@@ -1,0 +1,557 @@
+const DATA_PATHS = {
+  tools: "data/tools.json",
+  resources: "data/resources.json",
+  tutorials: "data/tutorials.json",
+  cases: "data/cases.json",
+  site: "data/site.json"
+};
+
+const PLACEHOLDER_LINK_MESSAGE = "该内容正在整理中，后续会更新真实链接。";
+
+const FALLBACK_DATA = {
+  tools: [
+    { id: "tool-chatgpt", name: "ChatGPT", category: "AI 对话", description: "通用型 AI 助手，适合写作、分析、学习和项目构思。", suitableFor: "新手、内容创作者、项目负责人", usageTip: "先用于需求整理和方案拆解，再接入具体工具执行。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 对话", "写作"], status: "推荐", updatedAt: "2026-05-14" },
+    { id: "tool-claude", name: "Claude", category: "AI 对话", description: "长文本理解和复杂写作体验稳定，适合做文档、方案和代码讨论。", suitableFor: "写作者、产品经理、开发者", usageTip: "用来梳理长文档、重构需求和复盘项目。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 对话", "长文本"], status: "推荐", updatedAt: "2026-05-14" },
+    { id: "tool-gemini", name: "Gemini", category: "AI 对话", description: "适合信息整理、多模态理解和与 Google 生态结合的工作。", suitableFor: "办公用户、研究型用户", usageTip: "适合做资料对比、图片理解和日常效率辅助。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 对话", "多模态"], status: "常用", updatedAt: "2026-05-14" },
+    { id: "tool-deepseek", name: "DeepSeek", category: "AI 对话", description: "中文体验友好，适合快速问答、代码理解和低成本试用。", suitableFor: "中文用户、学生、轻量开发者", usageTip: "用来做日常提问、脚本思路和内容初稿。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 对话", "中文"], status: "常用", updatedAt: "2026-05-14" },
+    { id: "tool-codex", name: "Codex", category: "AI 编程", description: "适合用自然语言协作完成网页、小工具和代码改造。", suitableFor: "想用 AI 做项目的人", usageTip: "把需求拆清楚，按页面、功能和验收标准推进。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 编程", "网页"], status: "推荐", updatedAt: "2026-05-14" },
+    { id: "tool-claude-code", name: "Claude Code", category: "AI 编程", description: "命令行 AI 编程助手，适合较完整的代码项目协作。", suitableFor: "开发者、技术型创作者", usageTip: "搭配清晰任务说明和版本管理使用。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 编程", "命令行"], status: "推荐", updatedAt: "2026-05-14" },
+    { id: "tool-comfyui", name: "ComfyUI", category: "AI 图像", description: "节点式 AI 图像工作流工具，适合做可复用的图片生成流程。", suitableFor: "设计师、图片创作者、本地部署用户", usageTip: "先跑通基础工作流，再逐步增加模型和节点。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 图像", "本地部署"], status: "推荐", updatedAt: "2026-05-14" },
+    { id: "tool-openclaw", name: "OpenClaw", category: "AI 自动化", description: "用于连接本地工具和自动化流程，适合做任务执行链路。", suitableFor: "自动化爱好者、工具型项目用户", usageTip: "先检查权限、路径和工具调用，再设计复杂流程。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 自动化", "本地工具"], status: "待补充", updatedAt: "2026-05-14" },
+    { id: "tool-wps-ai", name: "WPS AI", category: "AI 办公", description: "围绕文档、表格、演示的办公 AI 功能，适合日常资料处理。", suitableFor: "办公用户、小商户、运营人员", usageTip: "从表格总结、合同草稿和汇报提纲开始使用。", officialUrl: "#", tutorialUrl: "#", tags: ["AI 办公", "表格"], status: "常用", updatedAt: "2026-05-14" },
+    { id: "tool-coze", name: "Coze", category: "AI 自动化", description: "适合搭建智能体、问答机器人和轻量自动化应用。", suitableFor: "内容账号、客服场景、运营人员", usageTip: "先做单一场景机器人，再逐步扩展知识库和流程。", officialUrl: "#", tutorialUrl: "#", tags: ["智能体", "AI 自动化"], status: "常用", updatedAt: "2026-05-14" }
+  ],
+  resources: [
+    { id: "resource-codex-prompt-template", title: "Codex 项目提示词模板", type: "提示词", description: "用于描述网站、小工具、Demo 项目的需求结构和验收标准。", targetUser: "想用 Codex 做项目的新手和创作者", format: "TXT", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["Codex", "提示词"], status: "可用", updatedAt: "2026-05-14" },
+    { id: "resource-comfyui-model-paths", title: "ComfyUI 新手模型路径表", type: "教程资料", description: "整理常用模型、节点、工作流文件应该放置的位置。", targetUser: "刚开始安装和调试 ComfyUI 的用户", format: "PDF", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["ComfyUI", "安装排查"], status: "可用", updatedAt: "2026-05-14" },
+    { id: "resource-ai-install-checklist", title: "AI 工具安装排查清单", type: "安装排查", description: "按环境、路径、依赖、权限和日志逐项检查常见安装问题。", targetUser: "经常卡在安装和报错阶段的用户", format: "PDF", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["安装", "排查"], status: "可用", updatedAt: "2026-05-14" },
+    { id: "resource-openclaw-local-checklist", title: "OpenClaw 接通本地工具检查表", type: "工具清单", description: "检查本地工具路径、权限、命令执行和流程配置是否正确。", targetUser: "想接通本地自动化工作流的人", format: "TXT", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["OpenClaw", "自动化"], status: "待补充", updatedAt: "2026-05-14" },
+    { id: "resource-claude-code-requirement-template", title: "Claude Code 项目需求模板", type: "模板", description: "把功能背景、页面结构、数据字段和交互规则写清楚。", targetUser: "需要让 AI 编程助手理解项目的人", format: "TXT", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["Claude Code", "模板"], status: "可用", updatedAt: "2026-05-14" },
+    { id: "resource-ai-tool-case-pack", title: "AI 小工具项目案例包", type: "项目案例", description: "整理轻量工具、资源库网站和演示型项目的案例资料。", targetUser: "想找项目灵感和落地案例的人", format: "ZIP", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["AI 小工具", "案例"], status: "规划中", updatedAt: "2026-05-14" },
+    { id: "resource-xianyu-ai-service-copy", title: "闲鱼 AI 服务商品文案模板", type: "模板", description: "用于包装 AI 安装调试、工具陪跑和项目 Demo 服务。", targetUser: "准备做 AI 服务商品的人", format: "TXT", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["闲鱼", "文案"], status: "待补充", updatedAt: "2026-05-14" },
+    { id: "resource-shop-demo-pack", title: "小商户工具 Demo 资料包", type: "项目案例", description: "包含会员管理、线索接待、经营看板等小商户工具方向。", targetUser: "想做本地商户 AI 工具项目的人", format: "ZIP", size: "待补充", downloadUrl: "#", tutorialUrl: "#", tags: ["小商户", "Demo"], status: "规划中", updatedAt: "2026-05-14" }
+  ],
+  tutorials: [
+    { id: "tutorial-build-ai-resource-site-with-codex", title: "用 Codex 做一个 AI 资源库网站", category: "Codex", difficulty: "入门", readingTime: "12 分钟", description: "从需求拆解、页面结构到静态站交付，跑通完整建站流程。", contentPreview: "围绕静态资源库网站，演示如何把需求拆成页面、样式、数据和验收标准。", tags: ["Codex", "AI 项目"], relatedResourceId: "resource-codex-prompt-template", status: "更新中", updatedAt: "2026-05-14" },
+    { id: "tutorial-comfyui-debug-model-node-errors", title: "ComfyUI 新手如何排查模型和节点报错", category: "ComfyUI", difficulty: "入门", readingTime: "10 分钟", description: "按路径、依赖、节点版本和控制台日志拆解常见错误。", contentPreview: "从模型路径、缺失节点、Python 依赖和运行日志四个方向定位问题。", tags: ["ComfyUI", "工具调试"], relatedResourceId: "resource-comfyui-model-paths", status: "待写", updatedAt: "2026-05-14" },
+    { id: "tutorial-openclaw-local-tool-workflow", title: "OpenClaw 如何接通本地工具工作流", category: "OpenClaw", difficulty: "进阶", readingTime: "15 分钟", description: "梳理本地工具、权限、路径和任务执行链路的基础方法。", contentPreview: "用检查表方式确认本地工具可调用，再逐步设计任务链路。", tags: ["OpenClaw", "工具调试"], relatedResourceId: "resource-openclaw-local-checklist", status: "待写", updatedAt: "2026-05-14" },
+    { id: "tutorial-claude-code-build-small-tool", title: "Claude Code 怎么做一个小工具", category: "Claude Code", difficulty: "进阶", readingTime: "14 分钟", description: "用清晰需求、迭代步骤和测试标准推进一个轻量工具。", contentPreview: "把工具目标、输入输出、页面结构和验收动作写清楚，再让 AI 逐步实现。", tags: ["Claude Code", "AI 项目"], relatedResourceId: "resource-claude-code-requirement-template", status: "待写", updatedAt: "2026-05-14" },
+    { id: "tutorial-xianyu-ai-service-listing", title: "AI 工具安装调试服务怎么在闲鱼上架", category: "闲鱼变现", difficulty: "实战", readingTime: "9 分钟", description: "从服务描述、交付边界、价格阶梯到沟通话术做商品包装。", contentPreview: "把 AI 安装调试服务拆成标准化商品，并明确交付边界。", tags: ["闲鱼", "AI 服务"], relatedResourceId: "resource-xianyu-ai-service-copy", status: "待写", updatedAt: "2026-05-14" },
+    { id: "tutorial-package-ai-project-demo", title: "如何把 AI 项目打包成演示版", category: "AI 项目", difficulty: "进阶", readingTime: "11 分钟", description: "让项目具备可展示、可讲解、可复盘的 Demo 交付形态。", contentPreview: "整理页面入口、演示数据、操作路径和展示话术，形成可演示版本。", tags: ["AI 项目", "Demo"], relatedResourceId: "resource-ai-tool-case-pack", status: "更新中", updatedAt: "2026-05-14" },
+    { id: "tutorial-first-webpage-with-ai", title: "小白怎么用 AI 做第一个网页", category: "新手入门", difficulty: "入门", readingTime: "8 分钟", description: "用最小页面结构、清晰文案和静态文件完成第一个网页。", contentPreview: "从一个 HTML 文件开始，逐步加入样式、按钮、卡片和部署路径。", tags: ["新手入门", "网页"], relatedResourceId: "", status: "待写", updatedAt: "2026-05-14" },
+    { id: "tutorial-stable-ai-project-prompts", title: "AI 项目提示词怎么写更稳定", category: "AI 项目", difficulty: "实战", readingTime: "13 分钟", description: "把目标、约束、页面、数据和验收标准写成可执行任务。", contentPreview: "通过结构化提示词减少返工，让 AI 更稳定地执行项目开发任务。", tags: ["提示词", "Codex"], relatedResourceId: "resource-codex-prompt-template", status: "已发布", updatedAt: "2026-05-14" }
+  ],
+  cases: [
+    { id: "case-poya-member-tool", title: "珀雅造型会员管理工具", category: "小商户工具", status: "已完成", targetUser: "理发店、美业门店、本地服务商户", problem: "会员开卡、扣次、到期提醒和消费记录分散。", features: ["会员档案", "扣次记录", "余额提醒", "门店数据概览"], description: "面向本地美业门店的轻量会员管理工具。", imageUrl: "", detailUrl: "#", tags: ["小商户工具", "会员管理"], updatedAt: "2026-05-14" },
+    { id: "case-decoration-ai-lead-desk", title: "装修公司 AI 线索接待工作台", category: "线索接待", status: "制作中", targetUser: "装修公司、销售团队、客服团队", problem: "客户咨询难分层，跟进节奏不稳定。", features: ["AI 接待", "意向评分", "跟进提醒", "话术整理"], description: "帮助装修公司统一承接咨询线索。", imageUrl: "", detailUrl: "#", tags: ["线索接待", "AI 自动化", "进行中"], updatedAt: "2026-05-14" },
+    { id: "case-he01-ai-resource-hub", title: "贺01 AI 实战资源库", category: "资源库", status: "制作中", targetUser: "AI 创作者、资源型账号、个人品牌", problem: "内容入口分散，案例和资源缺少统一承接。", features: ["工具导航", "资源下载", "教程预览", "案例展示"], description: "把 AI 工具、教程、资源和项目案例集中展示。", imageUrl: "", detailUrl: "#", tags: ["网站项目", "资源库", "进行中"], updatedAt: "2026-05-14" },
+    { id: "case-wps-smart-dashboard", title: "小店 WPS 智能经营看板", category: "小商户工具", status: "规划中", targetUser: "小店老板、运营人员、轻量办公用户", problem: "订单、收入、库存和复购数据不清晰。", features: ["表格录入", "经营指标", "AI 总结", "周报生成"], description: "基于表格数据做经营指标看板。", imageUrl: "", detailUrl: "#", tags: ["小商户工具", "WPS AI"], updatedAt: "2026-05-14" },
+    { id: "case-ai-install-service-page", title: "AI 工具安装调试服务页", category: "网站项目", status: "规划中", targetUser: "AI 服务商、技术陪跑、闲鱼服务卖家", problem: "服务说明不清楚，客户不知道能解决什么。", features: ["服务范围", "价格层级", "常见问题", "转化入口"], description: "展示 AI 工具安装调试服务的范围、流程和咨询入口。", imageUrl: "", detailUrl: "#", tags: ["网站项目", "服务页"], updatedAt: "2026-05-14" },
+    { id: "case-construction-ai-daily-report", title: "施工/安装进度 AI 日报系统", category: "AI 自动化", status: "制作中", targetUser: "施工队、安装团队、项目管理人员", problem: "现场反馈碎片化，日报整理耗时。", features: ["进度录入", "图片记录", "AI 总结", "异常提醒"], description: "把现场进度、图片和问题记录整理成标准日报。", imageUrl: "", detailUrl: "#", tags: ["AI 自动化", "日报", "进行中"], updatedAt: "2026-05-14" }
+  ],
+  site: {
+    siteName: "贺01 AI 实战资源库",
+    slogan: "AI 实战、资源整合、项目落地",
+    description: "这里整理我真实用过的 AI 工具、项目案例、教程资料和资源下载。不讲空概念，只做能跑通、能展示、能变现的 AI 实战内容。",
+    contact: { wechat: "HE01-AI", xianyu: "贺01 AI", douyin: "贺·01", xiaohongshu: "贺·01", email: "hello@he01.ai" },
+    privateCommunity: { title: "私域二维码", description: "后续替换真实二维码。你可以在这里承接微信、社群、资料包或服务咨询入口。", qrCodeUrl: "", placeholderText: "二维码占位" },
+    services: ["AI工具安装调试", "ComfyUI报错排查", "OpenClaw接通本地工具", "Codex / Claude Code 项目陪跑", "AI小工具 / 网站 Demo 制作", "AI项目需求梳理"]
+  }
+};
+
+const menuToggle = document.querySelector(".menu-toggle");
+const navPanel = document.querySelector(".nav-panel");
+const modal = document.querySelector(".modal");
+const modalMessage = document.querySelector("#modal-message");
+const heroVisual = document.querySelector(".hero-visual");
+const heroSection = document.querySelector(".hero-section");
+const particleCanvas = document.querySelector(".hero-particles");
+const parallaxItems = document.querySelectorAll(".hero-visual [data-depth]");
+const revealItems = document.querySelectorAll(".reveal");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const mobileMotionQuery = window.matchMedia("(max-width: 760px)");
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatDate(value) {
+  if (!value) return "待更新";
+  const [year, month] = String(value).split("-");
+  return year && month ? `${year}.${month} 更新` : value;
+}
+
+function getNestedValue(source, path) {
+  return path.split(".").reduce((result, key) => result?.[key], source);
+}
+
+function normalizeCategories(item, primaryKey) {
+  return [item[primaryKey], item.category, item.type, item.status, ...(item.tags || [])]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function statusClass(status) {
+  if (status === "已完成" || status === "可用" || status === "已发布") return "done";
+  if (status === "制作中" || status === "更新中" || status === "推荐") return "building";
+  return "planned";
+}
+
+function emptyState(title, description) {
+  return `<article class="empty-state"><h2>${escapeHTML(title)}</h2><p>${escapeHTML(description)}</p></article>`;
+}
+
+async function loadJSON(key) {
+  try {
+    if (window.location.protocol === "file:") {
+      throw new Error("file protocol fallback");
+    }
+    const response = await fetch(DATA_PATHS[key], { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return { data, source: "json" };
+  } catch (error) {
+    console.warn(`无法读取 ${DATA_PATHS[key]}，已使用内置示例数据。`, error);
+    return { data: FALLBACK_DATA[key], source: "fallback" };
+  }
+}
+
+function showDataNotice(container, source) {
+  if (source !== "fallback") return;
+  container.insertAdjacentHTML(
+    "beforebegin",
+    `<div class="data-notice">未能读取 data 文件，当前显示内置示例数据。使用本地服务器预览或部署后会自动读取 JSON。</div>`
+  );
+}
+
+function createDataLink(label, url) {
+  const safeUrl = escapeHTML(url || "#");
+  return `<a class="card-link js-data-link" href="${safeUrl}" data-url="${safeUrl}"><span>${escapeHTML(label)}</span><i aria-hidden="true"></i></a>`;
+}
+
+function renderTools(container, items, source) {
+  showDataNotice(container, source);
+  if (!Array.isArray(items) || items.length === 0) {
+    container.innerHTML = emptyState("暂无工具数据", "请在 admin.html 添加工具后导出 tools.json。");
+    return;
+  }
+  container.innerHTML = items.map((item) => `
+    <article class="tool-card" data-category="${escapeHTML(normalizeCategories(item, "category"))}">
+      <div><h2>${escapeHTML(item.name)}</h2><span class="tag">${escapeHTML(item.category || item.status || "待分类")}</span></div>
+      <p>${escapeHTML(item.description)}</p>
+      <dl>
+        <dt>适合人群</dt><dd>${escapeHTML(item.suitableFor)}</dd>
+        <dt>使用建议</dt><dd>${escapeHTML(item.usageTip)}</dd>
+      </dl>
+      <div class="card-actions">
+        ${createDataLink("官网", item.officialUrl)}
+        ${createDataLink("教程", item.tutorialUrl)}
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderResources(container, items, source) {
+  showDataNotice(container, source);
+  if (!Array.isArray(items) || items.length === 0) {
+    container.innerHTML = emptyState("暂无资源数据", "请在 admin.html 添加资源后导出 resources.json。");
+    return;
+  }
+  container.innerHTML = items.map((item) => `
+    <article class="resource-card" data-category="${escapeHTML(normalizeCategories(item, "type"))}">
+      <div><span class="tag">${escapeHTML(item.type || item.status || "资源")}</span><time datetime="${escapeHTML(item.updatedAt)}">${escapeHTML(formatDate(item.updatedAt))}</time></div>
+      <h2>${escapeHTML(item.title)}</h2>
+      <p>${escapeHTML(item.description)}</p>
+      <dl>
+        <dt>格式/大小</dt><dd>${escapeHTML(item.format || "待补充")} · ${escapeHTML(item.size || "待补充")}</dd>
+        <dt>适合谁用</dt><dd>${escapeHTML(item.targetUser)}</dd>
+      </dl>
+      <div class="card-actions">
+        ${createDataLink("下载资源", item.downloadUrl)}
+        ${createDataLink("相关教程", item.tutorialUrl)}
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderTutorials(container, items, source) {
+  showDataNotice(container, source);
+  if (!Array.isArray(items) || items.length === 0) {
+    container.innerHTML = emptyState("暂无教程数据", "请在 admin.html 添加教程后导出 tutorials.json。");
+    return;
+  }
+  container.innerHTML = items.map((item) => `
+    <article class="tutorial-card" data-category="${escapeHTML(normalizeCategories(item, "category"))}">
+      <span class="tag">${escapeHTML(item.category || item.status || "教程")}</span>
+      <h2>${escapeHTML(item.title)}</h2>
+      <p>${escapeHTML(item.description)}</p>
+      <div class="info-row"><span>${escapeHTML(item.readingTime || "待补充")}</span><span>${escapeHTML(item.difficulty || "待补充")}</span><time>${escapeHTML(formatDate(item.updatedAt))}</time></div>
+      <button class="card-link js-placeholder-action" type="button"><span>查看教程</span><i aria-hidden="true"></i></button>
+    </article>
+  `).join("");
+}
+
+function renderCases(container, items, source) {
+  showDataNotice(container, source);
+  if (!Array.isArray(items) || items.length === 0) {
+    container.innerHTML = emptyState("暂无案例数据", "请在 admin.html 添加案例后导出 cases.json。");
+    return;
+  }
+  container.innerHTML = items.map((item) => {
+    const image = item.imageUrl
+      ? `<img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}">`
+      : `<span>${escapeHTML(item.title)}截图占位</span>`;
+    return `
+      <article class="case-card" data-category="${escapeHTML(normalizeCategories(item, "category"))}">
+        <div class="case-shot">${image}</div>
+        <div class="case-title-row"><h2>${escapeHTML(item.title)}</h2><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "规划中")}</span></div>
+        <dl>
+          <dt>适合人群</dt><dd>${escapeHTML(item.targetUser)}</dd>
+          <dt>解决问题</dt><dd>${escapeHTML(item.problem)}</dd>
+          <dt>核心功能</dt><dd>${escapeHTML((item.features || []).join("、"))}</dd>
+        </dl>
+        ${createDataLink("查看案例", item.detailUrl)}
+      </article>
+    `;
+  }).join("");
+}
+
+function renderServices(container, site, source) {
+  showDataNotice(container, source);
+  const services = Array.isArray(site?.services) ? site.services : [];
+  if (services.length === 0) {
+    container.innerHTML = emptyState("暂无服务项目", "请在 admin.html 的站点设置里添加服务项目。");
+    return;
+  }
+  container.innerHTML = services.map((service) => `
+    <article class="mini-card"><h3>${escapeHTML(service)}</h3><p>可在管理后台继续补充服务说明、案例和交付范围。</p></article>
+  `).join("");
+}
+
+function renderSiteFields(site) {
+  document.querySelectorAll("[data-site-field]").forEach((element) => {
+    const value = getNestedValue(site, element.dataset.siteField);
+    if (value) element.textContent = value;
+  });
+  document.querySelectorAll('[data-render="private-community-qr"]').forEach((container) => {
+    const community = site.privateCommunity || {};
+    const qr = community.qrCodeUrl
+      ? `<img class="qr-image" src="${escapeHTML(community.qrCodeUrl)}" alt="${escapeHTML(community.title || "私域二维码")}">`
+      : `<div class="qr-placeholder"><span></span><span></span><span></span><span></span></div>`;
+    container.innerHTML = `${qr}<strong>${escapeHTML(community.placeholderText || community.title || "二维码占位")}</strong><small>${escapeHTML(community.qrCodeUrl ? "扫码或长按识别" : "后续替换真实二维码")}</small>`;
+  });
+}
+
+function renderHomePreview(container, data) {
+  const toolItems = (data.tools || []).slice(0, 2);
+  const resourceItems = (data.resources || []).slice(0, 2);
+  const tutorialItems = (data.tutorials || []).slice(0, 2);
+  const caseItems = (data.cases || []).slice(0, 2);
+  const columns = [
+    { tag: "推荐工具", title: "AI 工具导航", link: "tools.html", items: toolItems.map((item) => item.name) },
+    { tag: "精选资源", title: "资源下载", link: "resources.html", items: resourceItems.map((item) => item.title) },
+    { tag: "最新教程", title: "实战教程", link: "tutorials.html", items: tutorialItems.map((item) => item.title) },
+    { tag: "作品案例", title: "项目展示", link: "cases.html", items: caseItems.map((item) => item.title) }
+  ];
+  container.innerHTML = columns.map((column) => `
+    <article class="preview-column">
+      <span class="tag">${escapeHTML(column.tag)}</span>
+      <h3>${escapeHTML(column.title)}</h3>
+      <ul>${column.items.map((item) => `<li>${escapeHTML(item)}</li>`).join("") || "<li>内容整理中</li>"}</ul>
+      <a class="card-link" href="${escapeHTML(column.link)}"><span>查看更多</span><i aria-hidden="true"></i></a>
+    </article>
+  `).join("");
+}
+
+async function initDataRender() {
+  const renderTargets = document.querySelectorAll("[data-render]");
+  if (renderTargets.length === 0) return;
+
+  const requiredKeys = new Set();
+  renderTargets.forEach((target) => {
+    const type = target.dataset.render;
+    if (["tools", "resources", "tutorials", "cases"].includes(type)) requiredKeys.add(type);
+    if (["services", "private-community-qr"].includes(type)) requiredKeys.add("site");
+    if (type === "home-preview") ["tools", "resources", "tutorials", "cases"].forEach((key) => requiredKeys.add(key));
+  });
+  if (document.querySelector("[data-site-field]")) requiredKeys.add("site");
+
+  const entries = await Promise.all([...requiredKeys].map(async (key) => [key, await loadJSON(key)]));
+  const loaded = Object.fromEntries(entries);
+  const data = Object.fromEntries(entries.map(([key, result]) => [key, result.data]));
+
+  renderTargets.forEach((target) => {
+    const type = target.dataset.render;
+    if (type === "tools") renderTools(target, data.tools, loaded.tools.source);
+    if (type === "resources") renderResources(target, data.resources, loaded.resources.source);
+    if (type === "tutorials") renderTutorials(target, data.tutorials, loaded.tutorials.source);
+    if (type === "cases") renderCases(target, data.cases, loaded.cases.source);
+    if (type === "services") renderServices(target, data.site, loaded.site.source);
+    if (type === "home-preview") renderHomePreview(target, data);
+  });
+
+  if (data.site) renderSiteFields(data.site);
+}
+
+function closeMenu() {
+  menuToggle?.classList.remove("is-open");
+  navPanel?.classList.remove("is-open");
+  menuToggle?.setAttribute("aria-expanded", "false");
+}
+
+function openModal(message) {
+  if (!modal || !modalMessage) return;
+  closeMenu();
+  modalMessage.textContent = message || "该功能将在后续版本接入。";
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  if (!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function addRipple(target, event) {
+  if (!target || reduceMotion) return;
+  const rect = target.getBoundingClientRect();
+  const ripple = document.createElement("span");
+  ripple.className = "ripple";
+  ripple.style.left = `${event.clientX - rect.left}px`;
+  ripple.style.top = `${event.clientY - rect.top}px`;
+  target.appendChild(ripple);
+  ripple.addEventListener("animationend", () => ripple.remove());
+}
+
+menuToggle?.addEventListener("click", () => {
+  const isOpen = menuToggle.classList.toggle("is-open");
+  navPanel?.classList.toggle("is-open", isOpen);
+  menuToggle.setAttribute("aria-expanded", String(isOpen));
+});
+
+document.addEventListener("click", (event) => {
+  const navLink = event.target.closest(".nav-links a");
+  if (navLink) closeMenu();
+
+  const rippleTarget = event.target.closest(".btn, .card-link, .text-action, .search-button, .modal-close, .filter-button");
+  if (rippleTarget) addRipple(rippleTarget, event);
+
+  const modalTrigger = event.target.closest("[data-modal-message]");
+  if (modalTrigger) {
+    event.preventDefault();
+    openModal(modalTrigger.dataset.modalMessage);
+    return;
+  }
+
+  if (event.target.closest("[data-modal-close]")) {
+    event.preventDefault();
+    closeModal();
+    return;
+  }
+
+  const placeholderAction = event.target.closest(".js-placeholder-action");
+  if (placeholderAction) {
+    event.preventDefault();
+    openModal(PLACEHOLDER_LINK_MESSAGE);
+    return;
+  }
+
+  const dataLink = event.target.closest(".js-data-link");
+  if (dataLink) {
+    const url = dataLink.dataset.url || dataLink.getAttribute("href");
+    if (!url || url === "#") {
+      event.preventDefault();
+      openModal(PLACEHOLDER_LINK_MESSAGE);
+    }
+  }
+
+  const filterButton = event.target.closest(".filter-button");
+  if (filterButton) {
+    const bar = filterButton.closest(".filter-bar");
+    const filter = filterButton.dataset.filter || "all";
+    const list = bar?.nextElementSibling;
+    const cards = list?.querySelectorAll("[data-category]") || [];
+    bar?.querySelectorAll(".filter-button").forEach((item) => item.classList.toggle("active", item === filterButton));
+    cards.forEach((card) => {
+      const categories = card.dataset.category || "";
+      const shouldShow = filter === "all" || categories.includes(filter);
+      card.classList.toggle("is-filtered-out", !shouldShow);
+    });
+  }
+});
+
+if (!reduceMotion && heroVisual) {
+  heroVisual.addEventListener("mousemove", (event) => {
+    const rect = heroVisual.getBoundingClientRect();
+    const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+    const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+
+    parallaxItems.forEach((item) => {
+      const depth = Number(item.dataset.depth || 1);
+      item.style.setProperty("--parallax-x", `${offsetX * depth * 14}px`);
+      item.style.setProperty("--parallax-y", `${offsetY * depth * 10}px`);
+    });
+  });
+
+  heroVisual.addEventListener("mouseleave", () => {
+    parallaxItems.forEach((item) => {
+      item.style.removeProperty("--parallax-x");
+      item.style.removeProperty("--parallax-y");
+    });
+  });
+}
+
+function initHeroParticles() {
+  if (!particleCanvas || !heroSection || reduceMotion || mobileMotionQuery.matches) return;
+
+  const ctx = particleCanvas.getContext("2d");
+  if (!ctx) return;
+
+  let width = 0;
+  let height = 0;
+  let particles = [];
+  let rafId = 0;
+  let isRunning = false;
+  let pointer = { x: 0, y: 0, active: false };
+  const particleCount = Math.min(44, Math.max(26, Math.round(window.innerWidth / 38)));
+
+  function resize() {
+    const rect = heroSection.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = Math.max(1, Math.round(rect.width));
+    height = Math.max(1, Math.round(rect.height));
+    particleCanvas.width = Math.round(width * dpr);
+    particleCanvas.height = Math.round(height * dpr);
+    particleCanvas.style.width = `${width}px`;
+    particleCanvas.style.height = `${height}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function createParticle(index) {
+    const rightBias = index % 3 !== 0;
+    return {
+      x: rightBias ? width * (0.48 + Math.random() * 0.46) : width * Math.random(),
+      y: height * (0.14 + Math.random() * 0.72),
+      vx: (Math.random() - 0.5) * 0.16,
+      vy: (Math.random() - 0.5) * 0.12,
+      radius: 0.8 + Math.random() * 1.8,
+      alpha: 0.12 + Math.random() * 0.28,
+      hue: Math.random() > 0.48 ? "105, 226, 255" : "150, 125, 255"
+    };
+  }
+
+  function resetParticles() {
+    particles = Array.from({ length: particleCount }, (_, index) => createParticle(index));
+  }
+
+  function draw() {
+    isRunning = true;
+    ctx.clearRect(0, 0, width, height);
+
+    particles.forEach((particle, index) => {
+      if (pointer.active) {
+        const dx = particle.x - pointer.x;
+        const dy = particle.y - pointer.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 150 && distance > 0.01) {
+          const force = (150 - distance) / 150;
+          particle.vx += (dx / distance) * force * 0.004;
+          particle.vy += (dy / distance) * force * 0.004;
+        }
+      }
+
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= 0.992;
+      particle.vy *= 0.992;
+
+      if (particle.x < width * 0.02 || particle.x > width * 0.98) particle.vx *= -1;
+      if (particle.y < height * 0.08 || particle.y > height * 0.92) particle.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${particle.hue}, ${particle.alpha})`;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = `rgba(${particle.hue}, 0.28)`;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      for (let otherIndex = index + 1; otherIndex < particles.length; otherIndex += 1) {
+        const other = particles[otherIndex];
+        const dx = particle.x - other.x;
+        const dy = particle.y - other.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 118) {
+          ctx.beginPath();
+          ctx.moveTo(particle.x, particle.y);
+          ctx.lineTo(other.x, other.y);
+          ctx.strokeStyle = `rgba(122, 174, 255, ${(1 - distance / 118) * 0.08})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+    });
+
+    rafId = requestAnimationFrame(draw);
+  }
+
+  resize();
+  resetParticles();
+  draw();
+
+  window.addEventListener("resize", () => {
+    if (mobileMotionQuery.matches) {
+      cancelAnimationFrame(rafId);
+      isRunning = false;
+      ctx.clearRect(0, 0, width, height);
+      return;
+    }
+    resize();
+    resetParticles();
+    if (!isRunning) draw();
+  });
+
+  heroSection.addEventListener("mousemove", (event) => {
+    const rect = heroSection.getBoundingClientRect();
+    pointer = { x: event.clientX - rect.left, y: event.clientY - rect.top, active: true };
+  });
+
+  heroSection.addEventListener("mouseleave", () => {
+    pointer.active = false;
+  });
+}
+
+initDataRender();
+initHeroParticles();
+
+if ("IntersectionObserver" in window && !reduceMotion) {
+  const revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12 }
+  );
+  revealItems.forEach((item) => revealObserver.observe(item));
+} else {
+  revealItems.forEach((item) => item.classList.add("is-visible"));
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeMenu();
+    closeModal();
+  }
+});

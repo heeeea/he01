@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="贺 · 01 AI 工具导航，按使用场景整理常用 AI 工具。">
+  <title>AI 工具导航 - 贺 · 01</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <nav class="navbar" aria-label="主导航">
+        <a class="brand" href="index.html">贺 · 01</a>
+        <button class="menu-toggle" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="primary-menu"><span></span><span></span><span></span></button>
+        <div class="nav-panel" id="primary-menu">
+          <ul class="nav-links">
+            <li><a href="index.html">首页</a></li>
+            <li><a class="active" href="tools.html">AI工具导航</a></li>
+            <li><a href="resources.html">资源下载</a></li>
+            <li><a href="tutorials.html">实战教程</a></li>
+            <li><a href="cases.html">作品案例</a></li>
+            <li><a href="contact.html">联系合作</a></li>
+          </ul>
+          <div class="nav-actions">
+            <button class="search-button" type="button" aria-label="搜索" data-modal-message="搜索功能将在后续版本接入。"><span class="search-icon" aria-hidden="true"></span></button>
+            <a class="btn btn-small btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero reveal">
+        <p class="eyebrow">Tool Directory</p>
+        <h1>AI 工具导航</h1>
+        <p>按使用场景整理常用 AI 工具，方便新手快速找到适合自己的工具。</p>
+      </section>
+
+      <section class="filter-bar reveal" aria-label="工具分类筛选">
+        <button class="filter-button active" type="button" data-filter="all">全部</button>
+        <button class="filter-button" type="button" data-filter="AI 对话">AI 对话</button>
+        <button class="filter-button" type="button" data-filter="AI 编程">AI 编程</button>
+        <button class="filter-button" type="button" data-filter="AI 图像">AI 图像</button>
+        <button class="filter-button" type="button" data-filter="AI 视频">AI 视频</button>
+        <button class="filter-button" type="button" data-filter="AI 自动化">AI 自动化</button>
+        <button class="filter-button" type="button" data-filter="AI 办公">AI 办公</button>
+        <button class="filter-button" type="button" data-filter="本地部署">本地部署</button>
+      </section>
+
+      <section class="content-grid tools-grid reveal" aria-label="AI 工具列表" data-render="tools"></section>
+    </main>
+
+    <footer class="site-footer"><p>© 2026 贺 · 01 AI 实战资源库</p><nav><a href="index.html">首页</a><a href="resources.html">资源下载</a><a href="contact.html">联系合作</a><a href="admin.html">管理后台</a></nav></footer>
+  </div>
+
+  <div class="modal" aria-hidden="true"><div class="modal-backdrop" data-modal-close></div><div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message"><button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>×</button><p class="eyebrow">Coming Soon</p><h2 id="modal-title">功能占位提示</h2><p id="modal-message">该功能将在后续版本接入。</p><button class="btn btn-primary modal-confirm" type="button" data-modal-close><span>知道了</span><i></i></button></div></div>
+  <script src="script.js"></script>
+</body>
+</html>
