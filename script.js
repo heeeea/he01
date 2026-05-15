@@ -86,6 +86,24 @@ function formatDate(value) {
   return year && month ? `${year}.${month} 更新` : value;
 }
 
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+async function fetchJson(path, fallback) {
+  try {
+    if (window.location.protocol === "file:") {
+      throw new Error("file protocol fallback");
+    }
+    const response = await fetch(path, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn(`无法读取 ${path}，已使用兜底数据。`, error);
+    return fallback;
+  }
+}
+
 function getNestedValue(source, path) {
   return path.split(".").reduce((result, key) => result?.[key], source);
 }
@@ -106,6 +124,78 @@ function emptyState(title, description) {
   return `<article class="empty-state"><h2>${escapeHTML(title)}</h2><p>${escapeHTML(description)}</p></article>`;
 }
 
+function toArray(value) {
+  if (Array.isArray(value)) return value.filter((item) => item !== null && item !== undefined && String(item).trim() !== "");
+  if (!value) return [];
+  return String(value).split(/\n+/).map((item) => item.trim()).filter(Boolean);
+}
+
+function toIdArray(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  if (!value) return [];
+  return String(value).split(/[，,\n]+/).map((item) => item.trim()).filter(Boolean);
+}
+
+function normalizeFaq(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => ({
+      question: item?.question || "",
+      answer: item?.answer || ""
+    }))
+    .filter((item) => item.question || item.answer);
+}
+
+function normalizeFrontItem(key, source) {
+  const item = { ...source };
+  if (key === "resources") {
+    item.detailContent ||= `这份资源围绕「${item.title || "资源"}」整理，适合在做项目前先统一需求、检查准备材料，并把可复用的方法沉淀下来。你可以先按步骤通读，再结合自己的工具环境补充真实链接和文件。`;
+    item.usageSteps = toArray(item.usageSteps);
+    if (item.usageSteps.length === 0) item.usageSteps = ["先阅读资源简介和适合人群，确认是否匹配当前任务。", "按照资源里的清单或模板填写自己的项目情况。", "结合相关教程或案例复盘，补齐下载文件和真实交付材料。"];
+    item.notes = toArray(item.notes);
+    if (item.notes.length === 0) item.notes = ["下载链接为 # 时表示资源还在整理中。", "示例内容可以直接替换成你的真实资料说明。"];
+    item.faq = normalizeFaq(item.faq);
+    if (item.faq.length === 0) item.faq = [{ question: "这个资源适合新手吗？", answer: "适合。建议先从简介和使用步骤看起，再根据自己的场景做删改。" }];
+    item.relatedResourceIds = toIdArray(item.relatedResourceIds || item.relatedResourceId);
+  }
+  if (key === "tutorials") {
+    item.detailContent ||= `本教程会围绕「${item.title || "教程"}」拆解一个可执行流程：先明确目标，再准备资料，最后按步骤验证结果。\n\n当前正文是示例内容，后续可以在后台替换成完整教程。`;
+    item.steps = Array.isArray(item.steps) ? item.steps : [];
+    if (item.steps.length === 0) item.steps = [
+      { title: "明确目标", description: "先写清楚这篇教程要帮助用户跑通什么结果。" },
+      { title: "准备材料", description: "确认工具、资源、账号、文件路径和演示数据是否齐全。" },
+      { title: "按步骤验证", description: "每完成一步就检查页面、输出或日志，避免最后集中排错。" }
+    ];
+    item.faq = normalizeFaq(item.faq);
+    if (item.faq.length === 0) item.faq = [{ question: "照着做还是报错怎么办？", answer: "先检查教程里提到的环境、路径和版本，再去相关资源里找排查清单。" }];
+    item.relatedResourceIds = toIdArray(item.relatedResourceIds || item.relatedResourceId);
+    item.nextActions = toArray(item.nextActions);
+    if (item.nextActions.length === 0) item.nextActions = ["打开相关资源，补齐模板或检查清单。", "把教程步骤套到自己的项目里跑一遍。"];
+  }
+  if (key === "cases") {
+    item.background ||= `这个案例来自「${item.title || "项目"}」方向的实战整理，重点记录需求背景、实现过程和后续可升级空间。`;
+    item.process = Array.isArray(item.process) ? item.process : [];
+    if (item.process.length === 0) item.process = [
+      { title: "需求梳理", description: "先明确目标用户、核心痛点和最小可用功能。" },
+      { title: "原型搭建", description: "用静态页面或轻量工具跑通主要操作路径。" },
+      { title: "演示复盘", description: "整理截图、结果和下一阶段升级方向。" }
+    ];
+    item.upgrades = toArray(item.upgrades);
+    if (item.upgrades.length === 0) item.upgrades = ["补充真实业务数据。", "增加搜索、筛选或自动化提醒。"];
+    item.relatedResourceIds = toIdArray(item.relatedResourceIds);
+    item.result ||= "项目目前以演示和复盘为主，后续可继续接入真实业务数据。";
+    item.lessons ||= "先把最小流程跑通，再决定是否升级数据库、登录和在线后台。";
+  }
+  return item;
+}
+
+function normalizeData(key, data) {
+  if (["resources", "tutorials", "cases"].includes(key) && Array.isArray(data)) {
+    return data.map((item) => normalizeFrontItem(key, item));
+  }
+  return data;
+}
+
 async function loadJSON(key) {
   try {
     if (window.location.protocol === "file:") {
@@ -114,10 +204,10 @@ async function loadJSON(key) {
     const response = await fetch(DATA_PATHS[key], { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    return { data, source: "json" };
+    return { data: normalizeData(key, data), source: "json" };
   } catch (error) {
     console.warn(`无法读取 ${DATA_PATHS[key]}，已使用内置示例数据。`, error);
-    return { data: FALLBACK_DATA[key], source: "fallback" };
+    return { data: normalizeData(key, FALLBACK_DATA[key]), source: "fallback" };
   }
 }
 
@@ -132,6 +222,91 @@ function showDataNotice(container, source) {
 function createDataLink(label, url) {
   const safeUrl = escapeHTML(url || "#");
   return `<a class="card-link js-data-link" href="${safeUrl}" data-url="${safeUrl}"><span>${escapeHTML(label)}</span><i aria-hidden="true"></i></a>`;
+}
+
+function detailUrl(type, item, fallback) {
+  if (!item?.id) return fallback;
+  return `${type}-detail.html?id=${encodeURIComponent(item.id)}`;
+}
+
+function renderTags(tags) {
+  const safeTags = toArray(tags);
+  if (safeTags.length === 0) return "";
+  return `<div class="detail-tags">${safeTags.map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`).join("")}</div>`;
+}
+
+function openLinkOrModal(url, message = PLACEHOLDER_LINK_MESSAGE) {
+  if (!url || url === "#") {
+    openModal(message);
+    return;
+  }
+  window.open(url, "_blank", "noopener");
+}
+
+function findItemById(list, id) {
+  return (Array.isArray(list) ? list : []).find((item) => String(item.id) === String(id));
+}
+
+function renderFaq(faq) {
+  const items = normalizeFaq(faq);
+  if (items.length === 0) return `<p class="detail-muted">常见问题正在整理中。</p>`;
+  return `<div class="faq-list">${items.map((item) => `
+    <article class="faq-card">
+      <h3>${escapeHTML(item.question || "常见问题")}</h3>
+      <p>${escapeHTML(item.answer || "回答整理中。")}</p>
+    </article>
+  `).join("")}</div>`;
+}
+
+function renderSteps(steps) {
+  const items = toArray(steps);
+  if (items.length === 0) return `<p class="detail-muted">步骤正在整理中。</p>`;
+  return `<ol class="step-list">${items.map((step, index) => {
+    const title = typeof step === "object" ? step.title : step;
+    const description = typeof step === "object" ? step.description : "";
+    return `
+      <li>
+        <span>${String(index + 1).padStart(2, "0")}</span>
+        <div>
+          <h3>${escapeHTML(title || `步骤 ${index + 1}`)}</h3>
+          ${description ? `<p>${escapeHTML(description)}</p>` : ""}
+        </div>
+      </li>
+    `;
+  }).join("")}</ol>`;
+}
+
+function renderTextBlock(value) {
+  const text = String(value || "内容正在整理中。");
+  return `<div class="rich-text">${escapeHTML(text).replace(/\n/g, "<br>")}</div>`;
+}
+
+function renderListItems(items) {
+  const list = toArray(items);
+  if (list.length === 0) return `<p class="detail-muted">内容正在整理中。</p>`;
+  return `<ul class="detail-list">${list.map((item) => `<li>${escapeHTML(item)}</li>`).join("")}</ul>`;
+}
+
+function relatedResources(current, resources, limit = 3) {
+  const ids = toIdArray(current?.relatedResourceIds || current?.relatedResourceId);
+  const byId = ids.map((id) => findItemById(resources, id)).filter(Boolean);
+  if (byId.length >= limit) return byId.slice(0, limit);
+  const tags = new Set(toArray(current?.tags));
+  const byTag = (resources || [])
+    .filter((item) => item.id !== current?.id && !byId.some((related) => related.id === item.id))
+    .filter((item) => toArray(item.tags).some((tag) => tags.has(tag)));
+  return [...byId, ...byTag].slice(0, limit);
+}
+
+function renderRelatedResourceCards(items) {
+  if (!items || items.length === 0) return `<p class="detail-muted">相关资源正在整理中。</p>`;
+  return `<div class="related-grid">${items.map((item) => `
+    <a class="related-card" href="${escapeHTML(detailUrl("resource", item, "resources.html"))}">
+      <span class="tag">${escapeHTML(item.type || "资源")}</span>
+      <h3>${escapeHTML(item.title)}</h3>
+      <p>${escapeHTML(item.description || "查看资源详情。")}</p>
+    </a>
+  `).join("")}</div>`;
 }
 
 function renderTools(container, items, source) {
@@ -172,6 +347,7 @@ function renderResources(container, items, source) {
         <dt>适合谁用</dt><dd>${escapeHTML(item.targetUser)}</dd>
       </dl>
       <div class="card-actions">
+        <a class="card-link" href="${escapeHTML(detailUrl("resource", item, "resources.html"))}"><span>查看详情</span><i aria-hidden="true"></i></a>
         ${createDataLink("下载资源", item.downloadUrl)}
         ${createDataLink("相关教程", item.tutorialUrl)}
       </div>
@@ -191,7 +367,7 @@ function renderTutorials(container, items, source) {
       <h2>${escapeHTML(item.title)}</h2>
       <p>${escapeHTML(item.description)}</p>
       <div class="info-row"><span>${escapeHTML(item.readingTime || "待补充")}</span><span>${escapeHTML(item.difficulty || "待补充")}</span><time>${escapeHTML(formatDate(item.updatedAt))}</time></div>
-      <button class="card-link js-placeholder-action" type="button"><span>查看教程</span><i aria-hidden="true"></i></button>
+      <a class="card-link" href="${escapeHTML(detailUrl("tutorial", item, "tutorials.html"))}"><span>查看教程</span><i aria-hidden="true"></i></a>
     </article>
   `).join("");
 }
@@ -215,7 +391,7 @@ function renderCases(container, items, source) {
           <dt>解决问题</dt><dd>${escapeHTML(item.problem)}</dd>
           <dt>核心功能</dt><dd>${escapeHTML((item.features || []).join("、"))}</dd>
         </dl>
-        ${createDataLink("查看案例", item.detailUrl)}
+        <a class="card-link" href="${escapeHTML(detailUrl("case", item, "cases.html"))}"><span>查看案例</span><i aria-hidden="true"></i></a>
       </article>
     `;
   }).join("");
@@ -253,19 +429,203 @@ function renderHomePreview(container, data) {
   const tutorialItems = (data.tutorials || []).slice(0, 2);
   const caseItems = (data.cases || []).slice(0, 2);
   const columns = [
-    { tag: "推荐工具", title: "AI 工具导航", link: "tools.html", items: toolItems.map((item) => item.name) },
-    { tag: "精选资源", title: "资源下载", link: "resources.html", items: resourceItems.map((item) => item.title) },
-    { tag: "最新教程", title: "实战教程", link: "tutorials.html", items: tutorialItems.map((item) => item.title) },
-    { tag: "作品案例", title: "项目展示", link: "cases.html", items: caseItems.map((item) => item.title) }
+    { tag: "推荐工具", title: "AI 工具导航", link: "tools.html", items: toolItems.map((item) => ({ label: item.name, url: "tools.html" })) },
+    { tag: "精选资源", title: "资源下载", link: "resources.html", items: resourceItems.map((item) => ({ label: item.title, url: detailUrl("resource", item, "resources.html") })) },
+    { tag: "最新教程", title: "实战教程", link: "tutorials.html", items: tutorialItems.map((item) => ({ label: item.title, url: detailUrl("tutorial", item, "tutorials.html") })) },
+    { tag: "作品案例", title: "项目展示", link: "cases.html", items: caseItems.map((item) => ({ label: item.title, url: detailUrl("case", item, "cases.html") })) }
   ];
   container.innerHTML = columns.map((column) => `
     <article class="preview-column">
       <span class="tag">${escapeHTML(column.tag)}</span>
       <h3>${escapeHTML(column.title)}</h3>
-      <ul>${column.items.map((item) => `<li>${escapeHTML(item)}</li>`).join("") || "<li>内容整理中</li>"}</ul>
+      <ul>${column.items.map((item) => `<li><a href="${escapeHTML(item.url)}">${escapeHTML(item.label)}</a></li>`).join("") || "<li>内容整理中</li>"}</ul>
       <a class="card-link" href="${escapeHTML(column.link)}"><span>查看更多</span><i aria-hidden="true"></i></a>
     </article>
   `).join("");
+}
+
+function renderNotFound(container, title, backUrl, backLabel) {
+  container.innerHTML = `
+    <section class="detail-shell reveal is-visible">
+      <a class="text-action back-link" href="${escapeHTML(backUrl)}">${escapeHTML(backLabel)}</a>
+      <article class="empty-state detail-empty">
+        <p class="eyebrow">Not Found</p>
+        <h2>${escapeHTML(title)}</h2>
+        <p>可以返回列表页查看其他内容，或稍后等资料补齐。</p>
+      </article>
+    </section>
+  `;
+}
+
+function renderDetailMeta(items) {
+  return `<dl class="detail-meta">${items.filter((item) => item.value).map((item) => `
+    <div><dt>${escapeHTML(item.label)}</dt><dd>${escapeHTML(item.value)}</dd></div>
+  `).join("")}</dl>`;
+}
+
+function renderSidebar(title, items, tags, backUrl, contactLabel = "联系合作") {
+  return `
+    <aside class="detail-sidebar">
+      <article class="detail-card sticky-card">
+        <p class="eyebrow">本页信息</p>
+        <h2>${escapeHTML(title)}</h2>
+        ${renderDetailMeta(items)}
+        ${renderTags(tags)}
+        <div class="sidebar-actions">
+          <a class="card-link" href="${escapeHTML(backUrl)}"><span>返回列表</span><i aria-hidden="true"></i></a>
+          <a class="card-link" href="contact.html"><span>${escapeHTML(contactLabel)}</span><i aria-hidden="true"></i></a>
+        </div>
+      </article>
+    </aside>
+  `;
+}
+
+function renderResourceDetail(container, data) {
+  const id = getQueryParam("id");
+  const resources = data.resources || [];
+  const item = findItemById(resources, id);
+  if (!item) {
+    renderNotFound(container, "资源不存在或正在整理中", "resources.html", "← 返回资源下载");
+    return;
+  }
+  const related = relatedResources(item, resources, 3);
+  container.innerHTML = `
+    <section class="detail-shell reveal is-visible">
+      <a class="text-action back-link" href="resources.html">← 返回资源下载</a>
+      <div class="detail-layout">
+        <article class="detail-main">
+          <header class="detail-hero-card">
+            <div class="detail-kicker"><span class="tag">${escapeHTML(item.type || "资源")}</span><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "待补充")}</span></div>
+            <h1>${escapeHTML(item.title)}</h1>
+            <p>${escapeHTML(item.description)}</p>
+            ${renderDetailMeta([
+              { label: "更新时间", value: formatDate(item.updatedAt) },
+              { label: "适合谁用", value: item.targetUser },
+              { label: "格式", value: item.format },
+              { label: "文件大小", value: item.size }
+            ])}
+          </header>
+
+          <section class="detail-card"><p class="eyebrow">Overview</p><h2>详细说明</h2>${renderTextBlock(item.detailContent)}</section>
+          <section class="detail-card"><p class="eyebrow">Steps</p><h2>使用步骤</h2>${renderSteps(item.usageSteps)}</section>
+          <section class="detail-card action-card">
+            <div><p class="eyebrow">Download</p><h2>下载资源</h2><p>下载资料或先查看相关教程，按自己的场景补齐真实项目内容。</p></div>
+            <div class="card-actions">
+              <button class="btn btn-primary js-open-link" type="button" data-url="${escapeHTML(item.downloadUrl || "#")}" data-empty-message="该资源正在整理中，后续会更新真实下载链接。"><span>下载资源</span><i aria-hidden="true"></i></button>
+              <button class="btn btn-secondary js-open-link" type="button" data-url="${escapeHTML(item.tutorialUrl || "#")}"><span>相关教程</span><i aria-hidden="true"></i></button>
+            </div>
+          </section>
+          <section class="detail-card"><p class="eyebrow">Notes</p><h2>注意事项</h2>${renderListItems(item.notes)}</section>
+          <section class="detail-card"><p class="eyebrow">FAQ</p><h2>常见问题</h2>${renderFaq(item.faq)}</section>
+          <section class="detail-card"><p class="eyebrow">Related</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
+          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>需要帮你安装调试或跑通工具？</h2><p>可以把当前资源、工具环境和卡住的位置发给我，一起拆解下一步。</p></div><a class="btn btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
+        </article>
+        ${renderSidebar(item.type || "资源", [
+          { label: "类型", value: item.type },
+          { label: "更新时间", value: formatDate(item.updatedAt) },
+          { label: "状态", value: item.status },
+          { label: "格式", value: item.format }
+        ], item.tags, "resources.html")}
+      </div>
+    </section>
+  `;
+}
+
+function renderTutorialDetail(container, data) {
+  const id = getQueryParam("id");
+  const tutorials = data.tutorials || [];
+  const resources = data.resources || [];
+  const item = findItemById(tutorials, id);
+  if (!item) {
+    renderNotFound(container, "教程不存在或正在整理中", "tutorials.html", "← 返回实战教程");
+    return;
+  }
+  const related = relatedResources(item, resources, 3);
+  container.innerHTML = `
+    <section class="detail-shell reveal is-visible">
+      <a class="text-action back-link" href="tutorials.html">← 返回实战教程</a>
+      <div class="detail-layout">
+        <article class="detail-main">
+          <header class="detail-hero-card">
+            <div class="detail-kicker"><span class="tag">${escapeHTML(item.category || "教程")}</span><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "待补充")}</span></div>
+            <h1>${escapeHTML(item.title)}</h1>
+            <p>${escapeHTML(item.description)}</p>
+            ${renderDetailMeta([
+              { label: "难度", value: item.difficulty },
+              { label: "阅读时间", value: item.readingTime },
+              { label: "更新时间", value: formatDate(item.updatedAt) },
+              { label: "状态", value: item.status }
+            ])}
+          </header>
+
+          <section class="detail-card"><p class="eyebrow">Summary</p><h2>内容摘要</h2>${renderTextBlock(item.contentPreview)}</section>
+          <section class="detail-card"><p class="eyebrow">Content</p><h2>教程正文</h2>${renderTextBlock(item.detailContent)}</section>
+          <section class="detail-card"><p class="eyebrow">Steps</p><h2>操作步骤</h2>${renderSteps(item.steps)}</section>
+          <section class="detail-card"><p class="eyebrow">FAQ</p><h2>常见问题</h2>${renderFaq(item.faq)}</section>
+          <section class="detail-card"><p class="eyebrow">Resources</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
+          <section class="detail-card"><p class="eyebrow">Next</p><h2>下一步建议</h2>${renderListItems(item.nextActions)}</section>
+          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>需要陪跑/调试？</h2><p>如果照着教程仍然卡住，可以带着报错、截图和目标一起沟通。</p></div><a class="btn btn-primary" href="contact.html"><span>需要陪跑/调试</span><i aria-hidden="true"></i></a></section>
+        </article>
+        ${renderSidebar(item.category || "教程", [
+          { label: "分类", value: item.category },
+          { label: "难度", value: item.difficulty },
+          { label: "阅读时间", value: item.readingTime },
+          { label: "更新时间", value: formatDate(item.updatedAt) },
+          { label: "状态", value: item.status }
+        ], item.tags, "tutorials.html", "需要陪跑")}
+      </div>
+    </section>
+  `;
+}
+
+function renderCaseDetail(container, data) {
+  const id = getQueryParam("id");
+  const cases = data.cases || [];
+  const resources = data.resources || [];
+  const item = findItemById(cases, id);
+  if (!item) {
+    renderNotFound(container, "案例不存在或正在整理中", "cases.html", "← 返回作品案例");
+    return;
+  }
+  const hasImage = item.imageUrl && item.imageUrl !== "#";
+  const related = relatedResources(item, resources, 3);
+  container.innerHTML = `
+    <section class="detail-shell reveal is-visible">
+      <a class="text-action back-link" href="cases.html">← 返回作品案例</a>
+      <div class="detail-layout">
+        <article class="detail-main">
+          <header class="detail-hero-card">
+            <div class="detail-kicker"><span class="tag">${escapeHTML(item.category || "案例")}</span><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "规划中")}</span></div>
+            <h1>${escapeHTML(item.title)}</h1>
+            <p>${escapeHTML(item.description)}</p>
+            ${renderDetailMeta([
+              { label: "适合人群", value: item.targetUser },
+              { label: "更新时间", value: formatDate(item.updatedAt) },
+              { label: "分类", value: item.category },
+              { label: "状态", value: item.status }
+            ])}
+          </header>
+
+          <section class="detail-card"><p class="eyebrow">Background</p><h2>项目背景</h2>${renderTextBlock(item.background)}</section>
+          <section class="detail-card"><p class="eyebrow">Problem</p><h2>解决的问题</h2>${renderTextBlock(item.problem)}</section>
+          <section class="detail-card"><p class="eyebrow">Features</p><h2>核心功能</h2>${renderListItems(item.features)}</section>
+          <section class="detail-card"><p class="eyebrow">Process</p><h2>实现过程</h2>${renderSteps(item.process)}</section>
+          <section class="detail-card"><p class="eyebrow">Screenshot</p><h2>项目截图</h2><div class="detail-shot">${hasImage ? `<img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}">` : "<span>项目截图待补充</span>"}</div></section>
+          <section class="detail-card"><p class="eyebrow">Upgrade</p><h2>后续升级方向</h2>${renderListItems(item.upgrades)}</section>
+          <section class="detail-card"><p class="eyebrow">Result</p><h2>项目结果</h2>${renderTextBlock(item.result)}</section>
+          <section class="detail-card"><p class="eyebrow">Lessons</p><h2>经验总结</h2>${renderTextBlock(item.lessons)}</section>
+          <section class="detail-card"><p class="eyebrow">Resources</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
+          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>想做类似项目？</h2><p>可以把行业、目标用户和你想解决的问题发来，一起拆成可落地版本。</p></div><a class="btn btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
+        </article>
+        ${renderSidebar(item.category || "案例", [
+          { label: "分类", value: item.category },
+          { label: "适合人群", value: item.targetUser },
+          { label: "更新时间", value: formatDate(item.updatedAt) },
+          { label: "状态", value: item.status }
+        ], item.tags, "cases.html")}
+      </div>
+    </section>
+  `;
 }
 
 async function initDataRender() {
@@ -278,6 +638,9 @@ async function initDataRender() {
     if (["tools", "resources", "tutorials", "cases"].includes(type)) requiredKeys.add(type);
     if (["services", "private-community-qr"].includes(type)) requiredKeys.add("site");
     if (type === "home-preview") ["tools", "resources", "tutorials", "cases"].forEach((key) => requiredKeys.add(key));
+    if (type === "resource-detail") requiredKeys.add("resources");
+    if (type === "tutorial-detail") ["tutorials", "resources"].forEach((key) => requiredKeys.add(key));
+    if (type === "case-detail") ["cases", "resources"].forEach((key) => requiredKeys.add(key));
   });
   if (document.querySelector("[data-site-field]")) requiredKeys.add("site");
 
@@ -293,6 +656,9 @@ async function initDataRender() {
     if (type === "cases") renderCases(target, data.cases, loaded.cases.source);
     if (type === "services") renderServices(target, data.site, loaded.site.source);
     if (type === "home-preview") renderHomePreview(target, data);
+    if (type === "resource-detail") renderResourceDetail(target, data);
+    if (type === "tutorial-detail") renderTutorialDetail(target, data);
+    if (type === "case-detail") renderCaseDetail(target, data);
   });
 
   if (data.site) renderSiteFields(data.site);
@@ -371,6 +737,12 @@ document.addEventListener("click", (event) => {
       event.preventDefault();
       openModal(PLACEHOLDER_LINK_MESSAGE);
     }
+  }
+
+  const openLinkButton = event.target.closest(".js-open-link");
+  if (openLinkButton) {
+    event.preventDefault();
+    openLinkOrModal(openLinkButton.dataset.url, openLinkButton.dataset.emptyMessage || PLACEHOLDER_LINK_MESSAGE);
   }
 
   const filterButton = event.target.closest(".filter-button");

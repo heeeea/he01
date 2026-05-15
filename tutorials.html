@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="贺 · 01 实战教程，整理 AI 工具、项目落地和调试排查教程。">
+  <title>实战教程 - 贺 · 01</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <nav class="navbar" aria-label="主导航">
+        <a class="brand" href="index.html">贺 · 01</a>
+        <button class="menu-toggle" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="primary-menu"><span></span><span></span><span></span></button>
+        <div class="nav-panel" id="primary-menu">
+          <ul class="nav-links">
+            <li><a href="index.html">首页</a></li><li><a href="tools.html">AI工具导航</a></li><li><a href="resources.html">资源下载</a></li><li><a class="active" href="tutorials.html">实战教程</a></li><li><a href="cases.html">作品案例</a></li><li><a href="contact.html">联系合作</a></li>
+          </ul>
+          <div class="nav-actions"><button class="search-button" type="button" aria-label="搜索" data-modal-message="搜索功能将在后续版本接入。"><span class="search-icon" aria-hidden="true"></span></button><a class="btn btn-small btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></div>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <section class="page-hero reveal"><p class="eyebrow">Practical Tutorials</p><h1>实战教程</h1><p>围绕 AI 工具调试、项目构建、资源整理和案例落地，整理能一步步照做的教程。</p></section>
+      <section class="filter-bar reveal" aria-label="教程分类筛选">
+        <button class="filter-button active" type="button" data-filter="all">全部</button><button class="filter-button" type="button" data-filter="Codex">Codex</button><button class="filter-button" type="button" data-filter="ComfyUI">ComfyUI</button><button class="filter-button" type="button" data-filter="OpenClaw">OpenClaw</button><button class="filter-button" type="button" data-filter="Claude Code">Claude Code</button><button class="filter-button" type="button" data-filter="AI 项目">AI 项目</button><button class="filter-button" type="button" data-filter="新手入门">新手入门</button>
+      </section>
+      <section class="content-grid tutorials-grid reveal" aria-label="教程列表" data-render="tutorials"></section>
+    </main>
+    <footer class="site-footer"><p>© 2026 贺 · 01 AI 实战资源库</p><nav><a href="index.html">首页</a><a href="resources.html">资源下载</a><a href="cases.html">作品案例</a><a href="admin.html">管理后台</a></nav></footer>
+  </div>
+  <div class="modal" aria-hidden="true"><div class="modal-backdrop" data-modal-close></div><div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message"><button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>×</button><p class="eyebrow">Coming Soon</p><h2 id="modal-title">功能占位提示</h2><p id="modal-message">该功能将在后续版本接入。</p><button class="btn btn-primary modal-confirm" type="button" data-modal-close><span>知道了</span><i></i></button></div></div>
+  <script src="script.js"></script>
+</body>
+</html>

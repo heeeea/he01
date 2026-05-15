@@ -1,114 +1,354 @@
 [
-  {
-    "id": "resource-codex-prompt-template",
-    "title": "Codex 项目提示词模板",
-    "type": "提示词",
-    "description": "用于描述网站、小工具、Demo 项目的需求结构和验收标准。",
-    "targetUser": "想用 Codex 做项目的新手和创作者",
-    "format": "TXT",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["Codex", "提示词", "项目需求"],
-    "status": "可用",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "resource-comfyui-model-paths",
-    "title": "ComfyUI 新手模型路径表",
-    "type": "教程资料",
-    "description": "整理常用模型、节点、工作流文件应该放置的位置。",
-    "targetUser": "刚开始安装和调试 ComfyUI 的用户",
-    "format": "PDF",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["ComfyUI", "模型路径", "安装排查"],
-    "status": "可用",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "resource-ai-install-checklist",
-    "title": "AI 工具安装排查清单",
-    "type": "安装排查",
-    "description": "按环境、路径、依赖、权限和日志逐项检查常见安装问题。",
-    "targetUser": "经常卡在安装和报错阶段的用户",
-    "format": "PDF",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["安装", "排查", "工具清单"],
-    "status": "可用",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "resource-openclaw-local-checklist",
-    "title": "OpenClaw 接通本地工具检查表",
-    "type": "工具清单",
-    "description": "检查本地工具路径、权限、命令执行和流程配置是否正确。",
-    "targetUser": "想接通本地自动化工作流的人",
-    "format": "TXT",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["OpenClaw", "本地工具", "自动化"],
-    "status": "待补充",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "resource-claude-code-requirement-template",
-    "title": "Claude Code 项目需求模板",
-    "type": "模板",
-    "description": "把功能背景、页面结构、数据字段和交互规则写清楚。",
-    "targetUser": "需要让 AI 编程助手理解项目的人",
-    "format": "TXT",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["Claude Code", "模板", "需求"],
-    "status": "可用",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "resource-ai-tool-case-pack",
-    "title": "AI 小工具项目案例包",
-    "type": "项目案例",
-    "description": "整理轻量工具、资源库网站和演示型项目的案例资料。",
-    "targetUser": "想找项目灵感和落地案例的人",
-    "format": "ZIP",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["AI 小工具", "案例", "Demo"],
-    "status": "规划中",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "resource-xianyu-ai-service-copy",
-    "title": "闲鱼 AI 服务商品文案模板",
-    "type": "模板",
-    "description": "用于包装 AI 安装调试、工具陪跑和项目 Demo 服务。",
-    "targetUser": "准备做 AI 服务商品的人",
-    "format": "TXT",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["闲鱼", "服务商品", "文案"],
-    "status": "待补充",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "resource-shop-demo-pack",
-    "title": "小商户工具 Demo 资料包",
-    "type": "项目案例",
-    "description": "包含会员管理、线索接待、经营看板等小商户工具方向。",
-    "targetUser": "想做本地商户 AI 工具项目的人",
-    "format": "ZIP",
-    "size": "待补充",
-    "downloadUrl": "#",
-    "tutorialUrl": "#",
-    "tags": ["小商户", "Demo", "项目案例"],
-    "status": "规划中",
-    "updatedAt": "2026-05-14"
-  }
+    {
+        "id":  "resource-codex-prompt-template",
+        "title":  "Codex 项目提示词模板",
+        "type":  "提示词",
+        "description":  "用于描述网站、小工具、Demo 项目的需求结构和验收标准。",
+        "targetUser":  "想用 Codex 做项目的新手和创作者",
+        "format":  "TXT",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "Codex",
+                     "提示词",
+                     "项目需求"
+                 ],
+        "status":  "可用",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《Codex 项目提示词模板》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-claude-code-requirement-template",
+                                   "resource-ai-tool-case-pack",
+                                   "resource-ai-install-checklist"
+                               ]
+    },
+    {
+        "id":  "resource-comfyui-model-paths",
+        "title":  "ComfyUI 新手模型路径表",
+        "type":  "教程资料",
+        "description":  "整理常用模型、节点、工作流文件应该放置的位置。",
+        "targetUser":  "刚开始安装和调试 ComfyUI 的用户",
+        "format":  "PDF",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "ComfyUI",
+                     "模型路径",
+                     "安装排查"
+                 ],
+        "status":  "可用",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《ComfyUI 新手模型路径表》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-ai-install-checklist",
+                                   "resource-openclaw-local-checklist",
+                                   "resource-codex-prompt-template"
+                               ]
+    },
+    {
+        "id":  "resource-ai-install-checklist",
+        "title":  "AI 工具安装排查清单",
+        "type":  "安装排查",
+        "description":  "按环境、路径、依赖、权限和日志逐项检查常见安装问题。",
+        "targetUser":  "经常卡在安装和报错阶段的用户",
+        "format":  "PDF",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "安装",
+                     "排查",
+                     "工具清单"
+                 ],
+        "status":  "可用",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《AI 工具安装排查清单》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-comfyui-model-paths",
+                                   "resource-openclaw-local-checklist",
+                                   "resource-claude-code-requirement-template"
+                               ]
+    },
+    {
+        "id":  "resource-openclaw-local-checklist",
+        "title":  "OpenClaw 接通本地工具检查表",
+        "type":  "工具清单",
+        "description":  "检查本地工具路径、权限、命令执行和流程配置是否正确。",
+        "targetUser":  "想接通本地自动化工作流的人",
+        "format":  "TXT",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "OpenClaw",
+                     "本地工具",
+                     "自动化"
+                 ],
+        "status":  "待补充",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《OpenClaw 接通本地工具检查表》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-ai-install-checklist",
+                                   "resource-comfyui-model-paths",
+                                   "resource-ai-tool-case-pack"
+                               ]
+    },
+    {
+        "id":  "resource-claude-code-requirement-template",
+        "title":  "Claude Code 项目需求模板",
+        "type":  "模板",
+        "description":  "把功能背景、页面结构、数据字段和交互规则写清楚。",
+        "targetUser":  "需要让 AI 编程助手理解项目的人",
+        "format":  "TXT",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "Claude Code",
+                     "模板",
+                     "需求"
+                 ],
+        "status":  "可用",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《Claude Code 项目需求模板》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-codex-prompt-template",
+                                   "resource-ai-tool-case-pack",
+                                   "resource-shop-demo-pack"
+                               ]
+    },
+    {
+        "id":  "resource-ai-tool-case-pack",
+        "title":  "AI 小工具项目案例包",
+        "type":  "项目案例",
+        "description":  "整理轻量工具、资源库网站和演示型项目的案例资料。",
+        "targetUser":  "想找项目灵感和落地案例的人",
+        "format":  "ZIP",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "AI 小工具",
+                     "案例",
+                     "Demo"
+                 ],
+        "status":  "规划中",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《AI 小工具项目案例包》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-shop-demo-pack",
+                                   "resource-codex-prompt-template",
+                                   "resource-claude-code-requirement-template"
+                               ]
+    },
+    {
+        "id":  "resource-xianyu-ai-service-copy",
+        "title":  "闲鱼 AI 服务商品文案模板",
+        "type":  "模板",
+        "description":  "用于包装 AI 安装调试、工具陪跑和项目 Demo 服务。",
+        "targetUser":  "准备做 AI 服务商品的人",
+        "format":  "TXT",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "闲鱼",
+                     "服务商品",
+                     "文案"
+                 ],
+        "status":  "待补充",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《闲鱼 AI 服务商品文案模板》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-ai-install-checklist",
+                                   "resource-ai-tool-case-pack",
+                                   "resource-shop-demo-pack"
+                               ]
+    },
+    {
+        "id":  "resource-shop-demo-pack",
+        "title":  "小商户工具 Demo 资料包",
+        "type":  "项目案例",
+        "description":  "包含会员管理、线索接待、经营看板等小商户工具方向。",
+        "targetUser":  "想做本地商户 AI 工具项目的人",
+        "format":  "ZIP",
+        "size":  "待补充",
+        "downloadUrl":  "#",
+        "tutorialUrl":  "#",
+        "tags":  [
+                     "小商户",
+                     "Demo",
+                     "项目案例"
+                 ],
+        "status":  "规划中",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "这份《小商户工具 Demo 资料包》用于把零散经验整理成可执行资料。你可以先用它确认目标、边界、文件和交付方式，再替换成自己的真实链接或项目文件。\n\n当前内容是资源库示例详情，后续可以在后台补充真实下载地址、截图说明和版本记录。",
+        "usageSteps":  [
+                           "先确认资源类型、适合人群和使用场景是否匹配当前任务。",
+                           "下载或复制资源内容，按照模板填写自己的项目目标、工具环境和输出要求。",
+                           "结合相关教程或案例跑一遍流程，把遇到的问题记录到注意事项里。"
+                       ],
+        "notes":  [
+                      "如果下载链接仍为 #，表示真实文件还在整理中。",
+                      "示例字段可以直接通过 admin.html 替换成正式说明。",
+                      "涉及第三方工具时，请以对应工具的当前版本和官方要求为准。"
+                  ],
+        "faq":  [
+                    {
+                        "question":  "这份资源可以直接使用吗？",
+                        "answer":  "可以先作为模板或清单使用，真实文件、网盘链接和版本记录后续再补齐。"
+                    },
+                    {
+                        "question":  "适合完全没有基础的新手吗？",
+                        "answer":  "适合。建议按使用步骤逐项确认，不要一开始就改太多变量。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-ai-tool-case-pack",
+                                   "resource-xianyu-ai-service-copy",
+                                   "resource-claude-code-requirement-template"
+                               ]
+    }
 ]

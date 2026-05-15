@@ -1,106 +1,443 @@
 [
-  {
-    "id": "tutorial-build-ai-resource-site-with-codex",
-    "title": "用 Codex 做一个 AI 资源库网站",
-    "category": "Codex",
-    "difficulty": "入门",
-    "readingTime": "12 分钟",
-    "description": "从需求拆解、页面结构到静态站交付，跑通完整建站流程。",
-    "contentPreview": "围绕静态资源库网站，演示如何把需求拆成页面、样式、数据和验收标准。",
-    "tags": ["Codex", "AI 项目", "网站"],
-    "relatedResourceId": "resource-codex-prompt-template",
-    "status": "更新中",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "tutorial-comfyui-debug-model-node-errors",
-    "title": "ComfyUI 新手如何排查模型和节点报错",
-    "category": "ComfyUI",
-    "difficulty": "入门",
-    "readingTime": "10 分钟",
-    "description": "按路径、依赖、节点版本和控制台日志拆解常见错误。",
-    "contentPreview": "从模型路径、缺失节点、Python 依赖和运行日志四个方向定位问题。",
-    "tags": ["ComfyUI", "工具调试", "安装排查"],
-    "relatedResourceId": "resource-comfyui-model-paths",
-    "status": "待写",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "tutorial-openclaw-local-tool-workflow",
-    "title": "OpenClaw 如何接通本地工具工作流",
-    "category": "OpenClaw",
-    "difficulty": "进阶",
-    "readingTime": "15 分钟",
-    "description": "梳理本地工具、权限、路径和任务执行链路的基础方法。",
-    "contentPreview": "用检查表方式确认本地工具可调用，再逐步设计任务链路。",
-    "tags": ["OpenClaw", "工具调试", "AI 自动化"],
-    "relatedResourceId": "resource-openclaw-local-checklist",
-    "status": "待写",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "tutorial-claude-code-build-small-tool",
-    "title": "Claude Code 怎么做一个小工具",
-    "category": "Claude Code",
-    "difficulty": "进阶",
-    "readingTime": "14 分钟",
-    "description": "用清晰需求、迭代步骤和测试标准推进一个轻量工具。",
-    "contentPreview": "把工具目标、输入输出、页面结构和验收动作写清楚，再让 AI 逐步实现。",
-    "tags": ["Claude Code", "AI 项目", "小工具"],
-    "relatedResourceId": "resource-claude-code-requirement-template",
-    "status": "待写",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "tutorial-xianyu-ai-service-listing",
-    "title": "AI 工具安装调试服务怎么在闲鱼上架",
-    "category": "闲鱼变现",
-    "difficulty": "实战",
-    "readingTime": "9 分钟",
-    "description": "从服务描述、交付边界、价格阶梯到沟通话术做商品包装。",
-    "contentPreview": "把 AI 安装调试服务拆成标准化商品，并明确交付边界。",
-    "tags": ["闲鱼", "AI 服务", "变现"],
-    "relatedResourceId": "resource-xianyu-ai-service-copy",
-    "status": "待写",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "tutorial-package-ai-project-demo",
-    "title": "如何把 AI 项目打包成演示版",
-    "category": "AI 项目",
-    "difficulty": "进阶",
-    "readingTime": "11 分钟",
-    "description": "让项目具备可展示、可讲解、可复盘的 Demo 交付形态。",
-    "contentPreview": "整理页面入口、演示数据、操作路径和展示话术，形成可演示版本。",
-    "tags": ["AI 项目", "Demo", "交付"],
-    "relatedResourceId": "resource-ai-tool-case-pack",
-    "status": "更新中",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "tutorial-first-webpage-with-ai",
-    "title": "小白怎么用 AI 做第一个网页",
-    "category": "新手入门",
-    "difficulty": "入门",
-    "readingTime": "8 分钟",
-    "description": "用最小页面结构、清晰文案和静态文件完成第一个网页。",
-    "contentPreview": "从一个 HTML 文件开始，逐步加入样式、按钮、卡片和部署路径。",
-    "tags": ["新手入门", "网页", "AI 项目"],
-    "relatedResourceId": "",
-    "status": "待写",
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "tutorial-stable-ai-project-prompts",
-    "title": "AI 项目提示词怎么写更稳定",
-    "category": "AI 项目",
-    "difficulty": "实战",
-    "readingTime": "13 分钟",
-    "description": "把目标、约束、页面、数据和验收标准写成可执行任务。",
-    "contentPreview": "通过结构化提示词减少返工，让 AI 更稳定地执行项目开发任务。",
-    "tags": ["提示词", "Codex", "Claude Code"],
-    "relatedResourceId": "resource-codex-prompt-template",
-    "status": "已发布",
-    "updatedAt": "2026-05-14"
-  }
+    {
+        "id":  "tutorial-build-ai-resource-site-with-codex",
+        "title":  "用 Codex 做一个 AI 资源库网站",
+        "category":  "Codex",
+        "difficulty":  "入门",
+        "readingTime":  "12 分钟",
+        "description":  "从需求拆解、页面结构到静态站交付，跑通完整建站流程。",
+        "contentPreview":  "围绕静态资源库网站，演示如何把需求拆成页面、样式、数据和验收标准。",
+        "tags":  [
+                     "Codex",
+                     "AI 项目",
+                     "网站"
+                 ],
+        "relatedResourceId":  "resource-codex-prompt-template",
+        "status":  "更新中",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「用 Codex 做一个 AI 资源库网站」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-codex-prompt-template",
+                                   "resource-claude-code-requirement-template",
+                                   "resource-ai-tool-case-pack"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    },
+    {
+        "id":  "tutorial-comfyui-debug-model-node-errors",
+        "title":  "ComfyUI 新手如何排查模型和节点报错",
+        "category":  "ComfyUI",
+        "difficulty":  "入门",
+        "readingTime":  "10 分钟",
+        "description":  "按路径、依赖、节点版本和控制台日志拆解常见错误。",
+        "contentPreview":  "从模型路径、缺失节点、Python 依赖和运行日志四个方向定位问题。",
+        "tags":  [
+                     "ComfyUI",
+                     "工具调试",
+                     "安装排查"
+                 ],
+        "relatedResourceId":  "resource-comfyui-model-paths",
+        "status":  "待写",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「ComfyUI 新手如何排查模型和节点报错」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-comfyui-model-paths",
+                                   "resource-ai-install-checklist"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    },
+    {
+        "id":  "tutorial-openclaw-local-tool-workflow",
+        "title":  "OpenClaw 如何接通本地工具工作流",
+        "category":  "OpenClaw",
+        "difficulty":  "进阶",
+        "readingTime":  "15 分钟",
+        "description":  "梳理本地工具、权限、路径和任务执行链路的基础方法。",
+        "contentPreview":  "用检查表方式确认本地工具可调用，再逐步设计任务链路。",
+        "tags":  [
+                     "OpenClaw",
+                     "工具调试",
+                     "AI 自动化"
+                 ],
+        "relatedResourceId":  "resource-openclaw-local-checklist",
+        "status":  "待写",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「OpenClaw 如何接通本地工具工作流」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-openclaw-local-checklist",
+                                   "resource-ai-install-checklist"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    },
+    {
+        "id":  "tutorial-claude-code-build-small-tool",
+        "title":  "Claude Code 怎么做一个小工具",
+        "category":  "Claude Code",
+        "difficulty":  "进阶",
+        "readingTime":  "14 分钟",
+        "description":  "用清晰需求、迭代步骤和测试标准推进一个轻量工具。",
+        "contentPreview":  "把工具目标、输入输出、页面结构和验收动作写清楚，再让 AI 逐步实现。",
+        "tags":  [
+                     "Claude Code",
+                     "AI 项目",
+                     "小工具"
+                 ],
+        "relatedResourceId":  "resource-claude-code-requirement-template",
+        "status":  "待写",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「Claude Code 怎么做一个小工具」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-claude-code-requirement-template",
+                                   "resource-codex-prompt-template"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    },
+    {
+        "id":  "tutorial-xianyu-ai-service-listing",
+        "title":  "AI 工具安装调试服务怎么在闲鱼上架",
+        "category":  "闲鱼变现",
+        "difficulty":  "实战",
+        "readingTime":  "9 分钟",
+        "description":  "从服务描述、交付边界、价格阶梯到沟通话术做商品包装。",
+        "contentPreview":  "把 AI 安装调试服务拆成标准化商品，并明确交付边界。",
+        "tags":  [
+                     "闲鱼",
+                     "AI 服务",
+                     "变现"
+                 ],
+        "relatedResourceId":  "resource-xianyu-ai-service-copy",
+        "status":  "待写",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「AI 工具安装调试服务怎么在闲鱼上架」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-xianyu-ai-service-copy",
+                                   "resource-ai-install-checklist"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    },
+    {
+        "id":  "tutorial-package-ai-project-demo",
+        "title":  "如何把 AI 项目打包成演示版",
+        "category":  "AI 项目",
+        "difficulty":  "进阶",
+        "readingTime":  "11 分钟",
+        "description":  "让项目具备可展示、可讲解、可复盘的 Demo 交付形态。",
+        "contentPreview":  "整理页面入口、演示数据、操作路径和展示话术，形成可演示版本。",
+        "tags":  [
+                     "AI 项目",
+                     "Demo",
+                     "交付"
+                 ],
+        "relatedResourceId":  "resource-ai-tool-case-pack",
+        "status":  "更新中",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「如何把 AI 项目打包成演示版」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-ai-tool-case-pack",
+                                   "resource-shop-demo-pack"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    },
+    {
+        "id":  "tutorial-first-webpage-with-ai",
+        "title":  "小白怎么用 AI 做第一个网页",
+        "category":  "新手入门",
+        "difficulty":  "入门",
+        "readingTime":  "8 分钟",
+        "description":  "用最小页面结构、清晰文案和静态文件完成第一个网页。",
+        "contentPreview":  "从一个 HTML 文件开始，逐步加入样式、按钮、卡片和部署路径。",
+        "tags":  [
+                     "新手入门",
+                     "网页",
+                     "AI 项目"
+                 ],
+        "relatedResourceId":  "",
+        "status":  "待写",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「小白怎么用 AI 做第一个网页」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-codex-prompt-template",
+                                   "resource-claude-code-requirement-template"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    },
+    {
+        "id":  "tutorial-stable-ai-project-prompts",
+        "title":  "AI 项目提示词怎么写更稳定",
+        "category":  "AI 项目",
+        "difficulty":  "实战",
+        "readingTime":  "13 分钟",
+        "description":  "把目标、约束、页面、数据和验收标准写成可执行任务。",
+        "contentPreview":  "通过结构化提示词减少返工，让 AI 更稳定地执行项目开发任务。",
+        "tags":  [
+                     "提示词",
+                     "Codex",
+                     "Claude Code"
+                 ],
+        "relatedResourceId":  "resource-codex-prompt-template",
+        "status":  "已发布",
+        "updatedAt":  "2026-05-14",
+        "detailContent":  "本教程围绕「AI 项目提示词怎么写更稳定」展开，重点不是堆概念，而是把目标拆成可以执行、可以检查、可以复盘的步骤。\n\n你可以先照着示例流程跑一遍，再把其中的工具、路径、素材和交付标准替换成自己的项目情况。遇到报错时，优先回到资源清单检查环境和输入。",
+        "steps":  [
+                      {
+                          "title":  "明确结果",
+                          "description":  "先写清楚最终要得到什么页面、文件、流程或演示效果。"
+                      },
+                      {
+                          "title":  "准备资料",
+                          "description":  "确认相关资源、工具账号、项目文件、路径和测试数据是否齐全。"
+                      },
+                      {
+                          "title":  "小步执行",
+                          "description":  "每完成一个步骤就做一次检查，避免把问题累积到最后。"
+                      },
+                      {
+                          "title":  "整理复盘",
+                          "description":  "记录可复用提示词、报错处理方式和下一次可优化的地方。"
+                      }
+                  ],
+        "faq":  [
+                    {
+                        "question":  "教程内容没有写完怎么办？",
+                        "answer":  "当前是示例正文结构，可以先按摘要和步骤跑通，后续在后台继续补完整细节。"
+                    },
+                    {
+                        "question":  "相关资源在哪里？",
+                        "answer":  "详情页会根据 relatedResourceIds 或标签推荐资源，优先查看对应模板和检查清单。"
+                    }
+                ],
+        "relatedResourceIds":  [
+                                   "resource-codex-prompt-template",
+                                   "resource-claude-code-requirement-template"
+                               ],
+        "nextActions":  [
+                            "打开相关资源，把模板或检查清单复制到自己的项目里。",
+                            "用同一个目标跑一个最小 Demo，先验证流程是否可行。",
+                            "把遇到的问题记录下来，后续补进 FAQ 或案例复盘。"
+                        ]
+    }
 ]

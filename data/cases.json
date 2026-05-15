@@ -1,86 +1,322 @@
 [
-  {
-    "id": "case-poya-member-tool",
-    "title": "珀雅造型会员管理工具",
-    "category": "小商户工具",
-    "status": "已完成",
-    "targetUser": "理发店、美业门店、本地服务商户",
-    "problem": "会员开卡、扣次、到期提醒和消费记录分散。",
-    "features": ["会员档案", "扣次记录", "余额提醒", "门店数据概览"],
-    "description": "面向本地美业门店的轻量会员管理工具，用来提升会员记录和复购管理效率。",
-    "imageUrl": "",
-    "detailUrl": "#",
-    "tags": ["小商户工具", "会员管理", "已完成"],
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "case-decoration-ai-lead-desk",
-    "title": "装修公司 AI 线索接待工作台",
-    "category": "线索接待",
-    "status": "制作中",
-    "targetUser": "装修公司、销售团队、客服团队",
-    "problem": "客户咨询难分层，跟进节奏不稳定。",
-    "features": ["AI 接待", "意向评分", "跟进提醒", "话术整理"],
-    "description": "帮助装修公司统一承接咨询线索，并用 AI 辅助判断意向和整理跟进动作。",
-    "imageUrl": "",
-    "detailUrl": "#",
-    "tags": ["线索接待", "AI 自动化", "进行中"],
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "case-he01-ai-resource-hub",
-    "title": "贺01 AI 实战资源库",
-    "category": "资源库",
-    "status": "制作中",
-    "targetUser": "AI 创作者、资源型账号、个人品牌",
-    "problem": "内容入口分散，案例和资源缺少统一承接。",
-    "features": ["工具导航", "资源下载", "教程预览", "案例展示"],
-    "description": "把 AI 工具、教程、资源和项目案例集中展示，作为私域与合作转化入口。",
-    "imageUrl": "",
-    "detailUrl": "#",
-    "tags": ["网站项目", "资源库", "进行中"],
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "case-wps-smart-dashboard",
-    "title": "小店 WPS 智能经营看板",
-    "category": "小商户工具",
-    "status": "规划中",
-    "targetUser": "小店老板、运营人员、轻量办公用户",
-    "problem": "订单、收入、库存和复购数据不清晰。",
-    "features": ["表格录入", "经营指标", "AI 总结", "周报生成"],
-    "description": "基于表格数据做经营指标看板，并用 AI 辅助生成经营总结。",
-    "imageUrl": "",
-    "detailUrl": "#",
-    "tags": ["小商户工具", "WPS AI", "规划中"],
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "case-ai-install-service-page",
-    "title": "AI 工具安装调试服务页",
-    "category": "网站项目",
-    "status": "规划中",
-    "targetUser": "AI 服务商、技术陪跑、闲鱼服务卖家",
-    "problem": "服务说明不清楚，客户不知道能解决什么。",
-    "features": ["服务范围", "价格层级", "常见问题", "转化入口"],
-    "description": "用于展示 AI 工具安装调试服务的范围、流程和咨询入口。",
-    "imageUrl": "",
-    "detailUrl": "#",
-    "tags": ["网站项目", "服务页", "规划中"],
-    "updatedAt": "2026-05-14"
-  },
-  {
-    "id": "case-construction-ai-daily-report",
-    "title": "施工/安装进度 AI 日报系统",
-    "category": "AI 自动化",
-    "status": "制作中",
-    "targetUser": "施工队、安装团队、项目管理人员",
-    "problem": "现场反馈碎片化，日报整理耗时。",
-    "features": ["进度录入", "图片记录", "AI 总结", "异常提醒"],
-    "description": "把现场进度、图片和问题记录整理成标准日报，减少人工汇总成本。",
-    "imageUrl": "",
-    "detailUrl": "#",
-    "tags": ["AI 自动化", "日报", "进行中"],
-    "updatedAt": "2026-05-14"
-  }
+    {
+        "id":  "case-poya-member-tool",
+        "title":  "珀雅造型会员管理工具",
+        "category":  "小商户工具",
+        "status":  "已完成",
+        "targetUser":  "理发店、美业门店、本地服务商户",
+        "problem":  "会员开卡、扣次、到期提醒和消费记录分散。",
+        "features":  [
+                         "会员档案",
+                         "扣次记录",
+                         "余额提醒",
+                         "门店数据概览"
+                     ],
+        "description":  "面向本地美业门店的轻量会员管理工具，用来提升会员记录和复购管理效率。",
+        "imageUrl":  "",
+        "detailUrl":  "#",
+        "tags":  [
+                     "小商户工具",
+                     "会员管理",
+                     "已完成"
+                 ],
+        "updatedAt":  "2026-05-14",
+        "background":  "这个项目来自「理发店、美业门店、本地服务商户」的真实使用场景：日常工作里有大量重复记录、沟通和整理动作，但缺少一个低成本、容易讲清楚的承接工具。",
+        "process":  [
+                        {
+                            "title":  "需求拆解",
+                            "description":  "先确认目标用户、核心痛点、必须保留的字段和最小可用流程。"
+                        },
+                        {
+                            "title":  "页面原型",
+                            "description":  "用静态页面或轻量 Demo 先把主入口、列表、详情和操作按钮搭出来。"
+                        },
+                        {
+                            "title":  "数据演示",
+                            "description":  "准备示例数据，验证用户能否看懂项目价值和操作路径。"
+                        },
+                        {
+                            "title":  "复盘升级",
+                            "description":  "根据演示反馈决定是否继续接入后台、权限、搜索和自动化提醒。"
+                        }
+                    ],
+        "upgrades":  [
+                         "补充真实业务数据和项目截图。",
+                         "增加搜索、筛选、导出或提醒能力。",
+                         "根据实际交付情况升级为在线后台或数据库版本。"
+                     ],
+        "relatedResourceIds":  [
+                                   "resource-shop-demo-pack",
+                                   "resource-ai-tool-case-pack",
+                                   "resource-claude-code-requirement-template"
+                               ],
+        "result":  "当前项目已经形成可展示的 Demo 方向，能用于讲清楚「会员开卡、扣次、到期提醒和消费记录分散。」这一类问题的解决思路。",
+        "lessons":  "这类项目最重要的是先把最小闭环做出来：用户是谁、解决什么、怎么操作、结果如何展示。等演示能说清楚，再投入更重的技术升级。"
+    },
+    {
+        "id":  "case-decoration-ai-lead-desk",
+        "title":  "装修公司 AI 线索接待工作台",
+        "category":  "线索接待",
+        "status":  "制作中",
+        "targetUser":  "装修公司、销售团队、客服团队",
+        "problem":  "客户咨询难分层，跟进节奏不稳定。",
+        "features":  [
+                         "AI 接待",
+                         "意向评分",
+                         "跟进提醒",
+                         "话术整理"
+                     ],
+        "description":  "帮助装修公司统一承接咨询线索，并用 AI 辅助判断意向和整理跟进动作。",
+        "imageUrl":  "",
+        "detailUrl":  "#",
+        "tags":  [
+                     "线索接待",
+                     "AI 自动化",
+                     "进行中"
+                 ],
+        "updatedAt":  "2026-05-14",
+        "background":  "这个项目来自「装修公司、销售团队、客服团队」的真实使用场景：日常工作里有大量重复记录、沟通和整理动作，但缺少一个低成本、容易讲清楚的承接工具。",
+        "process":  [
+                        {
+                            "title":  "需求拆解",
+                            "description":  "先确认目标用户、核心痛点、必须保留的字段和最小可用流程。"
+                        },
+                        {
+                            "title":  "页面原型",
+                            "description":  "用静态页面或轻量 Demo 先把主入口、列表、详情和操作按钮搭出来。"
+                        },
+                        {
+                            "title":  "数据演示",
+                            "description":  "准备示例数据，验证用户能否看懂项目价值和操作路径。"
+                        },
+                        {
+                            "title":  "复盘升级",
+                            "description":  "根据演示反馈决定是否继续接入后台、权限、搜索和自动化提醒。"
+                        }
+                    ],
+        "upgrades":  [
+                         "补充真实业务数据和项目截图。",
+                         "增加搜索、筛选、导出或提醒能力。",
+                         "根据实际交付情况升级为在线后台或数据库版本。"
+                     ],
+        "relatedResourceIds":  [
+                                   "resource-ai-tool-case-pack",
+                                   "resource-codex-prompt-template"
+                               ],
+        "result":  "当前项目已经形成可展示的 Demo 方向，能用于讲清楚「客户咨询难分层，跟进节奏不稳定。」这一类问题的解决思路。",
+        "lessons":  "这类项目最重要的是先把最小闭环做出来：用户是谁、解决什么、怎么操作、结果如何展示。等演示能说清楚，再投入更重的技术升级。"
+    },
+    {
+        "id":  "case-he01-ai-resource-hub",
+        "title":  "贺01 AI 实战资源库",
+        "category":  "资源库",
+        "status":  "制作中",
+        "targetUser":  "AI 创作者、资源型账号、个人品牌",
+        "problem":  "内容入口分散，案例和资源缺少统一承接。",
+        "features":  [
+                         "工具导航",
+                         "资源下载",
+                         "教程预览",
+                         "案例展示"
+                     ],
+        "description":  "把 AI 工具、教程、资源和项目案例集中展示，作为私域与合作转化入口。",
+        "imageUrl":  "",
+        "detailUrl":  "#",
+        "tags":  [
+                     "网站项目",
+                     "资源库",
+                     "进行中"
+                 ],
+        "updatedAt":  "2026-05-14",
+        "background":  "这个项目来自「AI 创作者、资源型账号、个人品牌」的真实使用场景：日常工作里有大量重复记录、沟通和整理动作，但缺少一个低成本、容易讲清楚的承接工具。",
+        "process":  [
+                        {
+                            "title":  "需求拆解",
+                            "description":  "先确认目标用户、核心痛点、必须保留的字段和最小可用流程。"
+                        },
+                        {
+                            "title":  "页面原型",
+                            "description":  "用静态页面或轻量 Demo 先把主入口、列表、详情和操作按钮搭出来。"
+                        },
+                        {
+                            "title":  "数据演示",
+                            "description":  "准备示例数据，验证用户能否看懂项目价值和操作路径。"
+                        },
+                        {
+                            "title":  "复盘升级",
+                            "description":  "根据演示反馈决定是否继续接入后台、权限、搜索和自动化提醒。"
+                        }
+                    ],
+        "upgrades":  [
+                         "补充真实业务数据和项目截图。",
+                         "增加搜索、筛选、导出或提醒能力。",
+                         "根据实际交付情况升级为在线后台或数据库版本。"
+                     ],
+        "relatedResourceIds":  [
+                                   "resource-codex-prompt-template",
+                                   "resource-ai-tool-case-pack",
+                                   "resource-claude-code-requirement-template"
+                               ],
+        "result":  "当前项目已经形成可展示的 Demo 方向，能用于讲清楚「内容入口分散，案例和资源缺少统一承接。」这一类问题的解决思路。",
+        "lessons":  "这类项目最重要的是先把最小闭环做出来：用户是谁、解决什么、怎么操作、结果如何展示。等演示能说清楚，再投入更重的技术升级。"
+    },
+    {
+        "id":  "case-wps-smart-dashboard",
+        "title":  "小店 WPS 智能经营看板",
+        "category":  "小商户工具",
+        "status":  "规划中",
+        "targetUser":  "小店老板、运营人员、轻量办公用户",
+        "problem":  "订单、收入、库存和复购数据不清晰。",
+        "features":  [
+                         "表格录入",
+                         "经营指标",
+                         "AI 总结",
+                         "周报生成"
+                     ],
+        "description":  "基于表格数据做经营指标看板，并用 AI 辅助生成经营总结。",
+        "imageUrl":  "",
+        "detailUrl":  "#",
+        "tags":  [
+                     "小商户工具",
+                     "WPS AI",
+                     "规划中"
+                 ],
+        "updatedAt":  "2026-05-14",
+        "background":  "这个项目来自「小店老板、运营人员、轻量办公用户」的真实使用场景：日常工作里有大量重复记录、沟通和整理动作，但缺少一个低成本、容易讲清楚的承接工具。",
+        "process":  [
+                        {
+                            "title":  "需求拆解",
+                            "description":  "先确认目标用户、核心痛点、必须保留的字段和最小可用流程。"
+                        },
+                        {
+                            "title":  "页面原型",
+                            "description":  "用静态页面或轻量 Demo 先把主入口、列表、详情和操作按钮搭出来。"
+                        },
+                        {
+                            "title":  "数据演示",
+                            "description":  "准备示例数据，验证用户能否看懂项目价值和操作路径。"
+                        },
+                        {
+                            "title":  "复盘升级",
+                            "description":  "根据演示反馈决定是否继续接入后台、权限、搜索和自动化提醒。"
+                        }
+                    ],
+        "upgrades":  [
+                         "补充真实业务数据和项目截图。",
+                         "增加搜索、筛选、导出或提醒能力。",
+                         "根据实际交付情况升级为在线后台或数据库版本。"
+                     ],
+        "relatedResourceIds":  [
+                                   "resource-shop-demo-pack",
+                                   "resource-ai-tool-case-pack"
+                               ],
+        "result":  "当前项目已经形成可展示的 Demo 方向，能用于讲清楚「订单、收入、库存和复购数据不清晰。」这一类问题的解决思路。",
+        "lessons":  "这类项目最重要的是先把最小闭环做出来：用户是谁、解决什么、怎么操作、结果如何展示。等演示能说清楚，再投入更重的技术升级。"
+    },
+    {
+        "id":  "case-ai-install-service-page",
+        "title":  "AI 工具安装调试服务页",
+        "category":  "网站项目",
+        "status":  "规划中",
+        "targetUser":  "AI 服务商、技术陪跑、闲鱼服务卖家",
+        "problem":  "服务说明不清楚，客户不知道能解决什么。",
+        "features":  [
+                         "服务范围",
+                         "价格层级",
+                         "常见问题",
+                         "转化入口"
+                     ],
+        "description":  "用于展示 AI 工具安装调试服务的范围、流程和咨询入口。",
+        "imageUrl":  "",
+        "detailUrl":  "#",
+        "tags":  [
+                     "网站项目",
+                     "服务页",
+                     "规划中"
+                 ],
+        "updatedAt":  "2026-05-14",
+        "background":  "这个项目来自「AI 服务商、技术陪跑、闲鱼服务卖家」的真实使用场景：日常工作里有大量重复记录、沟通和整理动作，但缺少一个低成本、容易讲清楚的承接工具。",
+        "process":  [
+                        {
+                            "title":  "需求拆解",
+                            "description":  "先确认目标用户、核心痛点、必须保留的字段和最小可用流程。"
+                        },
+                        {
+                            "title":  "页面原型",
+                            "description":  "用静态页面或轻量 Demo 先把主入口、列表、详情和操作按钮搭出来。"
+                        },
+                        {
+                            "title":  "数据演示",
+                            "description":  "准备示例数据，验证用户能否看懂项目价值和操作路径。"
+                        },
+                        {
+                            "title":  "复盘升级",
+                            "description":  "根据演示反馈决定是否继续接入后台、权限、搜索和自动化提醒。"
+                        }
+                    ],
+        "upgrades":  [
+                         "补充真实业务数据和项目截图。",
+                         "增加搜索、筛选、导出或提醒能力。",
+                         "根据实际交付情况升级为在线后台或数据库版本。"
+                     ],
+        "relatedResourceIds":  [
+                                   "resource-xianyu-ai-service-copy",
+                                   "resource-ai-install-checklist"
+                               ],
+        "result":  "当前项目已经形成可展示的 Demo 方向，能用于讲清楚「服务说明不清楚，客户不知道能解决什么。」这一类问题的解决思路。",
+        "lessons":  "这类项目最重要的是先把最小闭环做出来：用户是谁、解决什么、怎么操作、结果如何展示。等演示能说清楚，再投入更重的技术升级。"
+    },
+    {
+        "id":  "case-construction-ai-daily-report",
+        "title":  "施工/安装进度 AI 日报系统",
+        "category":  "AI 自动化",
+        "status":  "制作中",
+        "targetUser":  "施工队、安装团队、项目管理人员",
+        "problem":  "现场反馈碎片化，日报整理耗时。",
+        "features":  [
+                         "进度录入",
+                         "图片记录",
+                         "AI 总结",
+                         "异常提醒"
+                     ],
+        "description":  "把现场进度、图片和问题记录整理成标准日报，减少人工汇总成本。",
+        "imageUrl":  "",
+        "detailUrl":  "#",
+        "tags":  [
+                     "AI 自动化",
+                     "日报",
+                     "进行中"
+                 ],
+        "updatedAt":  "2026-05-14",
+        "background":  "这个项目来自「施工队、安装团队、项目管理人员」的真实使用场景：日常工作里有大量重复记录、沟通和整理动作，但缺少一个低成本、容易讲清楚的承接工具。",
+        "process":  [
+                        {
+                            "title":  "需求拆解",
+                            "description":  "先确认目标用户、核心痛点、必须保留的字段和最小可用流程。"
+                        },
+                        {
+                            "title":  "页面原型",
+                            "description":  "用静态页面或轻量 Demo 先把主入口、列表、详情和操作按钮搭出来。"
+                        },
+                        {
+                            "title":  "数据演示",
+                            "description":  "准备示例数据，验证用户能否看懂项目价值和操作路径。"
+                        },
+                        {
+                            "title":  "复盘升级",
+                            "description":  "根据演示反馈决定是否继续接入后台、权限、搜索和自动化提醒。"
+                        }
+                    ],
+        "upgrades":  [
+                         "补充真实业务数据和项目截图。",
+                         "增加搜索、筛选、导出或提醒能力。",
+                         "根据实际交付情况升级为在线后台或数据库版本。"
+                     ],
+        "relatedResourceIds":  [
+                                   "resource-ai-tool-case-pack",
+                                   "resource-shop-demo-pack"
+                               ],
+        "result":  "当前项目已经形成可展示的 Demo 方向，能用于讲清楚「现场反馈碎片化，日报整理耗时。」这一类问题的解决思路。",
+        "lessons":  "这类项目最重要的是先把最小闭环做出来：用户是谁、解决什么、怎么操作、结果如何展示。等演示能说清楚，再投入更重的技术升级。"
+    }
 ]
