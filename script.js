@@ -71,6 +71,15 @@ const revealItems = document.querySelectorAll(".reveal");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const mobileMotionQuery = window.matchMedia("(max-width: 760px)");
 let currentSiteData = FALLBACK_DATA.site;
+const SEARCH_DEBOUNCE_MS = 180;
+let searchState = {
+  items: [],
+  loadPromise: null,
+  loaded: false,
+  hasPartialFailure: false,
+  query: ""
+};
+let searchDebounceTimer = 0;
 
 function escapeHTML(value) {
   return String(value ?? "")
@@ -838,10 +847,279 @@ function renderContactModalContent(site = currentSiteData) {
   `;
 }
 
+function normalizeSearchTags(value) {
+  if (Array.isArray(value)) return value.map((tag) => String(tag || "").trim()).filter(Boolean);
+  if (!value) return [];
+  return String(value).split(/[，,\n]+/).map((tag) => tag.trim()).filter(Boolean);
+}
+
+function searchValueToText(value) {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) return value.map(searchValueToText).filter(Boolean).join(" ");
+  if (typeof value === "object") return Object.values(value).map(searchValueToText).filter(Boolean).join(" ");
+  return String(value);
+}
+
+function compactSearchText(value) {
+  return searchValueToText(value).toLowerCase();
+}
+
+function getSearchUrl(type, item) {
+  if (type === "tool") {
+    return firstValue(item.tutorialUrl && item.tutorialUrl !== "#" ? item.tutorialUrl : "", item.officialUrl && item.officialUrl !== "#" ? item.officialUrl : "", "tools.html");
+  }
+  if (type === "resource") {
+    if (item.slug) return `resource-detail.html?slug=${encodeURIComponent(item.slug)}`;
+    if (item.id) return `resource-detail.html?id=${encodeURIComponent(item.id)}`;
+    return "resources.html";
+  }
+  if (type === "tutorial") {
+    if (item.source === "supabase" && item.slug) return `tutorial-detail.html?slug=${encodeURIComponent(item.slug)}`;
+    if (item.source !== "supabase" && item.id) return `tutorial-detail.html?id=${encodeURIComponent(item.id)}`;
+    if (item.slug) return `tutorial-detail.html?slug=${encodeURIComponent(item.slug)}`;
+    return "tutorials.html";
+  }
+  if (type === "case") {
+    if (item.slug) return `case-detail.html?slug=${encodeURIComponent(item.slug)}`;
+    if (item.id) return `case-detail.html?id=${encodeURIComponent(item.id)}`;
+    return "cases.html";
+  }
+  return "index.html";
+}
+
+function createSearchItem(type, label, item, fieldGroups) {
+  const title = firstValue(item.title, item.name, "未命名内容");
+  const category = firstValue(item.category, item.type, "未分类");
+  const summary = firstValue(item.summary, item.description, item.contentPreview, item.usageTip, item.detailContent, "简介正在整理中。");
+  const tags = normalizeSearchTags(item.tags);
+  const titleText = compactSearchText(title);
+  const categoryText = compactSearchText(category);
+  const bodyText = compactSearchText(fieldGroups);
+  return {
+    type,
+    label,
+    title,
+    category,
+    summary,
+    tags,
+    url: getSearchUrl(type, item),
+    source: item.source || "json",
+    titleText,
+    categoryText,
+    bodyText,
+    allText: [titleText, categoryText, bodyText, compactSearchText(tags)].filter(Boolean).join(" ")
+  };
+}
+
+function buildSearchIndex(data) {
+  const tools = Array.isArray(data.tools) ? data.tools : [];
+  const resources = Array.isArray(data.resources) ? data.resources : [];
+  const tutorials = Array.isArray(data.tutorials) ? data.tutorials : [];
+  const cases = Array.isArray(data.cases) ? data.cases : [];
+
+  return [
+    ...tools.map((item) => createSearchItem("tool", "工具", item, [
+      item.name,
+      item.category,
+      item.description,
+      item.suitableFor,
+      item.usageTip,
+      item.tags
+    ])),
+    ...resources.map((item) => createSearchItem("resource", "资源", item, [
+      item.title,
+      item.category,
+      item.type,
+      item.description,
+      item.detailContent,
+      item.tags
+    ])),
+    ...tutorials.map((item) => createSearchItem("tutorial", "教程", item, [
+      item.title,
+      item.category,
+      item.difficulty,
+      item.summary,
+      item.description,
+      item.content,
+      item.detailContent,
+      item.tags
+    ])),
+    ...cases.map((item) => createSearchItem("case", "案例", item, [
+      item.title,
+      item.category,
+      item.summary,
+      item.description,
+      item.background,
+      item.process,
+      item.result,
+      item.tags
+    ]))
+  ];
+}
+
+async function loadSearchData() {
+  if (searchState.loaded) return searchState;
+  if (searchState.loadPromise) return searchState.loadPromise;
+
+  searchState.loadPromise = (async () => {
+    let hasPartialFailure = false;
+    const [toolsResult, resourcesResult, casesResult] = await Promise.all([
+      loadJSON("tools"),
+      loadJSON("resources"),
+      loadJSON("cases")
+    ]);
+
+    hasPartialFailure = [toolsResult, resourcesResult, casesResult].some((result) => result.source === "fallback");
+
+    let tutorials = [];
+    try {
+      const supabaseItems = await loadSupabaseTutorials();
+      if (Array.isArray(supabaseItems)) {
+        tutorials = supabaseItems;
+      } else {
+        const tutorialsResult = await loadJSON("tutorials");
+        tutorials = tutorialsResult.data || [];
+        hasPartialFailure = hasPartialFailure || tutorialsResult.source === "fallback";
+      }
+    } catch (error) {
+      console.warn("搜索读取 Supabase 教程失败，已回退到 data/tutorials.json。", error);
+      const tutorialsResult = await loadJSON("tutorials");
+      tutorials = tutorialsResult.data || [];
+      hasPartialFailure = true;
+    }
+
+    searchState.items = buildSearchIndex({
+      tools: toolsResult.data,
+      resources: resourcesResult.data,
+      tutorials,
+      cases: casesResult.data
+    });
+    searchState.loaded = true;
+    searchState.hasPartialFailure = hasPartialFailure;
+    return searchState;
+  })();
+
+  return searchState.loadPromise;
+}
+
+function getSearchScore(item, query) {
+  if (!query || !item.allText.includes(query)) return 0;
+  if (item.titleText.includes(query)) return 300;
+  if (item.categoryText.includes(query)) return 200;
+  return 100;
+}
+
+function searchItems(query) {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  if (!normalizedQuery) return [];
+  return searchState.items
+    .map((item, index) => ({ item, index, score: getSearchScore(item, normalizedQuery) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((entry) => entry.item);
+}
+
+function isExternalUrl(url) {
+  return /^https?:\/\//i.test(String(url || ""));
+}
+
+function renderSearchResults(query) {
+  const resultRoot = modalDialog?.querySelector("[data-search-results]");
+  const status = modalDialog?.querySelector("[data-search-status]");
+  if (!resultRoot || !status) return;
+
+  const trimmed = String(query || "").trim();
+  if (!searchState.loaded) {
+    status.textContent = "正在加载搜索数据...";
+    resultRoot.innerHTML = `<div class="search-empty">正在整理全站内容，请稍候。</div>`;
+    return;
+  }
+
+  status.textContent = searchState.hasPartialFailure
+    ? "部分数据加载失败，但你仍可以搜索已加载内容。"
+    : "输入关键词后自动搜索";
+
+  if (!trimmed) {
+    resultRoot.innerHTML = `<div class="search-empty">输入关键词，快速查找 AI 工具、教程、资源和案例。</div>`;
+    return;
+  }
+
+  const results = searchItems(trimmed);
+  if (results.length === 0) {
+    resultRoot.innerHTML = `<div class="search-empty">没有找到相关内容，可以换个关键词试试。</div>`;
+    return;
+  }
+
+  resultRoot.innerHTML = results.map((item) => {
+    const safeUrl = escapeHTML(item.url || "#");
+    const target = isExternalUrl(item.url) ? ` target="_blank" rel="noopener"` : "";
+    const tags = item.tags.length
+      ? `<div class="search-result-tags">${item.tags.slice(0, 4).map((tag) => `<span>${escapeHTML(tag)}</span>`).join("")}</div>`
+      : "";
+    return `
+      <article class="search-result-card">
+        <div class="search-result-topline">
+          <span class="search-type">${escapeHTML(item.label)}</span>
+          <span>${escapeHTML(item.category)}</span>
+        </div>
+        <h3>${escapeHTML(item.title)}</h3>
+        <p>${escapeHTML(item.summary)}</p>
+        ${tags}
+        <a class="search-result-link" href="${safeUrl}"${target}><span>查看</span><i aria-hidden="true"></i></a>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderSearchModalContent() {
+  return `
+    <button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>×</button>
+    <div class="search-modal-content">
+      <div class="search-modal-head">
+        <p class="eyebrow">Search</p>
+        <h2 id="modal-title">全站搜索</h2>
+        <p id="modal-message" data-search-status>输入关键词后自动搜索</p>
+      </div>
+      <label class="search-input-wrap">
+        <span class="search-input-icon" aria-hidden="true"></span>
+        <input id="siteSearchInput" type="search" placeholder="搜索工具、资源、教程、案例..." autocomplete="off" data-search-input>
+      </label>
+      <div class="search-results" data-search-results>
+        <div class="search-empty">输入关键词，快速查找 AI 工具、教程、资源和案例。</div>
+      </div>
+    </div>
+  `;
+}
+
+function openSearchModal() {
+  if (!modal || !modalDialog) return;
+  closeMenu();
+  modalDialog.innerHTML = renderSearchModalContent();
+  modal.classList.remove("is-contact-modal");
+  modal.classList.add("is-open", "is-search-modal");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+
+  const input = modalDialog.querySelector("[data-search-input]");
+  window.setTimeout(() => input?.focus(), 60);
+  renderSearchResults(searchState.query);
+  loadSearchData()
+    .then(() => renderSearchResults(input?.value || searchState.query))
+    .catch((error) => {
+      console.warn("搜索数据加载失败。", error);
+      searchState.loaded = true;
+      searchState.hasPartialFailure = true;
+      renderSearchResults(input?.value || searchState.query);
+    });
+}
+
 function renderResourceDetail(container, data) {
+  const slug = getQueryParam("slug");
   const id = getQueryParam("id");
   const resources = data.resources || [];
-  const item = findItemById(resources, id);
+  const item = slug
+    ? resources.find((resource) => String(resource.slug || resource.id) === String(slug))
+    : findItemById(resources, id);
   if (!item) {
     renderNotFound(container, "资源不存在或正在整理中", "resources.html", "← 返回资源下载");
     return;
@@ -978,10 +1256,13 @@ async function renderTutorialDetail(container, data) {
 }
 
 function renderCaseDetail(container, data) {
+  const slug = getQueryParam("slug");
   const id = getQueryParam("id");
   const cases = data.cases || [];
   const resources = data.resources || [];
-  const item = findItemById(cases, id);
+  const item = slug
+    ? cases.find((caseItem) => String(caseItem.slug || caseItem.id) === String(slug))
+    : findItemById(cases, id);
   if (!item) {
     renderNotFound(container, "案例不存在或正在整理中", "cases.html", "← 返回作品案例");
     return;
@@ -1075,6 +1356,7 @@ function openModal(message) {
   if (!modal || !modalDialog) return;
   closeMenu();
   modalDialog.innerHTML = renderBasicModalContent(message);
+  modal.classList.remove("is-contact-modal", "is-search-modal");
   modal.classList.add("is-open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -1084,6 +1366,7 @@ function openContactModal(site = currentSiteData) {
   if (!modal || !modalDialog) return false;
   closeMenu();
   modalDialog.innerHTML = renderContactModalContent(site);
+  modal.classList.remove("is-search-modal");
   modal.classList.add("is-open", "is-contact-modal");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -1135,6 +1418,7 @@ function closeModal() {
   if (!modal) return;
   modal.classList.remove("is-open");
   modal.classList.remove("is-contact-modal");
+  modal.classList.remove("is-search-modal");
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
 }
@@ -1202,6 +1486,13 @@ document.addEventListener("click", (event) => {
   const rippleTarget = event.target.closest(".btn, .card-link, .text-action, .search-button, .modal-close, .filter-button, .copy-button");
   if (rippleTarget) addRipple(rippleTarget, event);
 
+  const searchTrigger = event.target.closest(".search-button, [data-search-modal]");
+  if (searchTrigger) {
+    event.preventDefault();
+    openSearchModal();
+    return;
+  }
+
   const contactTrigger = event.target.closest(".js-contact-modal, [data-contact-modal]");
   if (contactTrigger) {
     event.preventDefault();
@@ -1232,6 +1523,12 @@ document.addEventListener("click", (event) => {
 
   if (event.target.closest("[data-modal-close]")) {
     event.preventDefault();
+    closeModal();
+    return;
+  }
+
+  const searchResultLink = event.target.closest(".search-result-link");
+  if (searchResultLink) {
     closeModal();
     return;
   }
@@ -1271,6 +1568,16 @@ document.addEventListener("click", (event) => {
       card.classList.toggle("is-filtered-out", !shouldShow);
     });
   }
+});
+
+document.addEventListener("input", (event) => {
+  const searchInput = event.target.closest("[data-search-input]");
+  if (!searchInput) return;
+  window.clearTimeout(searchDebounceTimer);
+  searchState.query = searchInput.value;
+  searchDebounceTimer = window.setTimeout(() => {
+    renderSearchResults(searchInput.value);
+  }, SEARCH_DEBOUNCE_MS);
 });
 
 if (!reduceMotion && heroVisual) {
