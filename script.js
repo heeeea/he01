@@ -281,6 +281,128 @@ function renderTextBlock(value) {
   return `<div class="rich-text">${escapeHTML(text).replace(/\n/g, "<br>")}</div>`;
 }
 
+function renderInlineMarkdown(value) {
+  return escapeHTML(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+function closeArticleList(state) {
+  if (!state.listType) return "";
+  const closing = state.listType === "ol" ? "</ol>" : "</ul>";
+  state.listType = "";
+  return closing;
+}
+
+function renderArticleMarkdown(value) {
+  const lines = String(value || "内容正在整理中。").replace(/\r\n/g, "\n").split("\n");
+  const state = { listType: "", inCode: false, codeLines: [], codeLang: "" };
+  const output = [];
+  let paragraph = [];
+  let quote = [];
+
+  const flushParagraph = () => {
+    if (paragraph.length === 0) return;
+    output.push(`<p>${renderInlineMarkdown(paragraph.join(" "))}</p>`);
+    paragraph = [];
+  };
+
+  const flushQuote = () => {
+    if (quote.length === 0) return;
+    output.push(`<aside class="article-callout">${quote.map((line) => `<p>${renderInlineMarkdown(line)}</p>`).join("")}</aside>`);
+    quote = [];
+  };
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trimEnd();
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith("```")) {
+      flushParagraph();
+      flushQuote();
+      output.push(closeArticleList(state));
+      if (state.inCode) {
+        const lang = state.codeLang ? `<span>${escapeHTML(state.codeLang)}</span>` : "";
+        output.push(`<figure class="article-code"><figcaption>${lang}</figcaption><pre><code>${escapeHTML(state.codeLines.join("\n"))}</code></pre></figure>`);
+        state.inCode = false;
+        state.codeLines = [];
+        state.codeLang = "";
+      } else {
+        state.inCode = true;
+        state.codeLang = trimmed.slice(3).trim();
+      }
+      return;
+    }
+
+    if (state.inCode) {
+      state.codeLines.push(rawLine);
+      return;
+    }
+
+    if (!trimmed) {
+      flushParagraph();
+      flushQuote();
+      output.push(closeArticleList(state));
+      return;
+    }
+
+    const imageMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)(?:\s+"(.*?)")?$/);
+    if (imageMatch) {
+      flushParagraph();
+      flushQuote();
+      output.push(closeArticleList(state));
+      const caption = imageMatch[3] || imageMatch[1];
+      output.push(`<figure class="article-image"><img src="${escapeHTML(imageMatch[2])}" alt="${escapeHTML(imageMatch[1] || caption || "教程图片")}">${caption ? `<figcaption>${escapeHTML(caption)}</figcaption>` : ""}</figure>`);
+      return;
+    }
+
+    if (trimmed.startsWith(">")) {
+      flushParagraph();
+      output.push(closeArticleList(state));
+      quote.push(trimmed.replace(/^>\s?/, ""));
+      return;
+    }
+
+    const heading = trimmed.match(/^(#{2,3})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      flushQuote();
+      output.push(closeArticleList(state));
+      const level = heading[1].length === 2 ? "h2" : "h3";
+      output.push(`<${level}>${renderInlineMarkdown(heading[2])}</${level}>`);
+      return;
+    }
+
+    const unordered = trimmed.match(/^[-*]\s+(.+)$/);
+    const ordered = trimmed.match(/^\d+[.)]\s+(.+)$/);
+    if (unordered || ordered) {
+      flushParagraph();
+      flushQuote();
+      const wanted = ordered ? "ol" : "ul";
+      if (state.listType && state.listType !== wanted) output.push(closeArticleList(state));
+      if (!state.listType) {
+        state.listType = wanted;
+        output.push(`<${wanted}>`);
+      }
+      output.push(`<li>${renderInlineMarkdown((ordered || unordered)[1])}</li>`);
+      return;
+    }
+
+    output.push(closeArticleList(state));
+    flushQuote();
+    paragraph.push(trimmed);
+  });
+
+  if (state.inCode) {
+    const lang = state.codeLang ? `<span>${escapeHTML(state.codeLang)}</span>` : "";
+    output.push(`<figure class="article-code"><figcaption>${lang}</figcaption><pre><code>${escapeHTML(state.codeLines.join("\n"))}</code></pre></figure>`);
+  }
+  flushParagraph();
+  flushQuote();
+  output.push(closeArticleList(state));
+  return `<div class="article-prose">${output.join("")}</div>`;
+}
+
 function renderListItems(items) {
   const list = toArray(items);
   if (list.length === 0) return `<p class="detail-muted">内容正在整理中。</p>`;
@@ -307,6 +429,86 @@ function renderRelatedResourceCards(items) {
       <p>${escapeHTML(item.description || "查看资源详情。")}</p>
     </a>
   `).join("")}</div>`;
+}
+
+function renderArticleSteps(steps) {
+  const items = toArray(steps);
+  if (items.length === 0) return `<p class="detail-muted">步骤正在整理中。</p>`;
+  return `<ol class="article-step-list">${items.map((step, index) => {
+    const title = typeof step === "object" ? step.title : step;
+    const description = typeof step === "object" ? step.description : "";
+    return `
+      <li>
+        <span class="article-step-index">${index + 1}</span>
+        <div>
+          <h3>第 ${index + 1} 步：${escapeHTML(title || `步骤 ${index + 1}`)}</h3>
+          ${description ? `<p>${escapeHTML(description)}</p>` : ""}
+        </div>
+      </li>
+    `;
+  }).join("")}</ol>`;
+}
+
+function renderArticleFaq(faq) {
+  const items = normalizeFaq(faq);
+  if (items.length === 0) return `<p class="detail-muted">常见问题正在整理中。</p>`;
+  return `<div class="article-faq-list">${items.map((item) => `
+    <article class="article-faq-item">
+      <h3><span>Q</span>${escapeHTML(item.question || "常见问题")}</h3>
+      <p><span>A</span>${escapeHTML(item.answer || "回答整理中。")}</p>
+    </article>
+  `).join("")}</div>`;
+}
+
+function renderArticleList(items) {
+  const list = toArray(items);
+  if (list.length === 0) return `<p class="detail-muted">内容正在整理中。</p>`;
+  return `<ul class="article-bullet-list">${list.map((item) => `<li>${escapeHTML(item)}</li>`).join("")}</ul>`;
+}
+
+function renderArticleRelatedResources(items, compact = false) {
+  if (!items || items.length === 0) return `<p class="detail-muted">相关资源正在整理中。</p>`;
+  return `<div class="${compact ? "article-sidebar-links" : "article-related-list"}">${items.map((item) => `
+    <a class="article-resource-link" href="${escapeHTML(detailUrl("resource", item, "resources.html"))}">
+      <span>${escapeHTML(item.type || "资源")}</span>
+      <strong>${escapeHTML(item.title)}</strong>
+      ${compact ? "" : `<small>${escapeHTML(item.description || "查看资源详情。")}</small>`}
+    </a>
+  `).join("")}</div>`;
+}
+
+function renderTutorialArticleSidebar(item, related) {
+  const toc = [
+    ["教程简介", "tutorial-intro"],
+    ["操作步骤", "tutorial-steps"],
+    ["常见问题", "tutorial-faq"],
+    ["相关资源", "tutorial-resources"],
+    ["下一步建议", "tutorial-next"]
+  ];
+  return `
+    <aside class="tutorial-article-sidebar" aria-label="教程辅助信息">
+      <div class="tutorial-sidebar-panel">
+        <section class="tutorial-sidebar-section">
+          <p class="eyebrow">本文信息</p>
+          ${renderDetailMeta([
+            { label: "分类", value: item.category },
+            { label: "难度", value: item.difficulty },
+            { label: "阅读时间", value: item.readingTime },
+            { label: "更新时间", value: formatDate(item.updatedAt) }
+          ])}
+        </section>
+        <nav class="tutorial-toc" aria-label="本文目录">
+          <p class="eyebrow">目录</p>
+          ${toc.map(([label, anchor]) => `<a href="#${anchor}">${escapeHTML(label)}</a>`).join("")}
+        </nav>
+        <section class="tutorial-sidebar-section">
+          <p class="eyebrow">相关资源</p>
+          ${renderArticleRelatedResources(related.slice(0, 3), true)}
+        </section>
+        <a class="btn btn-primary tutorial-help-button" href="contact.html"><span>需要陪跑 / 调试</span><i aria-hidden="true"></i></a>
+      </div>
+    </aside>
+  `;
 }
 
 function renderTools(container, items, source) {
@@ -542,37 +744,53 @@ function renderTutorialDetail(container, data) {
   }
   const related = relatedResources(item, resources, 3);
   container.innerHTML = `
-    <section class="detail-shell reveal is-visible">
+    <section class="tutorial-article-shell reveal is-visible">
       <a class="text-action back-link" href="tutorials.html">← 返回实战教程</a>
-      <div class="detail-layout">
-        <article class="detail-main">
-          <header class="detail-hero-card">
-            <div class="detail-kicker"><span class="tag">${escapeHTML(item.category || "教程")}</span><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "待补充")}</span></div>
+      <div class="tutorial-article-layout">
+        <article class="tutorial-article-main">
+          <header class="tutorial-article-hero">
+            <div class="tutorial-breadcrumb"><a href="tutorials.html">实战教程</a><span>/</span><span>${escapeHTML(item.category || "当前分类")}</span></div>
             <h1>${escapeHTML(item.title)}</h1>
-            <p>${escapeHTML(item.description)}</p>
+            <p class="tutorial-article-description">${escapeHTML(item.description || item.contentPreview || "教程简介正在整理中。")}</p>
             ${renderDetailMeta([
-              { label: "难度", value: item.difficulty },
-              { label: "阅读时间", value: item.readingTime },
               { label: "更新时间", value: formatDate(item.updatedAt) },
+              { label: "阅读时间", value: item.readingTime },
+              { label: "难度", value: item.difficulty },
+              { label: "分类", value: item.category },
               { label: "状态", value: item.status }
             ])}
+            ${item.contentPreview ? `<p class="tutorial-article-summary">${escapeHTML(item.contentPreview)}</p>` : ""}
           </header>
 
-          <section class="detail-card"><p class="eyebrow">Summary</p><h2>内容摘要</h2>${renderTextBlock(item.contentPreview)}</section>
-          <section class="detail-card"><p class="eyebrow">Content</p><h2>教程正文</h2>${renderTextBlock(item.detailContent)}</section>
-          <section class="detail-card"><p class="eyebrow">Steps</p><h2>操作步骤</h2>${renderSteps(item.steps)}</section>
-          <section class="detail-card"><p class="eyebrow">FAQ</p><h2>常见问题</h2>${renderFaq(item.faq)}</section>
-          <section class="detail-card"><p class="eyebrow">Resources</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
-          <section class="detail-card"><p class="eyebrow">Next</p><h2>下一步建议</h2>${renderListItems(item.nextActions)}</section>
-          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>需要陪跑/调试？</h2><p>如果照着教程仍然卡住，可以带着报错、截图和目标一起沟通。</p></div><a class="btn btn-primary" href="contact.html"><span>需要陪跑/调试</span><i aria-hidden="true"></i></a></section>
+          <div class="tutorial-article-body">
+            <section id="tutorial-intro" class="article-section">
+              <p class="eyebrow">Tutorial</p>
+              <h2>教程简介</h2>
+              ${renderArticleMarkdown(item.detailContent)}
+            </section>
+            <section id="tutorial-steps" class="article-section">
+              <p class="eyebrow">Steps</p>
+              <h2>操作步骤</h2>
+              ${renderArticleSteps(item.steps)}
+            </section>
+            <section id="tutorial-faq" class="article-section">
+              <p class="eyebrow">FAQ</p>
+              <h2>常见问题</h2>
+              ${renderArticleFaq(item.faq)}
+            </section>
+            <section id="tutorial-resources" class="article-section">
+              <p class="eyebrow">Resources</p>
+              <h2>相关资源</h2>
+              ${renderArticleRelatedResources(related)}
+            </section>
+            <section id="tutorial-next" class="article-section">
+              <p class="eyebrow">Next</p>
+              <h2>下一步建议</h2>
+              ${renderArticleList(item.nextActions)}
+            </section>
+          </div>
         </article>
-        ${renderSidebar(item.category || "教程", [
-          { label: "分类", value: item.category },
-          { label: "难度", value: item.difficulty },
-          { label: "阅读时间", value: item.readingTime },
-          { label: "更新时间", value: formatDate(item.updatedAt) },
-          { label: "状态", value: item.status }
-        ], item.tags, "tutorials.html", "需要陪跑")}
+        ${renderTutorialArticleSidebar(item, related)}
       </div>
     </section>
   `;
