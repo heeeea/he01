@@ -62,7 +62,7 @@ const FALLBACK_DATA = {
 const menuToggle = document.querySelector(".menu-toggle");
 const navPanel = document.querySelector(".nav-panel");
 const modal = document.querySelector(".modal");
-const modalMessage = document.querySelector("#modal-message");
+const modalDialog = document.querySelector(".modal-dialog");
 const heroVisual = document.querySelector(".hero-visual");
 const heroSection = document.querySelector(".hero-section");
 const particleCanvas = document.querySelector(".hero-particles");
@@ -70,6 +70,7 @@ const parallaxItems = document.querySelectorAll(".hero-visual [data-depth]");
 const revealItems = document.querySelectorAll(".reveal");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const mobileMotionQuery = window.matchMedia("(max-width: 760px)");
+let currentSiteData = FALLBACK_DATA.site;
 
 function escapeHTML(value) {
   return String(value ?? "")
@@ -505,7 +506,7 @@ function renderTutorialArticleSidebar(item, related) {
           <p class="eyebrow">相关资源</p>
           ${renderArticleRelatedResources(related.slice(0, 3), true)}
         </section>
-        <a class="btn btn-primary tutorial-help-button" href="contact.html"><span>需要陪跑 / 调试</span><i aria-hidden="true"></i></a>
+        <button class="btn btn-primary tutorial-help-button js-contact-modal" type="button"><span>需要陪跑 / 调试</span><i aria-hidden="true"></i></button>
       </div>
     </aside>
   `;
@@ -679,6 +680,79 @@ function renderSidebar(title, items, tags, backUrl, contactLabel = "联系合作
         </div>
       </article>
     </aside>
+  `;
+}
+
+function firstValue(...values) {
+  return values.find((value) => value !== null && value !== undefined && String(value).trim() !== "") || "";
+}
+
+function getContactEntries(site = currentSiteData) {
+  const contact = site?.contact || {};
+  return [
+    { key: "wechat", label: "微信号", value: firstValue(contact.wechat, contact.wechatId, site?.wechat, site?.wechatId) },
+    { key: "xianyu", label: "闲鱼", value: firstValue(contact.xianyu, site?.xianyu) },
+    { key: "douyin", label: "抖音", value: firstValue(contact.douyin, site?.douyin) },
+    { key: "xiaohongshu", label: "小红书", value: firstValue(contact.xiaohongshu, contact.redbook, site?.xiaohongshu, site?.redbook) },
+    { key: "email", label: "邮箱", value: firstValue(contact.email, site?.email) }
+  ].filter((item) => item.value);
+}
+
+function getContactQr(site = currentSiteData) {
+  const community = site?.privateCommunity || {};
+  const contact = site?.contact || {};
+  return firstValue(community.qrCodeUrl, community.qr, community.qrUrl, contact.qrCodeUrl, contact.qr, contact.qrUrl);
+}
+
+function renderBasicModalContent(message) {
+  return `
+    <button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>×</button>
+    <p class="eyebrow">Coming Soon</p>
+    <h2 id="modal-title">功能占位提示</h2>
+    <p id="modal-message">${escapeHTML(message || "该功能将在后续版本接入。")}</p>
+    <button class="btn btn-primary modal-confirm" type="button" data-modal-close><span>知道了</span><i></i></button>
+  `;
+}
+
+function renderContactModalContent(site = currentSiteData) {
+  const qr = getContactQr(site);
+  const entries = getContactEntries(site);
+  const qrTitle = firstValue(site?.privateCommunity?.title, "微信二维码");
+  const qrDescription = firstValue(site?.privateCommunity?.description, "扫码添加微信，获取 AI 工具资源、教程更新和项目陪跑支持。");
+  return `
+    <button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>×</button>
+    <div class="contact-modal-content">
+      <div>
+        <p class="eyebrow">Contact</p>
+        <h2 id="modal-title">需要陪跑 / 调试？</h2>
+        <p id="modal-message">如果你在 AI 工具安装、ComfyUI 报错、OpenClaw 接通、Codex / Claude Code 项目制作中卡住，可以扫码添加我。</p>
+      </div>
+      <div class="contact-modal-grid">
+        <figure class="contact-qr-card">
+          ${qr ? `<img src="${escapeHTML(qr)}" alt="${escapeHTML(qrTitle)}">` : `<div class="contact-qr-placeholder">二维码待补充</div>`}
+          <figcaption>
+            <strong>${escapeHTML(qrTitle)}</strong>
+            <span>${escapeHTML(qrDescription)}</span>
+          </figcaption>
+        </figure>
+        <div class="contact-copy-list">
+          ${entries.length ? entries.map((item) => `
+            <div class="contact-copy-row">
+              <div>
+                <span>${escapeHTML(item.label)}</span>
+                <strong>${escapeHTML(item.value)}</strong>
+              </div>
+              <button class="copy-button js-copy-contact" type="button" data-copy="${escapeHTML(item.value)}">复制</button>
+            </div>
+          `).join("") : `<p class="detail-muted">联系方式正在整理中。</p>`}
+          <p class="contact-copy-status" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="contact-modal-actions">
+        <a class="btn btn-primary" href="contact.html"><span>前往联系合作页</span><i aria-hidden="true"></i></a>
+        <button class="btn btn-secondary" type="button" data-modal-close><span>关闭</span><i aria-hidden="true"></i></button>
+      </div>
+    </div>
   `;
 }
 
@@ -857,7 +931,7 @@ async function initDataRender() {
     if (["services", "private-community-qr"].includes(type)) requiredKeys.add("site");
     if (type === "home-preview") ["tools", "resources", "tutorials", "cases"].forEach((key) => requiredKeys.add(key));
     if (type === "resource-detail") requiredKeys.add("resources");
-    if (type === "tutorial-detail") ["tutorials", "resources"].forEach((key) => requiredKeys.add(key));
+    if (type === "tutorial-detail") ["tutorials", "resources", "site"].forEach((key) => requiredKeys.add(key));
     if (type === "case-detail") ["cases", "resources"].forEach((key) => requiredKeys.add(key));
   });
   if (document.querySelector("[data-site-field]")) requiredKeys.add("site");
@@ -865,6 +939,7 @@ async function initDataRender() {
   const entries = await Promise.all([...requiredKeys].map(async (key) => [key, await loadJSON(key)]));
   const loaded = Object.fromEntries(entries);
   const data = Object.fromEntries(entries.map(([key, result]) => [key, result.data]));
+  if (data.site) currentSiteData = data.site;
 
   renderTargets.forEach((target) => {
     const type = target.dataset.render;
@@ -889,10 +964,19 @@ function closeMenu() {
 }
 
 function openModal(message) {
-  if (!modal || !modalMessage) return;
+  if (!modal || !modalDialog) return;
   closeMenu();
-  modalMessage.textContent = message || "该功能将在后续版本接入。";
+  modalDialog.innerHTML = renderBasicModalContent(message);
   modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function openContactModal(site = currentSiteData) {
+  if (!modal || !modalDialog) return;
+  closeMenu();
+  modalDialog.innerHTML = renderContactModalContent(site);
+  modal.classList.add("is-open", "is-contact-modal");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 }
@@ -900,8 +984,48 @@ function openModal(message) {
 function closeModal() {
   if (!modal) return;
   modal.classList.remove("is-open");
+  modal.classList.remove("is-contact-modal");
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
+}
+
+function setCopyFeedback(button, success) {
+  const status = button?.closest(".contact-copy-list")?.querySelector(".contact-copy-status");
+  if (success) {
+    const original = button.textContent;
+    button.textContent = "已复制";
+    button.disabled = true;
+    if (status) status.textContent = "";
+    window.setTimeout(() => {
+      button.textContent = original || "复制";
+      button.disabled = false;
+    }, 2000);
+    return;
+  }
+  if (status) status.textContent = "复制失败，请手动复制。";
+}
+
+async function copyTextToClipboard(value, button) {
+  try {
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+      await navigator.clipboard.writeText(value);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      if (!copied) throw new Error("copy command failed");
+    }
+    setCopyFeedback(button, true);
+  } catch (error) {
+    console.warn("复制失败", error);
+    setCopyFeedback(button, false);
+  }
 }
 
 function addRipple(target, event) {
@@ -925,8 +1049,22 @@ document.addEventListener("click", (event) => {
   const navLink = event.target.closest(".nav-links a");
   if (navLink) closeMenu();
 
-  const rippleTarget = event.target.closest(".btn, .card-link, .text-action, .search-button, .modal-close, .filter-button");
+  const rippleTarget = event.target.closest(".btn, .card-link, .text-action, .search-button, .modal-close, .filter-button, .copy-button");
   if (rippleTarget) addRipple(rippleTarget, event);
+
+  const contactTrigger = event.target.closest(".js-contact-modal, [data-contact-modal]");
+  if (contactTrigger) {
+    event.preventDefault();
+    openContactModal();
+    return;
+  }
+
+  const copyButton = event.target.closest(".js-copy-contact");
+  if (copyButton) {
+    event.preventDefault();
+    copyTextToClipboard(copyButton.dataset.copy || "", copyButton);
+    return;
+  }
 
   const modalTrigger = event.target.closest("[data-modal-message]");
   if (modalTrigger) {

@@ -1668,7 +1668,7 @@ button.card-link {
 
 .article-section {
   min-width: 0;
-  scroll-margin-top: var(--header-offset);
+  scroll-margin-top: 110px;
 }
 
 .article-section + .article-section {
@@ -1911,11 +1911,29 @@ button.card-link {
 
 .tutorial-article-sidebar {
   min-width: 0;
+  position: sticky;
+  top: var(--header-offset);
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(151, 168, 255, 0.36) transparent;
+  scrollbar-width: thin;
+}
+
+.tutorial-article-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tutorial-article-sidebar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(151, 168, 255, 0.28);
+}
+
+.tutorial-article-sidebar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .tutorial-sidebar-panel {
-  position: sticky;
-  top: var(--header-offset);
   display: grid;
   gap: 22px;
   padding: 18px;
@@ -2326,6 +2344,163 @@ time,
 
 .modal-confirm {
   min-width: 130px;
+}
+
+.modal.is-contact-modal .modal-dialog {
+  width: min(100%, 760px);
+  max-height: min(720px, calc(100vh - 36px));
+  overflow-y: auto;
+  scrollbar-color: rgba(151, 168, 255, 0.36) transparent;
+  scrollbar-width: thin;
+}
+
+.modal.is-contact-modal .modal-dialog::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal.is-contact-modal .modal-dialog::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(151, 168, 255, 0.28);
+}
+
+.contact-modal-content {
+  display: grid;
+  gap: 22px;
+}
+
+.contact-modal-content h2 {
+  margin: 0 0 10px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.22;
+}
+
+.contact-modal-content p:not(.eyebrow) {
+  max-width: 640px;
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.contact-modal-grid {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.contact-qr-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(151, 168, 255, 0.14);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.contact-qr-card img,
+.contact-qr-placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(151, 168, 255, 0.16);
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(135deg, rgba(120, 103, 255, 0.18), rgba(77, 185, 255, 0.08)),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 12px);
+}
+
+.contact-qr-card img {
+  object-fit: cover;
+}
+
+.contact-qr-placeholder {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.contact-qr-card figcaption {
+  display: grid;
+  gap: 4px;
+}
+
+.contact-qr-card strong {
+  color: var(--text);
+}
+
+.contact-qr-card span {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.contact-copy-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.contact-copy-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(151, 168, 255, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.contact-copy-row div {
+  min-width: 0;
+}
+
+.contact-copy-row span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.contact-copy-row strong {
+  display: block;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.copy-button {
+  position: relative;
+  min-width: 66px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(105, 226, 255, 0.28);
+  border-radius: var(--radius-sm);
+  color: #dbeeff;
+  background: rgba(77, 185, 255, 0.08);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.copy-button:disabled {
+  cursor: default;
+  opacity: 0.78;
+}
+
+.contact-copy-status {
+  min-height: 20px;
+  margin: 0;
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.contact-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .ripple {
@@ -2821,9 +2996,11 @@ time,
     grid-template-columns: 1fr;
   }
 
-  .tutorial-sidebar-panel {
+  .tutorial-article-sidebar {
     position: relative;
     top: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   .tutorial-article-hero .detail-meta {
@@ -3191,6 +3368,35 @@ time,
 
   .article-code pre {
     padding: 14px;
+  }
+
+  .modal.is-contact-modal {
+    padding: 12px;
+  }
+
+  .modal.is-contact-modal .modal-dialog {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    padding: 24px 16px;
+  }
+
+  .contact-modal-grid,
+  .contact-copy-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-copy-row {
+    align-items: stretch;
+  }
+
+  .copy-button {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .contact-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .card-actions,
