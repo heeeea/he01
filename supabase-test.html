@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase 教程读取测试 — 贺 · 01</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .test-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .test-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .test-header h1 {
+      font-size: clamp(24px, 3.5vw, 38px);
+      background: linear-gradient(135deg, var(--cyan), var(--primary-strong));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 10px;
+    }
+    .test-header p {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin: 0;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 28px;
+      border-radius: var(--radius-md);
+      margin-bottom: 36px;
+      font-size: 15px;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+    }
+    .status-bar.unconfigured { background: rgba(255, 200, 102, 0.08); color: var(--gold); }
+    .status-bar.loading     { background: rgba(77, 185, 255, 0.08); color: var(--blue); }
+    .status-bar.success     { background: rgba(105, 226, 255, 0.1); color: var(--cyan); border-color: rgba(105, 226, 255, 0.35); }
+    .status-bar.error       { background: rgba(255, 100, 100, 0.08); color: #ff7b7b; border-color: rgba(255, 100, 100, 0.3); }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .unconfigured .status-dot { background: var(--gold); }
+    .loading .status-dot     { background: var(--blue); animation: pulse-dot 0.9s infinite; }
+    .success .status-dot     { background: var(--cyan); }
+    .error .status-dot       { background: #ff7b7b; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .tutorial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .tutorial-card {
+      background: var(--glass);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    .tutorial-card:hover {
+      box-shadow: var(--shadow-lift);
+      border-color: var(--line-strong);
+    }
+    .tutorial-card .tc-category {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--primary-strong);
+      background: rgba(120, 103, 255, 0.12);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    .tutorial-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .tutorial-card .tc-meta {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .tutorial-card .tc-meta span { display: flex; align-items: center; gap: 5px; }
+    .tutorial-card .tc-summary {
+      font-size: 14px; color: var(--text-soft);
+      line-height: 1.6; margin-bottom: 14px;
+    }
+    .tutorial-card .tc-content {
+      font-size: 13px; color: var(--text-muted);
+      line-height: 1.65;
+      white-space: normal;
+      max-height: 160px; overflow: hidden;
+      position: relative;
+      mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    }
+    .tutorial-card .tc-content img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 12px 0;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--line);
+      object-fit: contain;
+    }
+    .tutorial-card .tc-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid var(--line);
+      font-size: 12px; color: var(--text-muted);
+    }
+    .tc-status {
+      padding: 2px 9px; border-radius: 10px;
+      font-size: 11px; font-weight: 600;
+    }
+    .tc-status.published { background: rgba(105, 226, 255, 0.12); color: var(--cyan); }
+
+    .empty-msg {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-muted); font-size: 16px;
+      grid-column: 1 / -1;
+    }
+
+    .error-detail {
+      background: rgba(255, 100, 100, 0.06);
+      border: 1px solid rgba(255, 100, 100, 0.2);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      max-width: 720px;
+      margin: 0 auto;
+      font-size: 14px; line-height: 1.75;
+      color: var(--text-soft);
+    }
+    .error-detail strong { color: #ff7b7b; }
+    .error-detail ul { padding-left: 20px; margin: 10px 0 0; }
+    .error-detail li { margin-bottom: 6px; }
+    .error-detail code {
+      background: rgba(255,255,255,0.06);
+      padding: 2px 7px; border-radius: 4px;
+      font-size: 13px; color: var(--cyan);
+    }
+
+    .config-note {
+      text-align: center; padding: 40px 20px;
+      color: var(--text-muted); font-size: 15px;
+    }
+	.config-note code {
+	  background: rgba(255,255,255,0.06);
+	  padding: 3px 8px; border-radius: 4px;
+	  font-size: 13px; color: var(--gold);
+	}
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <nav class="navbar" aria-label="主导航">
+        <a class="brand" href="index.html" aria-label="贺 · 01 首页">贺 · 01</a>
+        <button class="menu-toggle" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="primary-menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="nav-panel" id="primary-menu">
+          <ul class="nav-links">
+            <li><a href="index.html">首页</a></li>
+            <li><a href="tools.html">AI工具导航</a></li>
+            <li><a href="resources.html">资源下载</a></li>
+            <li><a href="tutorials.html">实战教程</a></li>
+            <li><a href="cases.html">作品案例</a></li>
+            <li><a href="contact.html">联系合作</a></li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="test-wrap">
+        <div class="test-header">
+          <h1>Supabase 教程读取测试</h1>
+          <p>测试前端通过 REST API 读取 tutorials 表中 status = published 的教程数据</p>
+        </div>
+
+        <!-- 状态栏 -->
+        <div id="statusBar" class="status-bar unconfigured">
+          <span class="status-dot"></span>
+          <span id="statusText">未配置 — 请先填写 Supabase URL 和 anon key</span>
+        </div>
+
+        <!-- 错误详情 -->
+        <div id="errorDetail" style="display:none;"></div>
+
+        <!-- 教程卡片区 -->
+        <div id="tutorialGrid" class="tutorial-grid"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ============================================================
+    // 配置区 — 请填入你的 Supabase 项目信息（仅使用 anon key）
+    // ============================================================
+    const SUPABASE_URL = "https://bnjywmwpcqybzngzjuug.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuanl3bXdwY3F5YnpuZ3pqdXVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MzI5NDgsImV4cCI6MjA5NDQwODk0OH0.b9Sp-Tz6sucQ6WALIhuzQvoRfwMZ3LOy8XGv8I_rggA";
+
+    const statusBar = document.getElementById("statusBar");
+    const statusText = document.getElementById("statusText");
+    const errorDetail = document.getElementById("errorDetail");
+    const tutorialGrid = document.getElementById("tutorialGrid");
+
+    function setStatus(state, text) {
+      statusBar.className = "status-bar " + state;
+      statusText.textContent = text;
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderContentWithImages(content) {
+      const text = String(content || "暂无正文");
+      const imagePattern = /!\[([^\]\n]*)\]\(([^)\s]+)\)/g;
+      let html = "";
+      let lastIndex = 0;
+      let match;
+
+      while ((match = imagePattern.exec(text)) !== null) {
+        html += escapeHtml(text.slice(lastIndex, match.index));
+        html += '<img src="' + escapeHtml(match[2]) + '" alt="' + escapeHtml(match[1] || "教程配图") + '" loading="lazy" onerror="this.style.display=\'none\'">';
+        lastIndex = imagePattern.lastIndex;
+      }
+
+      html += escapeHtml(text.slice(lastIndex));
+      return html.replace(/\n/g, "<br>");
+    }
+
+    function showError(httpStatus, message, url, key) {
+      let reasons = [];
+      if (!url)   reasons.push("<code>SUPABASE_URL</code> 未填写或填错");
+      if (!key)   reasons.push("<code>SUPABASE_ANON_KEY</code> 未填写或填错");
+      if (httpStatus === 404) reasons.push("路径不对 — <code>tutorials</code> 表可能不存在");
+      if (httpStatus === 401 || httpStatus === 403) reasons.push("anon key 无效，或 RLS 策略没有放开 <code>published</code> 读取");
+      if (httpStatus === 400) reasons.push("请求格式错误 — 检查查询参数语法");
+      if (httpStatus >= 500)  reasons.push("Supabase 服务端错误，稍后重试");
+
+      errorDetail.style.display = "block";
+      errorDetail.innerHTML = [
+        '<div class="error-detail">',
+          '<strong>请求失败</strong><br>',
+          'HTTP 状态码：' + (httpStatus || "网络错误") + '<br>',
+          '错误信息：' + (message || "无") + '<br>',
+          reasons.length ? '<ul>' + reasons.map(function(r){ return "<li>" + r + "</li>"; }).join("") + "</ul>" : "",
+          '<br>请求地址：<br><code>' + (SUPABASE_URL || "未配置") + '/rest/v1/tutorials?select=*&status=eq.published&order=created_at.desc</code>',
+        '</div>'
+      ].join("\n");
+    }
+
+    async function fetchTutorials() {
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        setStatus("unconfigured", "未配置 — 请先填写 Supabase URL 和 anon key");
+        errorDetail.style.display = "block";
+        errorDetail.innerHTML = '<div class="config-note">请在 <code>supabase-test.html</code> 顶部填写 <code>SUPABASE_URL</code> 和 <code>SUPABASE_ANON_KEY</code></div>';
+        return;
+      }
+
+      setStatus("loading", "读取中…");
+      errorDetail.style.display = "none";
+      tutorialGrid.innerHTML = "";
+
+      try {
+        const url = SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/tutorials?select=*&status=eq.published&order=created_at.desc";
+        const resp = await fetch(url, {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + SUPABASE_ANON_KEY
+          }
+        });
+
+        if (!resp.ok) {
+          let msg = "";
+          try { const j = await resp.json(); msg = j.message || JSON.stringify(j); } catch(e) { msg = resp.statusText; }
+          setStatus("error", "读取失败 — HTTP " + resp.status);
+          showError(resp.status, msg, SUPABASE_URL, SUPABASE_ANON_KEY);
+          return;
+        }
+
+        const data = await resp.json();
+        setStatus("success", "Supabase 连接成功 — 共 " + data.length + " 篇 published 教程");
+
+        if (!data.length) {
+          tutorialGrid.innerHTML = '<div class="empty-msg">当前没有 <code>published</code> 状态的教程。</div>';
+          return;
+        }
+
+        tutorialGrid.innerHTML = data.map(function(t) {
+          return [
+            '<div class="tutorial-card">',
+              '<span class="tc-category">' + (t.category || "未分类") + "</span>",
+              "<h3>" + (t.title || "无标题") + "</h3>",
+              '<div class="tc-meta">',
+                "<span>难度：" + (t.difficulty || "—") + "</span>",
+                "<span>阅读：" + (t.reading_time ? t.reading_time + " min" : "—") + "</span>",
+              "</div>",
+              '<p class="tc-summary">' + (t.summary || "暂无简介") + "</p>",
+              '<div class="tc-content">' + renderContentWithImages(t.content) + "</div>",
+              '<div class="tc-footer">',
+                '<span class="tc-status published">' + (t.status || "—") + "</span>",
+                "<span>" + (t.created_at ? new Date(t.created_at).toLocaleDateString("zh-CN") : "—") + "</span>",
+              "</div>",
+            "</div>"
+          ].join("\n");
+        }).join("");
+
+      } catch(e) {
+        setStatus("error", "读取失败");
+        showError(0, e.message, SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    }
+
+    fetchTutorials();
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>

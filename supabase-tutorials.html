@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="贺01 AI 实战资源库 Supabase 教程列表测试页">
+  <title>Supabase 教程列表测试 - 贺 · 01</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .sb-tutorials-wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 44px 0 76px;
+    }
+
+    .sb-test-note {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 3px 11px;
+      border: 1px solid rgba(105, 226, 255, 0.28);
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(105, 226, 255, 0.08);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .sb-status,
+    .sb-config-card,
+    .sb-debug-panel {
+      margin: 18px 0 24px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--text-soft);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .sb-status {
+      white-space: pre-wrap;
+    }
+
+    .sb-status.success {
+      color: #9df7c9;
+      border-color: rgba(84, 220, 150, 0.3);
+      background: rgba(84, 220, 150, 0.08);
+    }
+
+    .sb-status.warn {
+      color: var(--gold);
+      border-color: rgba(255, 200, 102, 0.3);
+      background: rgba(255, 200, 102, 0.08);
+    }
+
+    .sb-status.error {
+      color: #ff9d9d;
+      border-color: rgba(255, 100, 100, 0.3);
+      background: rgba(255, 100, 100, 0.08);
+    }
+
+    .sb-config-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .sb-config-card label {
+      display: grid;
+      gap: 7px;
+      color: var(--text-soft);
+      font-size: 13px;
+    }
+
+    .sb-config-card input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 9px 11px;
+      color: var(--text);
+      background: rgba(4, 9, 28, 0.76);
+      outline: none;
+      font: inherit;
+    }
+
+    .sb-config-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sb-flow {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .sb-flow div::before {
+      content: "• ";
+      color: var(--cyan);
+    }
+
+    .sb-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 26px;
+    }
+
+    .sb-card {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+      padding: 20px;
+      border: 1px solid rgba(151, 168, 255, 0.16);
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(145deg, rgba(13, 21, 51, 0.72), rgba(5, 10, 28, 0.54)),
+        radial-gradient(circle at 86% 0%, rgba(105, 226, 255, 0.08), transparent 34%);
+      box-shadow: var(--shadow-inset), 0 18px 54px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(14px);
+    }
+
+    .sb-card h2 {
+      margin: 0;
+      color: var(--text);
+      font-size: 19px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .sb-card p {
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .sb-field-list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .sb-field-list div {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .sb-field-list dt {
+      color: var(--text-muted);
+    }
+
+    .sb-field-list dd {
+      min-width: 0;
+      margin: 0;
+      color: var(--text-soft);
+      overflow-wrap: anywhere;
+    }
+
+    .sb-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .sb-tags span {
+      min-width: 0;
+      padding: 2px 8px;
+      border: 1px solid rgba(151, 168, 255, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sb-card .card-link,
+    .sb-disabled-link {
+      align-self: end;
+      justify-self: start;
+      margin-top: 4px;
+    }
+
+    .sb-disabled-link {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      padding: 0 14px;
+      border: 1px solid rgba(151, 168, 255, 0.12);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      cursor: not-allowed;
+    }
+
+    .sb-empty {
+      grid-column: 1 / -1;
+      padding: 58px 18px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-lg);
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.025);
+      text-align: center;
+    }
+
+    .sb-debug-panel h2 {
+      margin: 0 0 12px;
+      color: var(--text);
+      font-size: 18px;
+    }
+
+    .sb-debug-panel pre {
+      max-height: 420px;
+      margin: 0;
+      padding: 14px;
+      overflow: auto;
+      border: 1px solid rgba(151, 168, 255, 0.16);
+      border-radius: var(--radius-sm);
+      color: #eaf0ff;
+      background: rgba(1, 4, 15, 0.86);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 980px) {
+      .sb-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sb-config-card {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .sb-tutorials-wrap {
+        padding-top: 28px;
+      }
+
+      .sb-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sb-field-list div {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <nav class="navbar" aria-label="主导航">
+        <a class="brand" href="index.html">贺 · 01</a>
+        <button class="menu-toggle" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="primary-menu"><span></span><span></span><span></span></button>
+        <div class="nav-panel" id="primary-menu">
+          <ul class="nav-links">
+            <li><a href="index.html">首页</a></li>
+            <li><a href="tools.html">AI工具导航</a></li>
+            <li><a href="resources.html">资源下载</a></li>
+            <li><a class="active" href="supabase-tutorials.html">实战教程</a></li>
+            <li><a href="cases.html">作品案例</a></li>
+            <li><a href="contact.html">联系合作</a></li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+
+    <main class="sb-tutorials-wrap">
+      <section class="page-hero reveal is-visible">
+        <span class="sb-test-note">Supabase Test</span>
+        <p class="eyebrow">Practical Tutorials</p>
+        <h1>实战教程</h1>
+        <p>这个页面直接读取 Supabase tutorials 表，用来验证未来正式教程列表页接入数据库后的效果。</p>
+      </section>
+
+      <section class="sb-config-card" aria-label="Supabase 测试配置">
+        <label>Supabase Project URL<input id="runtimeUrl" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></label>
+        <label>Supabase anon public key<input id="runtimeAnonKey" type="password" placeholder="只填写 anon public key" autocomplete="off"></label>
+        <div class="sb-config-actions">
+          <button id="saveConfigButton" class="btn btn-small btn-primary" type="button"><span>保存配置</span><i aria-hidden="true"></i></button>
+          <button id="reloadButton" class="btn btn-small btn-secondary" type="button"><span>重新读取</span><i aria-hidden="true"></i></button>
+        </div>
+      </section>
+
+      <div id="statusBox" class="sb-status warn">准备读取配置...</div>
+      <section class="sb-debug-panel" aria-label="调试状态">
+        <h2>调试状态</h2>
+        <div id="flowLog" class="sb-flow"></div>
+      </section>
+
+      <section id="tutorialGrid" class="sb-grid" aria-label="Supabase 教程列表"></section>
+
+      <section class="sb-debug-panel" aria-label="Supabase 原始返回数据">
+        <h2>Supabase 原始返回数据</h2>
+        <pre id="rawJson">尚未请求数据</pre>
+      </section>
+    </main>
+
+    <footer class="site-footer"><p>© 2026 贺 · 01 AI 实战资源库</p><nav><a href="index.html">首页</a><a href="resources.html">资源下载</a><a href="cases.html">作品案例</a><a href="admin.html">管理后台</a></nav></footer>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      url: "he01_supabase_url",
+      anonKey: "he01_supabase_anon_key"
+    };
+
+    const SUPABASE_URL = "这里填我的 Supabase Project URL";
+    const SUPABASE_ANON_KEY = "这里填我的 Supabase anon public key";
+
+    const els = {
+      runtimeUrl: document.getElementById("runtimeUrl"),
+      runtimeAnonKey: document.getElementById("runtimeAnonKey"),
+      saveConfigButton: document.getElementById("saveConfigButton"),
+      reloadButton: document.getElementById("reloadButton"),
+      statusBox: document.getElementById("statusBox"),
+      flowLog: document.getElementById("flowLog"),
+      tutorialGrid: document.getElementById("tutorialGrid"),
+      rawJson: document.getElementById("rawJson")
+    };
+
+    let lastRequestUrl = "";
+
+    function isPlaceholder(value) {
+      return !value || String(value).includes("这里填");
+    }
+
+    function normalizeUrl(value) {
+      return String(value || "").trim().replace(/\/+$/, "");
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function appendFlow(message) {
+      const row = document.createElement("div");
+      row.textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false }) + " " + message;
+      els.flowLog.appendChild(row);
+    }
+
+    function resetFlow() {
+      els.flowLog.innerHTML = "";
+    }
+
+    function setStatus(type, message) {
+      els.statusBox.className = "sb-status " + type;
+      els.statusBox.textContent = message;
+    }
+
+    function getConfig() {
+      const storedUrl = normalizeUrl(localStorage.getItem(STORAGE_KEYS.url));
+      const storedAnonKey = String(localStorage.getItem(STORAGE_KEYS.anonKey) || "").trim();
+      const legacyUrl = normalizeUrl(localStorage.getItem("he01_supabase_front_url") || localStorage.getItem("he01_supabase_admin_url"));
+      const legacyAnonKey = String(localStorage.getItem("he01_supabase_front_anon_key") || localStorage.getItem("he01_supabase_admin_anon_key") || "").trim();
+      const hardcodedUrl = isPlaceholder(SUPABASE_URL) ? "" : normalizeUrl(SUPABASE_URL);
+      const hardcodedAnonKey = isPlaceholder(SUPABASE_ANON_KEY) ? "" : String(SUPABASE_ANON_KEY || "").trim();
+
+      return {
+        url: storedUrl || legacyUrl || hardcodedUrl,
+        anonKey: storedAnonKey || legacyAnonKey || hardcodedAnonKey
+      };
+    }
+
+    function syncConfigInputs(config) {
+      els.runtimeUrl.value = config.url || "";
+      els.runtimeAnonKey.value = config.anonKey || "";
+    }
+
+    function saveConfigAndReload() {
+      const url = normalizeUrl(els.runtimeUrl.value);
+      const anonKey = els.runtimeAnonKey.value.trim();
+
+      localStorage.setItem(STORAGE_KEYS.url, url);
+      localStorage.setItem(STORAGE_KEYS.anonKey, anonKey);
+
+      resetFlow();
+      appendFlow("配置已保存");
+      fetchTutorials();
+    }
+
+    function formatError(status, message, requestUrl) {
+      return [
+        "读取失败",
+        "HTTP 状态码：" + (status || "网络错误"),
+        "错误信息：" + (message || "没有返回具体错误信息"),
+        "请求 URL：" + (requestUrl || "未生成请求 URL"),
+        "排查建议：检查 Supabase URL、anon key、tutorials 表名、published 读取 RLS、浏览器控制台和 Network 返回内容。"
+      ].join("\n");
+    }
+
+    function showRawData(data) {
+      els.rawJson.textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function fetchTutorials() {
+      const config = getConfig();
+      syncConfigInputs(config);
+      els.tutorialGrid.innerHTML = "";
+      els.rawJson.textContent = "尚未拿到数据";
+      lastRequestUrl = "";
+
+      appendFlow("配置已读取");
+
+      if (!config.url || !config.anonKey) {
+        appendFlow("配置读取失败");
+        setStatus("warn", "请先填写 Supabase URL 和 anon key");
+        return;
+      }
+
+      lastRequestUrl = config.url + "/rest/v1/tutorials?select=*&status=eq.published&order=updated_at.desc";
+      appendFlow("开始请求 Supabase");
+      setStatus("warn", "正在读取 Supabase published 教程...");
+
+      try {
+        const response = await fetch(lastRequestUrl, {
+          headers: {
+            apikey: config.anonKey,
+            Authorization: "Bearer " + config.anonKey
+          }
+        });
+
+        if (!response.ok) {
+          let errorText = response.statusText;
+          try {
+            const errorJson = await response.json();
+            errorText = errorJson.message || errorJson.msg || JSON.stringify(errorJson);
+          } catch (error) {}
+          appendFlow("请求失败");
+          setStatus("error", formatError(response.status, errorText, lastRequestUrl));
+          return;
+        }
+
+        const data = await response.json();
+        appendFlow("请求成功");
+        setStatus("success", "读取成功，共 " + (Array.isArray(data) ? data.length : 0) + " 篇教程");
+        showRawData(data);
+
+        appendFlow("开始渲染");
+        renderTutorials(data);
+      } catch (error) {
+        appendFlow("请求失败");
+        setStatus("error", formatError(0, error.message, lastRequestUrl));
+      }
+    }
+
+    function renderTutorials(data) {
+      try {
+        if (!Array.isArray(data)) {
+          appendFlow("渲染失败");
+          setStatus("error", "返回数据格式异常");
+          els.tutorialGrid.innerHTML = '<div class="sb-empty">返回数据格式异常</div>';
+          return;
+        }
+
+        if (data.length === 0) {
+          appendFlow("渲染完成");
+          setStatus("success", "读取成功，共 0 篇教程");
+          els.tutorialGrid.innerHTML = '<div class="sb-empty">暂无已发布教程</div>';
+          return;
+        }
+
+        els.tutorialGrid.innerHTML = data.map(function(t) {
+          const title = t.title || "未命名教程";
+          const slug = t.slug || "";
+          const category = t.category || "未分类";
+          const difficulty = t.difficulty || "未设置";
+          const readingTime = t.reading_time || "未设置";
+          const summary = t.summary || "暂无简介";
+          const updatedAt = t.updated_at || "未更新";
+          const tags = Array.isArray(t.tags) ? t.tags : [];
+          const detailUrl = "supabase-tutorial-detail.html?slug=" + encodeURIComponent(slug);
+
+          return [
+            '<article class="sb-card">',
+              '<h2>' + escapeHtml(title) + '</h2>',
+              '<dl class="sb-field-list">',
+                '<div><dt>slug</dt><dd>' + escapeHtml(slug || "空") + '</dd></div>',
+                '<div><dt>分类</dt><dd>' + escapeHtml(category) + '</dd></div>',
+                '<div><dt>难度</dt><dd>' + escapeHtml(difficulty) + '</dd></div>',
+                '<div><dt>阅读时间</dt><dd>' + escapeHtml(readingTime) + '</dd></div>',
+                '<div><dt>更新时间</dt><dd>' + escapeHtml(updatedAt) + '</dd></div>',
+              '</dl>',
+              '<p>' + escapeHtml(summary) + '</p>',
+              '<div class="sb-tags">' + (tags.length ? tags.map(function(tag) { return '<span>' + escapeHtml(tag) + '</span>'; }).join("") : '<span>暂无标签</span>') + '</div>',
+              slug
+                ? '<a class="card-link" href="' + escapeHtml(detailUrl) + '"><span>查看教程</span><i aria-hidden="true"></i></a>'
+                : '<span class="sb-disabled-link">缺少 slug，无法查看</span>',
+            '</article>'
+          ].join("");
+        }).join("");
+
+        appendFlow("渲染完成");
+        setStatus("success", "读取成功，共 " + data.length + " 篇教程");
+      } catch (error) {
+        appendFlow("渲染失败");
+        setStatus("error", "渲染教程列表失败：" + (error.message || "未知错误"));
+        els.tutorialGrid.innerHTML = '<div class="sb-empty">渲染教程列表失败：' + escapeHtml(error.message || "未知错误") + '</div>';
+      }
+    }
+
+    els.saveConfigButton.addEventListener("click", saveConfigAndReload);
+    els.reloadButton.addEventListener("click", function() {
+      resetFlow();
+      fetchTutorials();
+    });
+
+    syncConfigInputs(getConfig());
+    resetFlow();
+    fetchTutorials();
+  </script>
+</body>
+</html>

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="贺01 AI 实战资源库 Supabase 教程详情测试页">
+  <title>Supabase 教程详情测试 - 贺 · 01</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .sb-detail-wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 36px 0 76px;
+    }
+
+    .sb-status,
+    .sb-config-card {
+      margin: 18px 0 24px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--text-soft);
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .sb-status.success {
+      color: #9df7c9;
+      border-color: rgba(84, 220, 150, 0.3);
+      background: rgba(84, 220, 150, 0.08);
+    }
+
+    .sb-status.warn {
+      color: var(--gold);
+      border-color: rgba(255, 200, 102, 0.3);
+      background: rgba(255, 200, 102, 0.08);
+    }
+
+    .sb-status.error {
+      color: #ff9d9d;
+      border-color: rgba(255, 100, 100, 0.3);
+      background: rgba(255, 100, 100, 0.08);
+    }
+
+    .sb-config-card {
+      display: none;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .sb-config-card.show {
+      display: grid;
+    }
+
+    .sb-config-card label {
+      display: grid;
+      gap: 7px;
+      color: var(--text-soft);
+      font-size: 13px;
+    }
+
+    .sb-config-card input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 9px 11px;
+      color: var(--text);
+      background: rgba(4, 9, 28, 0.76);
+      outline: none;
+      font: inherit;
+    }
+
+    .sb-config-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sb-test-note {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 3px 11px;
+      border: 1px solid rgba(105, 226, 255, 0.28);
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(105, 226, 255, 0.08);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .sb-detail-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .sb-detail-tags span {
+      min-height: 26px;
+      padding: 2px 10px;
+      border: 1px solid rgba(151, 168, 255, 0.14);
+      border-radius: 999px;
+      color: var(--text-soft);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 12px;
+    }
+
+    .sb-markdown {
+      color: var(--text-soft);
+      font-size: 16px;
+      line-height: 1.82;
+      overflow-wrap: anywhere;
+    }
+
+    .sb-markdown h2,
+    .sb-markdown h3 {
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    .sb-markdown h2 {
+      margin: 30px 0 12px;
+      font-size: clamp(24px, 2.3vw, 32px);
+    }
+
+    .sb-markdown h3 {
+      margin: 24px 0 10px;
+      font-size: clamp(20px, 2vw, 25px);
+    }
+
+    .sb-markdown p {
+      margin: 0 0 14px;
+    }
+
+    .sb-markdown img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 18px 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      object-fit: contain;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+    }
+
+    .sb-markdown ul {
+      margin: 0 0 16px;
+      padding-left: 22px;
+    }
+
+    .sb-markdown li {
+      margin: 6px 0;
+    }
+
+    .sb-markdown blockquote {
+      margin: 18px 0;
+      padding: 12px 16px;
+      border-left: 3px solid rgba(105, 226, 255, 0.55);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      color: #dce6ff;
+      background: rgba(105, 226, 255, 0.07);
+    }
+
+    .sb-markdown pre {
+      max-width: 100%;
+      margin: 18px 0;
+      padding: 16px;
+      overflow-x: auto;
+      border: 1px solid rgba(151, 168, 255, 0.16);
+      border-radius: var(--radius-md);
+      color: #eaf0ff;
+      background: rgba(1, 4, 15, 0.86);
+      line-height: 1.65;
+    }
+
+    .sb-markdown code {
+      font-family: Consolas, "SFMono-Regular", "Liberation Mono", monospace;
+      font-size: 14px;
+    }
+
+    .sb-not-found {
+      padding: 44px 24px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-lg);
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.025);
+      text-align: center;
+    }
+
+    .sb-not-found h1 {
+      margin: 0 0 10px;
+      color: var(--text);
+      font-size: clamp(26px, 4vw, 40px);
+    }
+
+    @media (max-width: 980px) {
+      .sb-config-card {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .sb-detail-wrap {
+        padding-top: 24px;
+      }
+
+      .sb-markdown {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <nav class="navbar" aria-label="主导航">
+        <a class="brand" href="index.html">贺 · 01</a>
+        <button class="menu-toggle" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="primary-menu"><span></span><span></span><span></span></button>
+        <div class="nav-panel" id="primary-menu">
+          <ul class="nav-links">
+            <li><a href="index.html">首页</a></li>
+            <li><a href="tools.html">AI工具导航</a></li>
+            <li><a href="resources.html">资源下载</a></li>
+            <li><a class="active" href="supabase-tutorials.html">实战教程</a></li>
+            <li><a href="cases.html">作品案例</a></li>
+            <li><a href="contact.html">联系合作</a></li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+
+    <main class="sb-detail-wrap">
+      <section id="configCard" class="sb-config-card" aria-label="Supabase 测试配置">
+        <label>Supabase Project URL<input id="runtimeUrl" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></label>
+        <label>Supabase anon public key<input id="runtimeAnonKey" type="password" placeholder="只填写 anon public key" autocomplete="off"></label>
+        <div class="sb-config-actions">
+          <button id="saveConfigButton" class="btn btn-small btn-primary" type="button"><span>保存配置</span><i aria-hidden="true"></i></button>
+          <button id="clearConfigButton" class="btn btn-small btn-secondary" type="button"><span>清空</span><i aria-hidden="true"></i></button>
+        </div>
+      </section>
+
+      <div id="statusBox" class="sb-status warn">读取中...</div>
+      <div id="detailRoot"></div>
+    </main>
+
+    <footer class="site-footer"><p>© 2026 贺 · 01 AI 实战资源库</p><nav><a href="index.html">首页</a><a href="resources.html">资源下载</a><a href="cases.html">作品案例</a><a href="admin.html">管理后台</a></nav></footer>
+  </div>
+
+  <div class="modal" aria-hidden="true"><div class="modal-backdrop" data-modal-close></div><div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message"><button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>×</button><p class="eyebrow">Coming Soon</p><h2 id="modal-title">功能占位提示</h2><p id="modal-message">该功能将在后续版本接入。</p><button class="btn btn-primary modal-confirm" type="button" data-modal-close><span>知道了</span><i></i></button></div></div>
+
+  <script src="script.js"></script>
+  <script>
+    // ============================================================
+    // 配置区：请填写你的 Supabase 项目信息，只能使用 anon public key。
+    // 不要填写 service_role key，也不要把 secret key 写进前端。
+    // 如果仓库公开，不建议直接提交真实 URL 和 anon key。
+    // ============================================================
+    const SUPABASE_URL = "这里填我的 Supabase Project URL";
+    const SUPABASE_ANON_KEY = "这里填我的 Supabase anon public key";
+
+    const STORAGE_KEYS = {
+      url: "he01_supabase_front_url",
+      anonKey: "he01_supabase_front_anon_key"
+    };
+
+    const els = {
+      configCard: document.getElementById("configCard"),
+      runtimeUrl: document.getElementById("runtimeUrl"),
+      runtimeAnonKey: document.getElementById("runtimeAnonKey"),
+      saveConfigButton: document.getElementById("saveConfigButton"),
+      clearConfigButton: document.getElementById("clearConfigButton"),
+      statusBox: document.getElementById("statusBox"),
+      detailRoot: document.getElementById("detailRoot")
+    };
+
+    function normalizeUrl(url) {
+      return String(url || "").trim().replace(/\/+$/, "");
+    }
+
+    function isPlaceholder(value) {
+      return !value || String(value).includes("这里填");
+    }
+
+    function getConfig() {
+      const hardcodedUrl = isPlaceholder(SUPABASE_URL) ? "" : normalizeUrl(SUPABASE_URL);
+      const hardcodedAnonKey = isPlaceholder(SUPABASE_ANON_KEY) ? "" : String(SUPABASE_ANON_KEY || "").trim();
+      const storedUrl = normalizeUrl(localStorage.getItem(STORAGE_KEYS.url));
+      const storedAnonKey = String(localStorage.getItem(STORAGE_KEYS.anonKey) || "").trim();
+      return {
+        url: hardcodedUrl || storedUrl,
+        anonKey: hardcodedAnonKey || storedAnonKey,
+        hardcoded: Boolean(hardcodedUrl && hardcodedAnonKey)
+      };
+    }
+
+    function getSlug() {
+      return new URLSearchParams(window.location.search).get("slug") || "";
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function setStatus(type, message) {
+      els.statusBox.style.display = "block";
+      els.statusBox.className = "sb-status " + type;
+      els.statusBox.textContent = message;
+    }
+
+    function hideStatus() {
+      els.statusBox.style.display = "none";
+    }
+
+    function showStatus() {
+      els.statusBox.style.display = "block";
+    }
+
+    function friendlyError(status, message) {
+      const hints = [];
+      if (status === 401 || status === 403) hints.push("可能是 anon key 填错，或者 RLS 没放开 published 读取。");
+      else if (status === 404) hints.push("可能是 Supabase URL 填错，或者 tutorials 表不存在。");
+      else if (status >= 500) hints.push("可能是 Supabase 服务临时异常，请稍后再试。");
+      else if (!status) hints.push("可能是网络错误、URL 无法访问，或配置未填写。");
+      return [
+        "读取失败。",
+        "HTTP 状态：" + (status || "网络错误"),
+        "错误信息：" + (message || "没有返回具体错误信息"),
+        "排查建议：" + (hints.join(" ") || "请检查 SUPABASE_URL、SUPABASE_ANON_KEY、tutorials 表、slug 和 RLS 策略。")
+      ].join("\n");
+    }
+
+    function formatDate(value) {
+      if (!value) return "未更新";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "时间格式异常";
+      return date.toLocaleDateString("zh-CN");
+    }
+
+    function normalizeTags(tags) {
+      if (Array.isArray(tags)) return tags.filter(Boolean);
+      if (typeof tags === "string") return tags.split(",").map(function(tag) { return tag.trim(); }).filter(Boolean);
+      return [];
+    }
+
+    function valueOrDefault(value, fallback) {
+      return value === null || value === undefined || String(value).trim() === "" ? fallback : value;
+    }
+
+    function renderInlineMarkdown(text) {
+      const value = String(text || "");
+      const imagePattern = /!\[([^\]\n]*)\]\(([^)\s]+)\)/g;
+      let html = "";
+      let lastIndex = 0;
+      let match;
+
+      while ((match = imagePattern.exec(value)) !== null) {
+        html += escapeHtml(value.slice(lastIndex, match.index));
+        html += '<img src="' + escapeHtml(match[2]) + '" alt="' + escapeHtml(match[1] || "教程配图") + '" loading="lazy" onerror="this.style.display=\'none\'">';
+        lastIndex = imagePattern.lastIndex;
+      }
+
+      html += escapeHtml(value.slice(lastIndex));
+      return html;
+    }
+
+    function renderSimpleMarkdown(markdown) {
+      const lines = String(markdown || "正文内容正在整理中。").replace(/\r\n/g, "\n").split("\n");
+      let html = "";
+      let listItems = [];
+      let quoteLines = [];
+      let codeLines = [];
+      let inCode = false;
+
+      function flushList() {
+        if (!listItems.length) return;
+        html += "<ul>" + listItems.map(function(item) { return "<li>" + item + "</li>"; }).join("") + "</ul>";
+        listItems = [];
+      }
+
+      function flushQuote() {
+        if (!quoteLines.length) return;
+        html += "<blockquote>" + quoteLines.join("<br>") + "</blockquote>";
+        quoteLines = [];
+      }
+
+      function flushBlocks() {
+        flushList();
+        flushQuote();
+      }
+
+      lines.forEach(function(line) {
+        const trimmed = line.trim();
+
+        if (trimmed.startsWith("```")) {
+          if (inCode) {
+            html += "<pre><code>" + escapeHtml(codeLines.join("\n")) + "</code></pre>";
+            codeLines = [];
+            inCode = false;
+          } else {
+            flushBlocks();
+            inCode = true;
+          }
+          return;
+        }
+
+        if (inCode) {
+          codeLines.push(line);
+          return;
+        }
+
+        if (!trimmed) {
+          flushBlocks();
+          return;
+        }
+
+        if (trimmed.startsWith("### ")) {
+          flushBlocks();
+          html += "<h3>" + escapeHtml(trimmed.slice(4)) + "</h3>";
+          return;
+        }
+
+        if (trimmed.startsWith("## ")) {
+          flushBlocks();
+          html += "<h2>" + escapeHtml(trimmed.slice(3)) + "</h2>";
+          return;
+        }
+
+        if (trimmed.startsWith("- ")) {
+          flushQuote();
+          listItems.push(renderInlineMarkdown(trimmed.slice(2)));
+          return;
+        }
+
+        if (trimmed.startsWith(">")) {
+          flushList();
+          quoteLines.push(renderInlineMarkdown(trimmed.replace(/^>\s?/, "")));
+          return;
+        }
+
+        flushBlocks();
+        html += "<p>" + renderInlineMarkdown(line) + "</p>";
+      });
+
+      if (inCode) {
+        html += "<pre><code>" + escapeHtml(codeLines.join("\n")) + "</code></pre>";
+      }
+      flushBlocks();
+      return html;
+    }
+
+    function renderDetailMeta(items) {
+      return '<dl class="detail-meta">' + items.map(function(item) {
+        return '<div><dt>' + escapeHtml(item.label) + '</dt><dd>' + escapeHtml(item.value || "未标注") + '</dd></div>';
+      }).join("") + '</dl>';
+    }
+
+    function syncConfigUi() {
+      const config = getConfig();
+      els.configCard.classList.toggle("show", !config.hardcoded);
+      els.runtimeUrl.value = config.hardcoded ? config.url : (localStorage.getItem(STORAGE_KEYS.url) || "");
+      els.runtimeAnonKey.value = config.hardcoded ? config.anonKey : (localStorage.getItem(STORAGE_KEYS.anonKey) || "");
+    }
+
+    function saveConfig() {
+      const url = normalizeUrl(els.runtimeUrl.value);
+      const anonKey = els.runtimeAnonKey.value.trim();
+      if (!url || !anonKey) {
+        showStatus();
+        setStatus("warn", "请先填写 Supabase URL 和 anon key。");
+        return;
+      }
+      localStorage.setItem(STORAGE_KEYS.url, url);
+      localStorage.setItem(STORAGE_KEYS.anonKey, anonKey);
+      syncConfigUi();
+      fetchTutorialDetail();
+    }
+
+    function clearConfig() {
+      localStorage.removeItem(STORAGE_KEYS.url);
+      localStorage.removeItem(STORAGE_KEYS.anonKey);
+      syncConfigUi();
+      fetchTutorialDetail();
+    }
+
+    async function fetchTutorialDetail() {
+      const config = getConfig();
+      const slug = getSlug();
+      els.detailRoot.innerHTML = "";
+      showStatus();
+
+      if (!slug) {
+        renderNotFound("教程不存在或还未发布", "URL 中缺少 slug，请从 Supabase 教程列表页进入。");
+        return;
+      }
+
+      if (!config.url || !config.anonKey) {
+        setStatus("warn", "请先填写 Supabase URL 和 anon key。只能使用 anon public key，不要使用 service_role key。");
+        return;
+      }
+
+      setStatus("warn", "正在读取教程：" + slug);
+      try {
+        const url = config.url + "/rest/v1/tutorials?select=*&slug=eq." + encodeURIComponent(slug) + "&status=eq.published&limit=1";
+        const response = await fetch(url, {
+          headers: {
+            apikey: config.anonKey,
+            Authorization: "Bearer " + config.anonKey
+          }
+        });
+
+        if (!response.ok) {
+          let msg = response.statusText;
+          try {
+            const json = await response.json();
+            msg = json.message || json.msg || JSON.stringify(json);
+          } catch (error) {}
+          throw Object.assign(new Error(msg), { status: response.status });
+        }
+
+        const rows = await response.json();
+        if (!rows.length) {
+          renderNotFound("教程不存在或还未发布", "请确认 slug 是否正确，并确认该教程 status = published。");
+          return;
+        }
+
+        try {
+          renderTutorial(rows[0]);
+        } catch (renderError) {
+          els.detailRoot.innerHTML = "";
+          setStatus("error", "渲染教程详情失败。\n错误信息：" + (renderError.message || "未知渲染错误"));
+        }
+      } catch (error) {
+        setStatus("error", friendlyError(error.status, error.message));
+      }
+    }
+
+    function renderNotFound(title, message) {
+      hideStatus();
+      els.detailRoot.innerHTML = [
+        '<section class="sb-not-found reveal is-visible">',
+          '<h1>' + escapeHtml(title) + '</h1>',
+          '<p>' + escapeHtml(message || "请返回教程列表重新选择。") + '</p>',
+          '<p><a class="text-action" href="supabase-tutorials.html">← 返回教程列表</a></p>',
+        '</section>'
+      ].join("");
+    }
+
+    function renderSidebar(item) {
+      const readingTime = valueOrDefault(item.reading_time, "阅读时间待补充");
+      const updatedAt = formatDate(item.updated_at || item.created_at);
+      return [
+        '<aside class="tutorial-article-sidebar" aria-label="教程辅助信息">',
+          '<div class="tutorial-sidebar-panel">',
+            '<section class="tutorial-sidebar-section">',
+              '<p class="eyebrow">本文信息</p>',
+              renderDetailMeta([
+                { label: "分类", value: item.category },
+                { label: "难度", value: item.difficulty },
+                { label: "阅读时间", value: readingTime },
+                { label: "更新时间", value: updatedAt }
+              ]),
+            '</section>',
+            '<nav class="tutorial-toc" aria-label="本文目录">',
+              '<p class="eyebrow">目录</p>',
+              '<a href="#tutorial-intro">教程简介</a>',
+              '<a href="#tutorial-content">正文内容</a>',
+              '<a href="#tutorial-contact">联系咨询</a>',
+            '</nav>',
+            '<section id="tutorial-contact" class="tutorial-sidebar-section">',
+              '<p class="eyebrow">咨询</p>',
+              '<button id="contactButton" class="btn btn-primary tutorial-help-button js-contact-modal" type="button"><span>需要陪跑 / 调试</span><i aria-hidden="true"></i></button>',
+            '</section>',
+          '</div>',
+        '</aside>'
+      ].join("");
+    }
+
+    function renderTutorial(item) {
+      hideStatus();
+      const title = valueOrDefault(item.title, "未命名教程");
+      const category = valueOrDefault(item.category, "当前分类");
+      const difficulty = valueOrDefault(item.difficulty, "未标注");
+      const readingTime = valueOrDefault(item.reading_time, "阅读时间待补充");
+      const summary = valueOrDefault(item.summary, "教程简介正在整理中。");
+      const updatedAt = formatDate(item.updated_at || item.created_at);
+      document.title = title + " - 贺 · 01";
+      const tags = normalizeTags(item.tags);
+      els.detailRoot.innerHTML = [
+        '<section class="tutorial-article-shell reveal is-visible">',
+          '<a class="text-action back-link" href="supabase-tutorials.html">← 返回教程列表</a>',
+          '<div class="tutorial-article-layout">',
+            '<article class="tutorial-article-main">',
+              '<header class="tutorial-article-hero">',
+                '<span class="sb-test-note">Supabase Test</span>',
+                '<div class="tutorial-breadcrumb"><a href="supabase-tutorials.html">实战教程</a><span>/</span><span>' + escapeHtml(category) + '</span></div>',
+                '<h1>' + escapeHtml(title) + '</h1>',
+                '<p class="tutorial-article-description">' + escapeHtml(summary) + '</p>',
+                renderDetailMeta([
+                  { label: "更新时间", value: updatedAt },
+                  { label: "阅读时间", value: readingTime },
+                  { label: "难度", value: difficulty },
+                  { label: "分类", value: category },
+                  { label: "状态", value: item.status }
+                ]),
+                tags.length ? '<div class="sb-detail-tags">' + tags.map(function(tag) { return '<span>' + escapeHtml(tag) + '</span>'; }).join("") + '</div>' : '',
+              '</header>',
+              '<div class="tutorial-article-body">',
+                '<section id="tutorial-intro" class="article-section">',
+                  '<p class="eyebrow">Summary</p>',
+                  '<h2>教程简介</h2>',
+                  '<p class="tutorial-article-summary">' + escapeHtml(summary) + '</p>',
+                '</section>',
+                '<section id="tutorial-content" class="article-section">',
+                  '<p class="eyebrow">Content</p>',
+                  '<h2>正文内容</h2>',
+                  '<div class="sb-markdown">' + renderSimpleMarkdown(item.content) + '</div>',
+                '</section>',
+              '</div>',
+            '</article>',
+            renderSidebar(item),
+          '</div>',
+        '</section>'
+      ].join("");
+
+      const contactButton = document.getElementById("contactButton");
+      if (contactButton) {
+        contactButton.addEventListener("click", function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (typeof window.openContactModal === "function") {
+            window.openContactModal();
+          } else {
+            window.location.href = "contact.html";
+          }
+        });
+      }
+    }
+
+    els.saveConfigButton.addEventListener("click", saveConfig);
+    els.clearConfigButton.addEventListener("click", clearConfig);
+    syncConfigUi();
+    fetchTutorialDetail();
+  </script>
+</body>
+</html>

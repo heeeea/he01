@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="贺01 AI 实战资源库 Supabase 测试后台">
+  <title>贺 · 01 Supabase 测试后台</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .supabase-admin-page {
+      min-height: 100vh;
+    }
+
+    .sb-admin-shell {
+      width: min(calc(100% - clamp(24px, 4vw, 64px)), 1420px);
+      margin: 0 auto;
+      padding: 22px 0 56px;
+    }
+
+    .sb-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 0 18px;
+      backdrop-filter: blur(16px);
+    }
+
+    .sb-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sb-brand strong {
+      font-size: clamp(20px, 3vw, 30px);
+      line-height: 1.2;
+      background: linear-gradient(135deg, var(--cyan), var(--primary-strong));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sb-brand span,
+    .sb-user-meta {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .sb-user-area {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      min-width: 220px;
+    }
+
+    .sb-card,
+    .sb-panel {
+      background: var(--glass);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px);
+    }
+
+    .sb-card {
+      width: min(100%, 620px);
+      margin: 54px auto;
+      padding: clamp(22px, 4vw, 34px);
+    }
+
+    .sb-card h1,
+    .sb-panel h2,
+    .sb-editor-title h2 {
+      margin: 0;
+      color: var(--text);
+      line-height: 1.25;
+    }
+
+    .sb-card h1 {
+      font-size: clamp(24px, 4vw, 34px);
+    }
+
+    .sb-card p,
+    .sb-help-text,
+    .sb-empty,
+    .sb-field small {
+      color: var(--text-muted);
+    }
+
+    .sb-help-text {
+      margin: 10px 0 22px;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .sb-alert {
+      display: none;
+      margin: 16px 0;
+      padding: 13px 15px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--line);
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .sb-alert.show {
+      display: block;
+    }
+
+    .sb-alert.info {
+      color: var(--cyan);
+      background: rgba(105, 226, 255, 0.08);
+      border-color: rgba(105, 226, 255, 0.28);
+    }
+
+    .sb-alert.success {
+      color: #9df7c9;
+      background: rgba(84, 220, 150, 0.08);
+      border-color: rgba(84, 220, 150, 0.28);
+    }
+
+    .sb-alert.warn {
+      color: var(--gold);
+      background: rgba(255, 200, 102, 0.08);
+      border-color: rgba(255, 200, 102, 0.28);
+    }
+
+    .sb-alert.error {
+      color: #ff9d9d;
+      background: rgba(255, 100, 100, 0.08);
+      border-color: rgba(255, 100, 100, 0.28);
+    }
+
+    .sb-config-grid,
+    .sb-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .sb-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .sb-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .sb-field input,
+    .sb-field textarea,
+    .sb-field select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text);
+      background: rgba(4, 9, 28, 0.76);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font: inherit;
+    }
+
+    .sb-field textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    .sb-field textarea[name="content"] {
+      min-height: 280px;
+    }
+
+    .sb-upload-box {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+      margin-top: -4px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .sb-upload-status {
+      grid-column: 1 / -1;
+      min-height: 22px;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .sb-upload-status.success {
+      color: #9df7c9;
+    }
+
+    .sb-upload-status.warn {
+      color: var(--gold);
+    }
+
+    .sb-upload-status.error {
+      color: #ff9d9d;
+    }
+
+    .sb-upload-preview {
+      grid-column: 1 / -1;
+      display: none;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .sb-upload-preview.show {
+      display: grid;
+    }
+
+    .sb-upload-preview input {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      color: var(--cyan);
+      background: rgba(4, 9, 28, 0.76);
+      font: inherit;
+    }
+
+    .sb-field input:focus,
+    .sb-field textarea:focus,
+    .sb-field select:focus {
+      border-color: var(--line-hot);
+      box-shadow: 0 0 0 3px rgba(105, 226, 255, 0.1);
+    }
+
+    .sb-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .sb-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 9px 15px;
+      color: var(--text);
+      background: var(--button-secondary);
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+      font-weight: 700;
+    }
+
+    .sb-button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    }
+
+    .sb-button.primary {
+      background: var(--button-glass);
+      box-shadow: 0 14px 34px rgba(77, 185, 255, 0.18);
+    }
+
+    .sb-button.danger {
+      color: #ffdada;
+      background: linear-gradient(135deg, rgba(136, 29, 50, 0.72), rgba(78, 12, 30, 0.64));
+      border-color: rgba(255, 100, 100, 0.28);
+    }
+
+    .sb-button.ghost {
+      color: var(--text-soft);
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sb-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .sb-admin-main {
+      display: none;
+      grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .sb-admin-main.active {
+      display: grid;
+    }
+
+    .sb-panel {
+      padding: clamp(18px, 3vw, 26px);
+    }
+
+    .sb-panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .sb-panel-head h2 {
+      font-size: 20px;
+    }
+
+    .sb-panel-head p {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .sb-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 240px;
+    }
+
+    .sb-list-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .sb-list-item.active {
+      border-color: var(--line-hot);
+      background: rgba(105, 226, 255, 0.07);
+    }
+
+    .sb-list-title {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .sb-list-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .sb-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border-radius: 999px;
+      padding: 2px 9px;
+      color: var(--text-soft);
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .sb-badge.published {
+      color: var(--cyan);
+      border-color: rgba(105, 226, 255, 0.24);
+      background: rgba(105, 226, 255, 0.1);
+    }
+
+    .sb-badge.draft {
+      color: var(--gold);
+      border-color: rgba(255, 200, 102, 0.24);
+      background: rgba(255, 200, 102, 0.1);
+    }
+
+    .sb-list-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sb-list-actions .sb-button {
+      min-height: 34px;
+      padding: 6px 11px;
+      font-size: 13px;
+    }
+
+    .sb-empty {
+      padding: 34px 12px;
+      text-align: center;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .sb-editor {
+      position: sticky;
+      top: 88px;
+    }
+
+    .sb-editor-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .sb-editor-title h2 {
+      font-size: 22px;
+    }
+
+    .sb-editor-title p {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .sb-security-note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      color: var(--gold);
+      background: rgba(255, 200, 102, 0.08);
+      border: 1px solid rgba(255, 200, 102, 0.25);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .sb-hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 980px) {
+      .sb-admin-main.active {
+        grid-template-columns: 1fr;
+      }
+
+      .sb-editor {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .sb-topbar {
+        position: static;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .sb-user-area {
+        justify-content: flex-start;
+        min-width: 0;
+      }
+
+      .sb-config-grid,
+      .sb-form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sb-panel-head,
+      .sb-editor-title {
+        flex-direction: column;
+      }
+
+      .sb-upload-box {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="supabase-admin-page">
+  <div class="sb-admin-shell">
+    <header class="sb-topbar">
+      <a class="sb-brand" href="index.html" aria-label="返回贺01首页">
+        <strong>贺 · 01 Supabase 测试后台</strong>
+        <span>登录、读取、新增、编辑、删除 tutorials 表数据</span>
+      </a>
+      <div class="sb-user-area">
+        <span id="currentEmail" class="sb-user-meta">未登录</span>
+        <button id="logoutButton" class="sb-button ghost sb-hidden" type="button">退出登录</button>
+      </div>
+    </header>
+
+    <div id="globalNotice" class="sb-alert" role="status" aria-live="polite"></div>
+
+    <section id="loginView" class="sb-card" aria-labelledby="loginTitle">
+      <h1 id="loginTitle">管理员登录</h1>
+      <p class="sb-help-text">
+        使用 Supabase Auth 邮箱密码登录。当前页面只适合测试后台能力，请不要把 service_role key 填进来。
+        如果还没有管理员账号，请先去 Supabase Dashboard → Authentication → Users 创建用户。
+      </p>
+
+      <div id="configNotice" class="sb-alert warn show">请先填写 Supabase URL 和 anon key。</div>
+
+      <div class="sb-config-grid" id="runtimeConfigBox">
+        <label class="sb-field full">
+          Supabase Project URL
+          <input id="runtimeUrl" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off">
+        </label>
+        <label class="sb-field full">
+          Supabase anon public key
+          <input id="runtimeAnonKey" type="password" placeholder="只填写 anon public key，不要填写 service_role key" autocomplete="off">
+        </label>
+      </div>
+
+      <div class="sb-actions" id="runtimeConfigActions">
+        <button id="saveRuntimeConfig" class="sb-button primary" type="button">保存测试配置</button>
+        <button id="clearRuntimeConfig" class="sb-button ghost" type="button">清空本地配置</button>
+      </div>
+
+      <form id="loginForm" class="sb-config-grid" style="margin-top: 22px;">
+        <label class="sb-field full">
+          邮箱
+          <input id="emailInput" type="email" placeholder="admin@example.com" autocomplete="email" required>
+        </label>
+        <label class="sb-field full">
+          密码
+          <input id="passwordInput" type="password" placeholder="输入 Supabase Auth 用户密码" autocomplete="current-password" required>
+        </label>
+        <div class="sb-actions full">
+          <button id="loginButton" class="sb-button primary" type="submit">登录后台</button>
+        </div>
+      </form>
+
+      <div class="sb-security-note">
+        安全提示：这个页面只能使用 anon public key。不要在前端写 service_role key 或任何 secret key。
+        如果 GitHub 仓库是公开的，不建议直接提交真实 SUPABASE_URL 和 SUPABASE_ANON_KEY。
+      </div>
+    </section>
+
+    <main id="adminView" class="sb-admin-main" aria-label="Supabase 教程管理后台">
+      <section class="sb-panel">
+        <div class="sb-panel-head">
+          <div>
+            <h2>教程列表</h2>
+            <p id="listSummary">登录后读取 tutorials 表。</p>
+          </div>
+          <div class="sb-actions" style="margin-top: 0;">
+            <button id="refreshButton" class="sb-button ghost" type="button">刷新列表</button>
+            <button id="newButton" class="sb-button primary" type="button">新增教程</button>
+          </div>
+        </div>
+        <div id="tutorialList" class="sb-list"></div>
+      </section>
+
+      <section class="sb-panel sb-editor">
+        <div class="sb-editor-title">
+          <div>
+            <h2 id="editorHeading">新增教程</h2>
+            <p id="editorSubheading">保存后会写入 Supabase tutorials 表。</p>
+          </div>
+          <button id="resetFormButton" class="sb-button ghost" type="button">清空表单</button>
+        </div>
+
+        <form id="tutorialForm" class="sb-form-grid">
+          <label class="sb-field">
+            slug
+            <input name="slug" type="text" placeholder="codex-ai-resource-site" required>
+            <small>英文小写，用于文章唯一标识。</small>
+          </label>
+          <label class="sb-field">
+            status
+            <select name="status">
+              <option value="draft">draft</option>
+              <option value="published">published</option>
+            </select>
+          </label>
+          <label class="sb-field full">
+            title
+            <input name="title" type="text" placeholder="教程标题" required>
+          </label>
+          <label class="sb-field">
+            category
+            <input name="category" type="text" placeholder="Codex / ComfyUI / OpenClaw / Claude Code">
+          </label>
+          <label class="sb-field">
+            difficulty
+            <input name="difficulty" type="text" placeholder="入门 / 进阶 / 实战">
+          </label>
+          <label class="sb-field">
+            reading_time
+            <input name="reading_time" type="text" placeholder="10 分钟">
+          </label>
+          <label class="sb-field">
+            cover_url
+            <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
+          </label>
+          <label class="sb-field full">
+            summary
+            <textarea name="summary" placeholder="教程简介"></textarea>
+          </label>
+          <label class="sb-field full">
+            content
+            <textarea name="content" placeholder="正文内容，支持换行保存。"></textarea>
+          </label>
+          <div class="sb-upload-box" id="imageUploadBox">
+            <label class="sb-field" style="margin: 0;">
+              图片说明
+              <input id="imageAltInput" type="text" placeholder="例如：Codex 对话截图">
+            </label>
+            <div class="sb-actions" style="margin: 0;">
+              <input id="imageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+              <button id="uploadImageButton" class="sb-button ghost" type="button">上传图片并插入正文</button>
+            </div>
+            <div id="uploadStatus" class="sb-upload-status">上传状态：未上传</div>
+            <div id="uploadPreview" class="sb-upload-preview">
+              <label class="sb-field" style="margin: 0;">
+                上传成功后的图片链接
+                <input id="uploadedImageUrl" type="url" readonly>
+              </label>
+              <button id="insertLastImageButton" class="sb-button ghost" type="button">再次插入正文</button>
+            </div>
+          </div>
+          <label class="sb-field full">
+            tags
+            <input name="tags" type="text" placeholder="Codex,AI建站,资源库">
+            <small>保存时会自动按英文逗号分隔成数组。</small>
+          </label>
+          <div class="sb-actions full">
+            <button id="saveButton" class="sb-button primary" type="submit">保存教程</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ============================================================
+    // 配置区：请填写你的 Supabase 项目信息，只能使用 anon public key。
+    // 不要填写 service_role key，也不要把 secret key 写进前端。
+    // 如果仓库是公开的，不建议直接提交真实 URL 和 anon key。
+    // ============================================================
+    const SUPABASE_URL = "这里填我的 Supabase Project URL";
+    const SUPABASE_ANON_KEY = "这里填我的 Supabase anon public key";
+    const STORAGE_BUCKET = "tutorial-images";
+    const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+    const IMAGE_SIZE_WARN_BYTES = 3 * 1024 * 1024;
+
+    const STORAGE_KEYS = {
+      url: "he01_supabase_admin_url",
+      anonKey: "he01_supabase_admin_anon_key",
+      session: "he01_supabase_admin_session"
+    };
+
+    const els = {
+      globalNotice: document.getElementById("globalNotice"),
+      configNotice: document.getElementById("configNotice"),
+      runtimeUrl: document.getElementById("runtimeUrl"),
+      runtimeAnonKey: document.getElementById("runtimeAnonKey"),
+      saveRuntimeConfig: document.getElementById("saveRuntimeConfig"),
+      clearRuntimeConfig: document.getElementById("clearRuntimeConfig"),
+      loginView: document.getElementById("loginView"),
+      adminView: document.getElementById("adminView"),
+      currentEmail: document.getElementById("currentEmail"),
+      logoutButton: document.getElementById("logoutButton"),
+      loginForm: document.getElementById("loginForm"),
+      emailInput: document.getElementById("emailInput"),
+      passwordInput: document.getElementById("passwordInput"),
+      loginButton: document.getElementById("loginButton"),
+      refreshButton: document.getElementById("refreshButton"),
+      newButton: document.getElementById("newButton"),
+      resetFormButton: document.getElementById("resetFormButton"),
+      tutorialList: document.getElementById("tutorialList"),
+      listSummary: document.getElementById("listSummary"),
+      tutorialForm: document.getElementById("tutorialForm"),
+      editorHeading: document.getElementById("editorHeading"),
+      editorSubheading: document.getElementById("editorSubheading"),
+      saveButton: document.getElementById("saveButton"),
+      imageUploadBox: document.getElementById("imageUploadBox"),
+      imageAltInput: document.getElementById("imageAltInput"),
+      imageFileInput: document.getElementById("imageFileInput"),
+      uploadImageButton: document.getElementById("uploadImageButton"),
+      uploadStatus: document.getElementById("uploadStatus"),
+      uploadPreview: document.getElementById("uploadPreview"),
+      uploadedImageUrl: document.getElementById("uploadedImageUrl"),
+      insertLastImageButton: document.getElementById("insertLastImageButton")
+    };
+
+    let session = loadSession();
+    let tutorials = [];
+    let editingId = null;
+    let contentCursor = null;
+    let lastUploadedMarkdown = "";
+
+    function normalizeUrl(url) {
+      return String(url || "").trim().replace(/\/+$/, "");
+    }
+
+    function isPlaceholder(value) {
+      return !value || String(value).includes("这里填");
+    }
+
+    function getConfig() {
+      const hardcodedUrl = isPlaceholder(SUPABASE_URL) ? "" : normalizeUrl(SUPABASE_URL);
+      const hardcodedAnonKey = isPlaceholder(SUPABASE_ANON_KEY) ? "" : String(SUPABASE_ANON_KEY || "").trim();
+      const storedUrl = normalizeUrl(localStorage.getItem(STORAGE_KEYS.url));
+      const storedAnonKey = String(localStorage.getItem(STORAGE_KEYS.anonKey) || "").trim();
+
+      return {
+        url: hardcodedUrl || storedUrl,
+        anonKey: hardcodedAnonKey || storedAnonKey,
+        source: hardcodedUrl && hardcodedAnonKey ? "file" : "browser"
+      };
+    }
+
+    function hasConfig() {
+      const config = getConfig();
+      return Boolean(config.url && config.anonKey);
+    }
+
+    function loadSession() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || "null");
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function saveSession(nextSession) {
+      session = nextSession;
+      localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(nextSession));
+    }
+
+    function clearSession() {
+      session = null;
+      localStorage.removeItem(STORAGE_KEYS.session);
+    }
+
+    function showNotice(type, message) {
+      els.globalNotice.className = "sb-alert show " + type;
+      els.globalNotice.textContent = message;
+    }
+
+    function clearNotice() {
+      els.globalNotice.className = "sb-alert";
+      els.globalNotice.textContent = "";
+    }
+
+    function setLoading(button, loadingText, isLoading) {
+      if (!button) return;
+      if (isLoading) {
+        button.dataset.normalText = button.textContent;
+        button.textContent = loadingText;
+        button.disabled = true;
+      } else {
+        button.textContent = button.dataset.normalText || button.textContent;
+        button.disabled = false;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "未更新";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "时间格式异常";
+      return date.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    function parseTags(value) {
+      return String(value || "")
+        .split(",")
+        .map(function(tag) { return tag.trim(); })
+        .filter(Boolean);
+    }
+
+    function tagsToInput(tags) {
+      return Array.isArray(tags) ? tags.join(",") : String(tags || "");
+    }
+
+    function friendlyError(status, message, context) {
+      const text = message || "没有返回具体错误信息";
+      const prefix = context ? context + "失败。" : "请求失败。";
+      const hints = [];
+
+      if (status === 401 || status === 403) {
+        hints.push("可能是登录失效、RLS 权限没配置好，或者 anon key 填错。");
+      } else if (status === 404) {
+        hints.push("可能是 tutorials 表不存在，或者 Supabase URL 填错。");
+      } else if (status === 409) {
+        hints.push("可能是 slug 重复，因为 slug 通常是唯一的。");
+      } else if (status === 400) {
+        hints.push("可能是字段名、字段类型或请求内容不符合 tutorials 表结构。");
+      } else if (status >= 500) {
+        hints.push("可能是 Supabase 服务端临时异常，请稍后再试。");
+      } else if (!status) {
+        hints.push("可能是网络错误、浏览器阻止请求，或者 Supabase URL 无法访问。");
+      }
+
+      return [
+        prefix,
+        "HTTP 状态：" + (status || "网络错误"),
+        "错误信息：" + text,
+        hints.length ? "检查建议：" + hints.join(" ") : ""
+      ].filter(Boolean).join("\n");
+    }
+
+    async function requestSupabase(path, options) {
+      const config = getConfig();
+      if (!config.url || !config.anonKey) {
+        throw Object.assign(new Error("请先填写 Supabase URL 和 anon key。"), { friendlyStatus: 0 });
+      }
+
+      const headers = Object.assign({
+        apikey: config.anonKey
+      }, options && options.headers ? options.headers : {});
+
+      const response = await fetch(config.url + path, Object.assign({}, options, { headers: headers }));
+      if (!response.ok) {
+        let errorMessage = response.statusText;
+        try {
+          const errorJson = await response.json();
+          errorMessage = errorJson.message || errorJson.msg || errorJson.error_description || JSON.stringify(errorJson);
+        } catch (error) {
+          errorMessage = response.statusText;
+        }
+        const requestError = new Error(errorMessage);
+        requestError.status = response.status;
+        throw requestError;
+      }
+
+      if (response.status === 204) return null;
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    function authHeaders(extraHeaders) {
+      return Object.assign({
+        Authorization: "Bearer " + (session && session.access_token ? session.access_token : "")
+      }, extraHeaders || {});
+    }
+
+    function friendlyUploadError(status, message) {
+      const text = message || "没有返回具体错误信息";
+      const hints = [];
+
+      if (status === 401 || status === 403) {
+        hints.push("可能是未登录、登录过期，或者 Storage RLS 权限没配置好。");
+      } else if (status === 404) {
+        hints.push("可能是 bucket 名称写错，请确认公开 bucket 是 tutorial-images。");
+      } else if (status === 413) {
+        hints.push("图片太大，建议压缩后再上传。");
+      } else if (status >= 500) {
+        hints.push("可能是 Supabase Storage 服务临时异常，请稍后再试。");
+      } else if (!status) {
+        hints.push("可能是网络错误，请检查网络或 Supabase URL。");
+      } else {
+        hints.push("请检查图片类型、bucket 权限和 Supabase 配置。");
+      }
+
+      return [
+        "上传图片失败。",
+        "HTTP 状态：" + (status || "网络错误"),
+        "错误信息：" + text,
+        "检查建议：" + hints.join(" ")
+      ].join("\n");
+    }
+
+    function setUploadStatus(type, message) {
+      els.uploadStatus.className = "sb-upload-status" + (type ? " " + type : "");
+      els.uploadStatus.textContent = message;
+    }
+
+    function sanitizePathSegment(value, fallback) {
+      const safe = String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_]+|[-_]+$/g, "");
+      return safe || fallback;
+    }
+
+    function getSafeFileName(file, timestamp) {
+      const extByType = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif"
+      };
+      const fallbackExt = extByType[file.type] || "png";
+      const originalName = file.name || "";
+      const dotIndex = originalName.lastIndexOf(".");
+      const rawBase = dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
+      const rawExt = dotIndex > 0 ? originalName.slice(dotIndex + 1).toLowerCase() : "";
+      const ext = ["png", "jpg", "jpeg", "webp", "gif"].includes(rawExt) ? rawExt : fallbackExt;
+      const base = rawBase
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9._-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_.]+|[-_.]+$/g, "")
+        .toLowerCase();
+
+      return timestamp + "-" + (base || "image") + "." + ext;
+    }
+
+    function buildImagePath(file) {
+      const timestamp = Date.now();
+      const slug = sanitizePathSegment(els.tutorialForm.elements.slug.value, "draft");
+      return "tutorials/" + slug + "/" + getSafeFileName(file, timestamp);
+    }
+
+    function encodeStoragePath(path) {
+      return path.split("/").map(encodeURIComponent).join("/");
+    }
+
+    function getPublicImageUrl(filePath) {
+      const config = getConfig();
+      return config.url + "/storage/v1/object/public/" + STORAGE_BUCKET + "/" + encodeStoragePath(filePath);
+    }
+
+    async function uploadImageFile(file, filePath) {
+      const config = getConfig();
+      if (!config.url || !config.anonKey) {
+        throw Object.assign(new Error("请先填写 Supabase URL 和 anon key。"), { friendlyStatus: 0 });
+      }
+      if (!session || !session.access_token) {
+        throw Object.assign(new Error("请先登录后再上传图片。"), { friendlyStatus: 401 });
+      }
+
+      const response = await fetch(config.url + "/storage/v1/object/" + STORAGE_BUCKET + "/" + encodeStoragePath(filePath), {
+        method: "POST",
+        headers: {
+          apikey: config.anonKey,
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": file.type,
+          "x-upsert": "true"
+        },
+        body: file
+      });
+
+      if (!response.ok) {
+        let errorMessage = response.statusText;
+        try {
+          const errorJson = await response.json();
+          errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
+        } catch (error) {
+          errorMessage = response.statusText;
+        }
+        const uploadError = new Error(errorMessage);
+        uploadError.status = response.status;
+        throw uploadError;
+      }
+    }
+
+    function rememberContentCursor() {
+      const textarea = els.tutorialForm.elements.content;
+      if (document.activeElement === textarea) {
+        contentCursor = {
+          start: textarea.selectionStart,
+          end: textarea.selectionEnd
+        };
+      }
+    }
+
+    function insertMarkdownAtCursor(markdown) {
+      const textarea = els.tutorialForm.elements.content;
+      const value = textarea.value || "";
+      const start = contentCursor && Number.isInteger(contentCursor.start) ? contentCursor.start : value.length;
+      const end = contentCursor && Number.isInteger(contentCursor.end) ? contentCursor.end : start;
+      const before = value.slice(0, start);
+      const after = value.slice(end);
+      const prefix = before && !before.endsWith("\n") ? "\n\n" : (before.endsWith("\n\n") || !before ? "" : "\n");
+      const suffix = after && !after.startsWith("\n") ? "\n\n" : (after.startsWith("\n\n") || !after ? "" : "\n");
+      const insertText = prefix + markdown + suffix;
+      const nextCursor = before.length + insertText.length;
+
+      textarea.value = before + insertText + after;
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+      contentCursor = { start: nextCursor, end: nextCursor };
+    }
+
+    async function handleImageUpload() {
+      if (!session || !session.access_token) {
+        setUploadStatus("error", "请先登录后再上传图片。");
+        return;
+      }
+      els.imageFileInput.click();
+    }
+
+    async function uploadSelectedImage() {
+      const file = els.imageFileInput.files && els.imageFileInput.files[0];
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        setUploadStatus("error", "只支持 png、jpg、webp、gif 图片。");
+        els.imageFileInput.value = "";
+        return;
+      }
+
+      const sizeWarning = file.size > IMAGE_SIZE_WARN_BYTES
+        ? "图片较大，建议先压缩后再上传，避免网页加载变慢。仍会继续上传。\n"
+        : "";
+      const filePath = buildImagePath(file);
+      const alt = els.imageAltInput.value.trim() || "教程配图";
+
+      setLoading(els.uploadImageButton, "上传中...", true);
+      setUploadStatus(file.size > IMAGE_SIZE_WARN_BYTES ? "warn" : "", sizeWarning + "上传中：" + filePath);
+      els.uploadPreview.classList.remove("show");
+
+      try {
+        await uploadImageFile(file, filePath);
+        const publicUrl = getPublicImageUrl(filePath);
+        const markdown = "![" + alt.replace(/[\[\]\n\r]/g, " ") + "](" + publicUrl + ")";
+        lastUploadedMarkdown = markdown;
+        els.uploadedImageUrl.value = publicUrl;
+        els.uploadPreview.classList.add("show");
+        insertMarkdownAtCursor(markdown);
+        setUploadStatus("success", "上传成功，图片 Markdown 已插入正文。");
+      } catch (error) {
+        setUploadStatus("error", friendlyUploadError(error.status || error.friendlyStatus, error.message));
+      } finally {
+        els.imageFileInput.value = "";
+        setLoading(els.uploadImageButton, "上传中...", false);
+      }
+    }
+
+    function refreshConfigUi() {
+      const config = getConfig();
+      const hardcoded = config.source === "file";
+      els.runtimeUrl.value = hardcoded ? config.url : (localStorage.getItem(STORAGE_KEYS.url) || "");
+      els.runtimeAnonKey.value = hardcoded ? config.anonKey : (localStorage.getItem(STORAGE_KEYS.anonKey) || "");
+      els.runtimeUrl.disabled = hardcoded;
+      els.runtimeAnonKey.disabled = hardcoded;
+      els.saveRuntimeConfig.disabled = hardcoded;
+
+      if (config.url && config.anonKey) {
+        els.configNotice.className = "sb-alert info show";
+        els.configNotice.textContent = hardcoded
+          ? "已从页面顶部常量读取 Supabase 配置。"
+          : "已从本浏览器 localStorage 读取 Supabase 测试配置。";
+      } else {
+        els.configNotice.className = "sb-alert warn show";
+        els.configNotice.textContent = "请先填写 Supabase URL 和 anon key。";
+      }
+    }
+
+    function updateAuthUi() {
+      refreshConfigUi();
+      const loggedIn = Boolean(session && session.access_token);
+      els.loginView.classList.toggle("sb-hidden", loggedIn);
+      els.adminView.classList.toggle("active", loggedIn);
+      els.logoutButton.classList.toggle("sb-hidden", !loggedIn);
+      els.currentEmail.textContent = loggedIn ? "当前登录：" + (session.email || "未知邮箱") : "未登录";
+
+      if (loggedIn) {
+        fetchTutorials();
+      } else {
+        renderTutorialList();
+      }
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      clearNotice();
+
+      if (!hasConfig()) {
+        showNotice("warn", "请先填写 Supabase URL 和 anon key。");
+        return;
+      }
+
+      const email = els.emailInput.value.trim();
+      const password = els.passwordInput.value;
+      if (!email || !password) {
+        showNotice("warn", "请输入邮箱和密码。");
+        return;
+      }
+
+      setLoading(els.loginButton, "登录中...", true);
+      try {
+        const data = await requestSupabase("/auth/v1/token?grant_type=password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email: email, password: password })
+        });
+
+        saveSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          email: data.user && data.user.email ? data.user.email : email,
+          expires_at: data.expires_at || null
+        });
+        els.passwordInput.value = "";
+        showNotice("success", "登录成功。");
+        updateAuthUi();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "登录") + "\n如果还没有管理员账号，请先去 Supabase Dashboard → Authentication → Users 创建用户；也请确认 Email 登录已经开启。");
+      } finally {
+        setLoading(els.loginButton, "登录中...", false);
+      }
+    }
+
+    async function fetchTutorials() {
+      if (!session || !session.access_token) return;
+      setLoading(els.refreshButton, "读取中...", true);
+      try {
+        tutorials = await requestSupabase("/rest/v1/tutorials?select=*&order=created_at.desc", {
+          method: "GET",
+          headers: authHeaders()
+        });
+        renderTutorialList();
+        els.listSummary.textContent = "共读取到 " + tutorials.length + " 篇教程。";
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "读取教程列表"));
+        if (error.status === 401) {
+          clearSession();
+          updateAuthUi();
+        }
+      } finally {
+        setLoading(els.refreshButton, "读取中...", false);
+      }
+    }
+
+    function renderTutorialList() {
+      if (!session || !session.access_token) {
+        els.tutorialList.innerHTML = "";
+        return;
+      }
+
+      if (!tutorials.length) {
+        els.tutorialList.innerHTML = '<div class="sb-empty">还没有教程。点击“新增教程”开始写入第一篇。</div>';
+        return;
+      }
+
+      els.tutorialList.innerHTML = tutorials.map(function(tutorial) {
+        const status = tutorial.status || "draft";
+        return [
+          '<article class="sb-list-item ' + (String(editingId) === String(tutorial.id) ? "active" : "") + '">',
+            '<h3 class="sb-list-title">' + escapeHtml(tutorial.title || "未命名教程") + '</h3>',
+            '<div class="sb-list-meta">',
+              '<span class="sb-badge">' + escapeHtml(tutorial.category || "未分类") + '</span>',
+              '<span class="sb-badge ' + escapeHtml(status) + '">' + escapeHtml(status) + '</span>',
+              '<span>更新：' + escapeHtml(formatDate(tutorial.updated_at)) + '</span>',
+            '</div>',
+            '<div class="sb-list-actions">',
+              '<button class="sb-button ghost" type="button" data-action="edit" data-id="' + escapeHtml(tutorial.id) + '">编辑</button>',
+              '<button class="sb-button danger" type="button" data-action="delete" data-id="' + escapeHtml(tutorial.id) + '">删除</button>',
+            '</div>',
+          '</article>'
+        ].join("");
+      }).join("");
+    }
+
+    function setFormMode(mode, tutorial) {
+      editingId = mode === "edit" && tutorial ? tutorial.id : null;
+      els.editorHeading.textContent = editingId ? "编辑教程" : "新增教程";
+      els.editorSubheading.textContent = editingId ? "正在编辑 ID：" + editingId : "保存后会写入 Supabase tutorials 表。";
+      fillForm(tutorial || {});
+      resetUploadUi();
+      renderTutorialList();
+    }
+
+    function resetUploadUi() {
+      contentCursor = null;
+      lastUploadedMarkdown = "";
+      els.imageAltInput.value = "";
+      els.imageFileInput.value = "";
+      els.uploadedImageUrl.value = "";
+      els.uploadPreview.classList.remove("show");
+      setUploadStatus("", session && session.access_token ? "上传状态：未上传" : "请先登录后再上传图片。");
+    }
+
+    function fillForm(tutorial) {
+      const form = els.tutorialForm;
+      form.elements.slug.value = tutorial.slug || "";
+      form.elements.title.value = tutorial.title || "";
+      form.elements.category.value = tutorial.category || "";
+      form.elements.difficulty.value = tutorial.difficulty || "";
+      form.elements.reading_time.value = tutorial.reading_time || "";
+      form.elements.summary.value = tutorial.summary || "";
+      form.elements.content.value = tutorial.content || "";
+      form.elements.cover_url.value = tutorial.cover_url || "";
+      form.elements.tags.value = tagsToInput(tutorial.tags);
+      form.elements.status.value = tutorial.status || "draft";
+    }
+
+    function getFormPayload() {
+      const form = els.tutorialForm;
+      return {
+        slug: form.elements.slug.value.trim(),
+        title: form.elements.title.value.trim(),
+        category: form.elements.category.value.trim(),
+        difficulty: form.elements.difficulty.value.trim(),
+        reading_time: form.elements.reading_time.value.trim(),
+        summary: form.elements.summary.value.trim(),
+        content: form.elements.content.value,
+        cover_url: form.elements.cover_url.value.trim(),
+        tags: parseTags(form.elements.tags.value),
+        status: form.elements.status.value,
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    async function handleSave(event) {
+      event.preventDefault();
+      clearNotice();
+
+      const payload = getFormPayload();
+      if (!payload.slug || !payload.title) {
+        showNotice("warn", "slug 和 title 必填。");
+        return;
+      }
+
+      setLoading(els.saveButton, "保存中...", true);
+      try {
+        if (editingId) {
+          await requestSupabase("/rest/v1/tutorials?id=eq." + encodeURIComponent(editingId), {
+            method: "PATCH",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        } else {
+          await requestSupabase("/rest/v1/tutorials", {
+            method: "POST",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        }
+
+        showNotice("success", "保存成功。");
+        await fetchTutorials();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "保存教程"));
+      } finally {
+        setLoading(els.saveButton, "保存中...", false);
+      }
+    }
+
+    async function handleDelete(id) {
+      const tutorial = tutorials.find(function(item) { return String(item.id) === String(id); });
+      if (!tutorial) return;
+      if (!window.confirm("确定要删除这篇教程吗？")) return;
+
+      clearNotice();
+      try {
+        await requestSupabase("/rest/v1/tutorials?id=eq." + encodeURIComponent(id), {
+          method: "DELETE",
+          headers: authHeaders()
+        });
+        showNotice("success", "删除成功。");
+        if (String(editingId) === String(id)) {
+          setFormMode("new");
+        }
+        await fetchTutorials();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "删除教程"));
+      }
+    }
+
+    function saveRuntimeConfig() {
+      const url = normalizeUrl(els.runtimeUrl.value);
+      const anonKey = els.runtimeAnonKey.value.trim();
+      if (!url || !anonKey) {
+        showNotice("warn", "请填写 Supabase URL 和 anon key。");
+        return;
+      }
+      localStorage.setItem(STORAGE_KEYS.url, url);
+      localStorage.setItem(STORAGE_KEYS.anonKey, anonKey);
+      refreshConfigUi();
+      showNotice("success", "测试配置已保存到当前浏览器。");
+    }
+
+    function clearRuntimeConfig() {
+      localStorage.removeItem(STORAGE_KEYS.url);
+      localStorage.removeItem(STORAGE_KEYS.anonKey);
+      clearSession();
+      refreshConfigUi();
+      updateAuthUi();
+      showNotice("success", "已清空本浏览器里的 Supabase 测试配置和登录态。");
+    }
+
+    els.loginForm.addEventListener("submit", handleLogin);
+    els.tutorialForm.addEventListener("submit", handleSave);
+    els.tutorialForm.elements.content.addEventListener("click", rememberContentCursor);
+    els.tutorialForm.elements.content.addEventListener("keyup", rememberContentCursor);
+    els.tutorialForm.elements.content.addEventListener("select", rememberContentCursor);
+    els.tutorialForm.elements.content.addEventListener("input", rememberContentCursor);
+    els.uploadImageButton.addEventListener("click", handleImageUpload);
+    els.imageFileInput.addEventListener("change", uploadSelectedImage);
+    els.insertLastImageButton.addEventListener("click", function() {
+      if (!lastUploadedMarkdown) {
+        setUploadStatus("warn", "还没有可插入的图片链接，请先上传图片。");
+        return;
+      }
+      insertMarkdownAtCursor(lastUploadedMarkdown);
+      setUploadStatus("success", "图片 Markdown 已再次插入正文。");
+    });
+    els.refreshButton.addEventListener("click", fetchTutorials);
+    els.newButton.addEventListener("click", function() {
+      clearNotice();
+      setFormMode("new");
+    });
+    els.resetFormButton.addEventListener("click", function() {
+      clearNotice();
+      setFormMode("new");
+    });
+    els.logoutButton.addEventListener("click", function() {
+      clearSession();
+      tutorials = [];
+      setFormMode("new");
+      showNotice("success", "已退出登录。");
+      updateAuthUi();
+    });
+    els.saveRuntimeConfig.addEventListener("click", saveRuntimeConfig);
+    els.clearRuntimeConfig.addEventListener("click", clearRuntimeConfig);
+    els.tutorialList.addEventListener("click", function(event) {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const id = button.dataset.id;
+      if (button.dataset.action === "edit") {
+        const tutorial = tutorials.find(function(item) { return String(item.id) === String(id); });
+        if (tutorial) {
+          clearNotice();
+          setFormMode("edit", tutorial);
+        }
+      }
+      if (button.dataset.action === "delete") {
+        handleDelete(id);
+      }
+    });
+
+    refreshConfigUi();
+    updateAuthUi();
+  </script>
+</body>
+</html>
