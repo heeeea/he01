@@ -668,15 +668,15 @@
           </div>
         </div>
         <div class="sb-list-tools" aria-label="教程筛选">
-          <input id="tutorialSearchInput" class="sb-list-search" type="search" placeholder="搜索教程标题 / slug / 简介" autocomplete="off">
+          <input id="tutorialSearchInput" class="sb-list-search" type="search" placeholder="搜索教程标题 / 文章标识 / 教程简介" autocomplete="off">
           <div class="sb-list-filter-row">
             <select id="categoryFilter" aria-label="分类筛选">
               <option value="all">全部分类</option>
             </select>
             <select id="statusFilter" aria-label="状态筛选">
               <option value="all">全部状态</option>
-              <option value="draft">draft</option>
-              <option value="published">published</option>
+              <option value="draft">草稿</option>
+              <option value="published">已发布</option>
             </select>
             <button id="clearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
           </div>
@@ -699,43 +699,50 @@
             <a id="previewArticleButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览文章</a>
           </div>
           <label class="sb-field">
-            slug
+            文章标识 / 链接名
             <input name="slug" type="text" placeholder="codex-ai-resource-site" required>
-            <small>英文小写，用于文章唯一标识。</small>
+            <small>建议使用英文小写和短横线，例如：codex-ai-resource-site。这个会出现在文章链接里，不建议用中文长句。</small>
           </label>
           <label class="sb-field">
-            status
+            发布状态
             <select name="status">
-              <option value="draft">draft</option>
-              <option value="published">published</option>
+              <option value="draft">草稿 draft</option>
+              <option value="published">已发布 published</option>
             </select>
+            <small>草稿不会作为正式发布内容展示；已发布会进入前台读取范围。</small>
           </label>
           <label class="sb-field full">
-            title
+            教程标题
             <input name="title" type="text" placeholder="教程标题" required>
+            <small>写给读者看的标题，建议清楚说明这篇教程解决什么问题。</small>
           </label>
           <label class="sb-field">
-            category
+            分类
             <input name="category" type="text" placeholder="Codex / ComfyUI / OpenClaw / Claude Code">
+            <small>用来在列表和详情页标记教程方向。</small>
           </label>
           <label class="sb-field">
-            difficulty
+            难度
             <input name="difficulty" type="text" placeholder="入门 / 进阶 / 实战">
+            <small>给读者一个学习门槛参考。</small>
           </label>
           <label class="sb-field">
-            reading_time
+            阅读时间
             <input name="reading_time" type="text" placeholder="10 分钟">
+            <small>可以写“10 分钟”“约 15 分钟”等。</small>
           </label>
           <label class="sb-field">
-            cover_url
+            封面图链接
             <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
+            <small>填写图片网址；没有封面时可以先留空。</small>
           </label>
           <label class="sb-field full">
-            summary
+            教程简介
             <textarea name="summary" placeholder="教程简介"></textarea>
+            <small>用一两句话说明读者能学到什么。</small>
           </label>
           <label class="sb-field full">
-            content
+            教程正文
             <div class="sb-markdown-tools" aria-label="正文快捷插入">
               <button class="sb-button ghost" type="button" data-insert-markdown="h2">插入二级标题</button>
               <button class="sb-button ghost" type="button" data-insert-markdown="h3">插入三级标题</button>
@@ -744,6 +751,7 @@
               <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
             </div>
             <textarea name="content" placeholder="正文内容，支持换行保存。"></textarea>
+            <small>支持 Markdown 写法，可以用上面的按钮快速插入标题、提示、代码块和分割线。</small>
           </label>
           <div class="sb-upload-box" id="imageUploadBox">
             <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后会自动插入正文光标位置。</p>
@@ -765,9 +773,9 @@
             </div>
           </div>
           <label class="sb-field full">
-            tags
+            标签
             <input name="tags" type="text" placeholder="Codex,AI建站,资源库">
-            <small>保存时会自动按英文逗号分隔成数组。</small>
+            <small>多个标签请用英文逗号分隔，例如：Codex,AI建站,资源库。</small>
           </label>
           <div class="sb-actions full">
             <button id="saveButton" class="sb-button primary" type="submit">保存教程</button>
@@ -937,6 +945,12 @@
       return Array.isArray(tags) ? tags.join(",") : String(tags || "");
     }
 
+    function statusLabel(status) {
+      if (status === "published") return "已发布";
+      if (status === "draft") return "草稿";
+      return status || "草稿";
+    }
+
     function getFilterState() {
       return {
         search: String(els.tutorialSearchInput.value || "").trim().toLowerCase(),
@@ -1008,7 +1022,7 @@
       const isDraft = savedPreview.status === "draft";
       els.previewArea.className = "sb-preview-area show" + (isDraft ? " warn" : "");
       els.previewHint.textContent = isDraft
-        ? "当前文章是 draft，正式前台可能不会展示。"
+        ? "当前文章是草稿 draft，正式前台可能不会展示。"
         : "文章已保存，可以打开正式详情页预览。";
       els.previewArticleButton.href = "tutorial-detail.html?slug=" + encodeURIComponent(savedPreview.slug);
     }
@@ -1023,7 +1037,7 @@
       } else if (status === 404) {
         hints.push("可能是 tutorials 表不存在，或者 Supabase URL 填错。");
       } else if (status === 409) {
-        hints.push("可能是 slug 重复，因为 slug 通常是唯一的。");
+        hints.push("可能是文章标识 / 链接名重复，因为它通常是唯一的。");
       } else if (status === 400) {
         hints.push("可能是字段名、字段类型或请求内容不符合 tutorials 表结构。");
       } else if (status >= 500) {
@@ -1449,15 +1463,15 @@
         const status = tutorial.status || "draft";
         return [
           '<article class="sb-list-item ' + (String(editingId) === String(tutorial.id) ? "active" : "") + '">',
-            '<h3 class="sb-list-title">' + escapeHtml(tutorial.title || "未命名教程") + '</h3>',
+            '<h3 class="sb-list-title"><span>标题：</span>' + escapeHtml(tutorial.title || "未命名教程") + '</h3>',
             '<div class="sb-list-meta">',
-              '<span class="sb-badge">' + escapeHtml(tutorial.category || "未分类") + '</span>',
-              '<span class="sb-badge ' + escapeHtml(status) + '">' + escapeHtml(status) + '</span>',
-              '<span>更新：' + escapeHtml(formatDate(tutorial.updated_at)) + '</span>',
+              '<span class="sb-badge">分类：' + escapeHtml(tutorial.category || "未分类") + '</span>',
+              '<span class="sb-badge ' + escapeHtml(status) + '">状态：' + escapeHtml(statusLabel(status)) + '</span>',
+              '<span>更新时间：' + escapeHtml(formatDate(tutorial.updated_at)) + '</span>',
             '</div>',
             '<div class="sb-list-actions">',
               '<button class="sb-button ghost" type="button" data-action="edit" data-id="' + escapeHtml(tutorial.id) + '">编辑</button>',
-              '<button class="sb-button danger" type="button" data-action="delete" data-id="' + escapeHtml(tutorial.id) + '">删除</button>',
+              '<button class="sb-button danger" type="button" data-action="delete" data-id="' + escapeHtml(tutorial.id) + '">删除教程</button>',
             '</div>',
           '</article>'
         ].join("");
@@ -1521,7 +1535,7 @@
 
       const payload = getFormPayload();
       if (!payload.slug || !payload.title) {
-        showNotice("warn", "slug 和 title 必填。");
+        showNotice("warn", "文章标识 / 链接名和教程标题必填。");
         return;
       }
 
@@ -1639,7 +1653,7 @@
         return;
       }
       if (savedPreview.status === "draft") {
-        window.alert("当前文章是 draft，正式前台可能不会展示。");
+        window.alert("当前文章是草稿 draft，正式前台可能不会展示。");
       }
     });
     els.insertLastImageButton.addEventListener("click", function() {

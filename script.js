@@ -758,7 +758,7 @@ function renderSidebar(title, items, tags, backUrl, contactLabel = "联系合作
         ${renderTags(tags)}
         <div class="sidebar-actions">
           <a class="card-link" href="${escapeHTML(backUrl)}"><span>返回列表</span><i aria-hidden="true"></i></a>
-          <a class="card-link" href="contact.html"><span>${escapeHTML(contactLabel)}</span><i aria-hidden="true"></i></a>
+          <a class="card-link js-contact-modal" href="contact.html"><span>${escapeHTML(contactLabel)}</span><i aria-hidden="true"></i></a>
         </div>
       </article>
     </aside>
@@ -876,7 +876,7 @@ function renderResourceDetail(container, data) {
           <section class="detail-card"><p class="eyebrow">Notes</p><h2>注意事项</h2>${renderListItems(item.notes)}</section>
           <section class="detail-card"><p class="eyebrow">FAQ</p><h2>常见问题</h2>${renderFaq(item.faq)}</section>
           <section class="detail-card"><p class="eyebrow">Related</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
-          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>需要帮你安装调试或跑通工具？</h2><p>可以把当前资源、工具环境和卡住的位置发给我，一起拆解下一步。</p></div><a class="btn btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
+          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>需要帮你安装调试或跑通工具？</h2><p>可以把当前资源、工具环境和卡住的位置发给我，一起拆解下一步。</p></div><a class="btn btn-primary js-contact-modal" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
         </article>
         ${renderSidebar(item.type || "资源", [
           { label: "类型", value: item.type },
@@ -1014,7 +1014,7 @@ function renderCaseDetail(container, data) {
           <section class="detail-card"><p class="eyebrow">Result</p><h2>项目结果</h2>${renderTextBlock(item.result)}</section>
           <section class="detail-card"><p class="eyebrow">Lessons</p><h2>经验总结</h2>${renderTextBlock(item.lessons)}</section>
           <section class="detail-card"><p class="eyebrow">Resources</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
-          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>想做类似项目？</h2><p>可以把行业、目标用户和你想解决的问题发来，一起拆成可落地版本。</p></div><a class="btn btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
+          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>想做类似项目？</h2><p>可以把行业、目标用户和你想解决的问题发来，一起拆成可落地版本。</p></div><a class="btn btn-primary js-contact-modal" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
         </article>
         ${renderSidebar(item.category || "案例", [
           { label: "分类", value: item.category },
@@ -1081,12 +1081,54 @@ function openModal(message) {
 }
 
 function openContactModal(site = currentSiteData) {
-  if (!modal || !modalDialog) return;
+  if (!modal || !modalDialog) return false;
   closeMenu();
   modalDialog.innerHTML = renderContactModalContent(site);
   modal.classList.add("is-open", "is-contact-modal");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+  return true;
+}
+
+window.openContactModal = openContactModal;
+
+function fallbackToContactPage(trigger) {
+  const url = trigger?.getAttribute?.("href") || "contact.html";
+  window.location.href = url && url !== "#" ? url : "contact.html";
+}
+
+function tryOpenContactModal(trigger) {
+  if (typeof window.openContactModal === "function" && window.openContactModal()) return;
+  fallbackToContactPage(trigger);
+}
+
+const CONTACT_MODAL_LABELS = new Set([
+  "联系合作",
+  "需要陪跑/调试",
+  "获取资源",
+  "人工咨询",
+  "想做类似项目",
+  "添加微信",
+  "扫码添加",
+  "立即咨询",
+  "联系我",
+  "获取加入方式",
+  "获取合作方式",
+  "获取方式"
+]);
+
+function compactContactText(value) {
+  return String(value || "").replace(/\s+/g, "").trim();
+}
+
+function isContactModalIntent(trigger) {
+  if (!trigger || trigger.closest(".modal, .nav-links, .site-footer")) return false;
+  const href = trigger.getAttribute("href") || "";
+  const text = compactContactText(trigger.textContent);
+  if (CONTACT_MODAL_LABELS.has(text)) return true;
+  if (trigger.closest(".nav-actions") && trigger.matches(".btn") && href.endsWith("contact.html")) return true;
+  if (trigger.closest(".contact-cta, .sidebar-actions") && href.endsWith("contact.html")) return true;
+  return false;
 }
 
 function closeModal() {
@@ -1163,7 +1205,14 @@ document.addEventListener("click", (event) => {
   const contactTrigger = event.target.closest(".js-contact-modal, [data-contact-modal]");
   if (contactTrigger) {
     event.preventDefault();
-    openContactModal();
+    tryOpenContactModal(contactTrigger);
+    return;
+  }
+
+  const contactIntentTrigger = event.target.closest("a, button");
+  if (isContactModalIntent(contactIntentTrigger)) {
+    event.preventDefault();
+    tryOpenContactModal(contactIntentTrigger);
     return;
   }
 
