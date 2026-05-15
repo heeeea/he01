@@ -195,6 +195,20 @@
       background: rgba(255, 255, 255, 0.035);
     }
 
+    .sb-upload-box.drag-active {
+      border-color: rgba(105, 226, 255, 0.68);
+      box-shadow: 0 0 0 3px rgba(105, 226, 255, 0.12), 0 16px 38px rgba(77, 185, 255, 0.14);
+      background: rgba(105, 226, 255, 0.06);
+    }
+
+    .sb-drop-hint {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
     .sb-upload-status {
       grid-column: 1 / -1;
       min-height: 22px;
@@ -331,6 +345,53 @@
       font-size: 13px;
     }
 
+    .sb-list-tools {
+      display: grid;
+      gap: 12px;
+      margin: -4px 0 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sb-list-search {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text);
+      background: rgba(4, 9, 28, 0.76);
+      outline: none;
+      font: inherit;
+    }
+
+    .sb-list-filter-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .sb-list-filter-row select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      color: var(--text);
+      background: rgba(4, 9, 28, 0.76);
+      outline: none;
+      font: inherit;
+    }
+
+    .sb-list-search:focus,
+    .sb-list-filter-row select:focus {
+      border-color: var(--line-hot);
+      box-shadow: 0 0 0 3px rgba(105, 226, 255, 0.1);
+    }
+
     .sb-list {
       display: flex;
       flex-direction: column;
@@ -435,6 +496,48 @@
       font-size: 13px;
     }
 
+    .sb-preview-area {
+      display: none;
+      grid-column: 1 / -1;
+      margin: 0 0 4px;
+      padding: 12px 14px;
+      border: 1px solid rgba(105, 226, 255, 0.2);
+      border-radius: var(--radius-md);
+      background: rgba(105, 226, 255, 0.06);
+    }
+
+    .sb-preview-area.show {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sb-preview-area p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .sb-preview-area.warn p {
+      color: var(--gold);
+    }
+
+    .sb-markdown-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .sb-markdown-tools .sb-button {
+      min-height: 34px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
     .sb-security-note {
       margin-top: 18px;
       padding: 14px 16px;
@@ -480,6 +583,10 @@
       .sb-panel-head,
       .sb-editor-title {
         flex-direction: column;
+      }
+
+      .sb-list-filter-row {
+        grid-template-columns: 1fr;
       }
 
       .sb-upload-box {
@@ -560,6 +667,20 @@
             <button id="newButton" class="sb-button primary" type="button">新增教程</button>
           </div>
         </div>
+        <div class="sb-list-tools" aria-label="教程筛选">
+          <input id="tutorialSearchInput" class="sb-list-search" type="search" placeholder="搜索教程标题 / slug / 简介" autocomplete="off">
+          <div class="sb-list-filter-row">
+            <select id="categoryFilter" aria-label="分类筛选">
+              <option value="all">全部分类</option>
+            </select>
+            <select id="statusFilter" aria-label="状态筛选">
+              <option value="all">全部状态</option>
+              <option value="draft">draft</option>
+              <option value="published">published</option>
+            </select>
+            <button id="clearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
+          </div>
+        </div>
         <div id="tutorialList" class="sb-list"></div>
       </section>
 
@@ -573,6 +694,10 @@
         </div>
 
         <form id="tutorialForm" class="sb-form-grid">
+          <div id="previewArea" class="sb-preview-area" aria-live="polite">
+            <p id="previewHint"></p>
+            <a id="previewArticleButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览文章</a>
+          </div>
           <label class="sb-field">
             slug
             <input name="slug" type="text" placeholder="codex-ai-resource-site" required>
@@ -611,9 +736,17 @@
           </label>
           <label class="sb-field full">
             content
+            <div class="sb-markdown-tools" aria-label="正文快捷插入">
+              <button class="sb-button ghost" type="button" data-insert-markdown="h2">插入二级标题</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="h3">插入三级标题</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="tip">插入提示框</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="code">插入代码块</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
+            </div>
             <textarea name="content" placeholder="正文内容，支持换行保存。"></textarea>
           </label>
           <div class="sb-upload-box" id="imageUploadBox">
+            <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后会自动插入正文光标位置。</p>
             <label class="sb-field" style="margin: 0;">
               图片说明
               <input id="imageAltInput" type="text" placeholder="例如：Codex 对话截图">
@@ -680,12 +813,19 @@
       refreshButton: document.getElementById("refreshButton"),
       newButton: document.getElementById("newButton"),
       resetFormButton: document.getElementById("resetFormButton"),
+      tutorialSearchInput: document.getElementById("tutorialSearchInput"),
+      categoryFilter: document.getElementById("categoryFilter"),
+      statusFilter: document.getElementById("statusFilter"),
+      clearFiltersButton: document.getElementById("clearFiltersButton"),
       tutorialList: document.getElementById("tutorialList"),
       listSummary: document.getElementById("listSummary"),
       tutorialForm: document.getElementById("tutorialForm"),
       editorHeading: document.getElementById("editorHeading"),
       editorSubheading: document.getElementById("editorSubheading"),
       saveButton: document.getElementById("saveButton"),
+      previewArea: document.getElementById("previewArea"),
+      previewHint: document.getElementById("previewHint"),
+      previewArticleButton: document.getElementById("previewArticleButton"),
       imageUploadBox: document.getElementById("imageUploadBox"),
       imageAltInput: document.getElementById("imageAltInput"),
       imageFileInput: document.getElementById("imageFileInput"),
@@ -701,6 +841,8 @@
     let editingId = null;
     let contentCursor = null;
     let lastUploadedMarkdown = "";
+    let savedPreview = null;
+    let dragDepth = 0;
 
     function normalizeUrl(url) {
       return String(url || "").trim().replace(/\/+$/, "");
@@ -793,6 +935,82 @@
 
     function tagsToInput(tags) {
       return Array.isArray(tags) ? tags.join(",") : String(tags || "");
+    }
+
+    function getFilterState() {
+      return {
+        search: String(els.tutorialSearchInput.value || "").trim().toLowerCase(),
+        category: els.categoryFilter.value || "all",
+        status: els.statusFilter.value || "all"
+      };
+    }
+
+    function tutorialSearchText(tutorial) {
+      const tags = Array.isArray(tutorial.tags) ? tutorial.tags.join(" ") : String(tutorial.tags || "");
+      return [
+        tutorial.title,
+        tutorial.slug,
+        tutorial.summary,
+        tutorial.category,
+        tags
+      ].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function getFilteredTutorials() {
+      const filter = getFilterState();
+      return tutorials.filter(function(tutorial) {
+        const category = tutorial.category || "";
+        const status = tutorial.status || "draft";
+        const matchesSearch = !filter.search || tutorialSearchText(tutorial).includes(filter.search);
+        const matchesCategory = filter.category === "all" || category === filter.category;
+        const matchesStatus = filter.status === "all" || status === filter.status;
+        return matchesSearch && matchesCategory && matchesStatus;
+      });
+    }
+
+    function refreshCategoryFilterOptions() {
+      const current = els.categoryFilter.value || "all";
+      const categories = Array.from(new Set(tutorials.map(function(tutorial) {
+        return tutorial.category || "";
+      }).filter(Boolean))).sort(function(a, b) {
+        return a.localeCompare(b, "zh-CN");
+      });
+      els.categoryFilter.innerHTML = '<option value="all">全部分类</option>' + categories.map(function(category) {
+        return '<option value="' + escapeHtml(category) + '">' + escapeHtml(category) + '</option>';
+      }).join("");
+      els.categoryFilter.value = categories.includes(current) ? current : "all";
+    }
+
+    function resetFilters() {
+      els.tutorialSearchInput.value = "";
+      els.categoryFilter.value = "all";
+      els.statusFilter.value = "all";
+      renderTutorialList();
+    }
+
+    function getCurrentFormPreview() {
+      const slug = els.tutorialForm.elements.slug.value.trim();
+      if (!slug) return null;
+      return {
+        slug: slug,
+        status: els.tutorialForm.elements.status.value || "draft"
+      };
+    }
+
+    function updatePreviewButton(preview) {
+      savedPreview = preview || null;
+      if (!savedPreview || !savedPreview.slug) {
+        els.previewArea.className = "sb-preview-area";
+        els.previewHint.textContent = "";
+        els.previewArticleButton.href = "#";
+        return;
+      }
+      const isDraft = savedPreview.status === "draft";
+      els.previewArea.className = "sb-preview-area show" + (isDraft ? " warn" : "");
+      els.previewHint.textContent = isDraft
+        ? "当前文章是 draft，正式前台可能不会展示。"
+        : "文章已保存，可以打开正式详情页预览。";
+      els.previewArticleButton.href = "tutorial-detail.html?slug=" + encodeURIComponent(savedPreview.slug);
     }
 
     function friendlyError(status, message, context) {
@@ -990,15 +1208,33 @@
       const end = contentCursor && Number.isInteger(contentCursor.end) ? contentCursor.end : start;
       const before = value.slice(0, start);
       const after = value.slice(end);
+      const cursorToken = "{cursor}";
+      const cursorIndex = markdown.indexOf(cursorToken);
+      const cleanMarkdown = cursorIndex >= 0 ? markdown.replace(cursorToken, "") : markdown;
       const prefix = before && !before.endsWith("\n") ? "\n\n" : (before.endsWith("\n\n") || !before ? "" : "\n");
       const suffix = after && !after.startsWith("\n") ? "\n\n" : (after.startsWith("\n\n") || !after ? "" : "\n");
-      const insertText = prefix + markdown + suffix;
-      const nextCursor = before.length + insertText.length;
+      const insertText = prefix + cleanMarkdown + suffix;
+      const nextCursor = cursorIndex >= 0
+        ? before.length + prefix.length + cursorIndex
+        : before.length + insertText.length;
 
       textarea.value = before + insertText + after;
       textarea.focus();
       textarea.setSelectionRange(nextCursor, nextCursor);
       contentCursor = { start: nextCursor, end: nextCursor };
+    }
+
+    function insertQuickMarkdown(type) {
+      const snippets = {
+        h2: "## {cursor}小标题",
+        h3: "### {cursor}小标题",
+        tip: "> 提示：{cursor}这里填写提醒内容",
+        code: "```text\n{cursor}这里填写代码或命令\n```",
+        divider: "---"
+      };
+      if (!snippets[type]) return;
+      rememberContentCursor();
+      insertMarkdownAtCursor(snippets[type]);
     }
 
     async function handleImageUpload() {
@@ -1009,8 +1245,8 @@
       els.imageFileInput.click();
     }
 
-    async function uploadSelectedImage() {
-      const file = els.imageFileInput.files && els.imageFileInput.files[0];
+    async function uploadSelectedImage(fileFromDrop) {
+      const file = fileFromDrop instanceof File ? fileFromDrop : (els.imageFileInput.files && els.imageFileInput.files[0]);
       if (!file) return;
 
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -1044,6 +1280,47 @@
         els.imageFileInput.value = "";
         setLoading(els.uploadImageButton, "上传中...", false);
       }
+    }
+
+    function getImageFileFromDrop(event) {
+      const files = Array.from(event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files : []);
+      return files.find(function(file) {
+        return ALLOWED_IMAGE_TYPES.includes(file.type);
+      }) || files[0] || null;
+    }
+
+    function setDragActive(active) {
+      els.imageUploadBox.classList.toggle("drag-active", active);
+    }
+
+    function handleUploadDragEnter(event) {
+      event.preventDefault();
+      dragDepth += 1;
+      setDragActive(true);
+    }
+
+    function handleUploadDragOver(event) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      setDragActive(true);
+    }
+
+    function handleUploadDragLeave(event) {
+      event.preventDefault();
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) setDragActive(false);
+    }
+
+    function handleUploadDrop(event) {
+      event.preventDefault();
+      dragDepth = 0;
+      setDragActive(false);
+      const file = getImageFileFromDrop(event);
+      if (!file) {
+        setUploadStatus("error", "没有识别到可上传的图片文件。");
+        return;
+      }
+      uploadSelectedImage(file);
     }
 
     function refreshConfigUi() {
@@ -1132,7 +1409,6 @@
           headers: authHeaders()
         });
         renderTutorialList();
-        els.listSummary.textContent = "共读取到 " + tutorials.length + " 篇教程。";
       } catch (error) {
         showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "读取教程列表"));
         if (error.status === 401) {
@@ -1150,12 +1426,26 @@
         return;
       }
 
+      refreshCategoryFilterOptions();
+
       if (!tutorials.length) {
+        els.listSummary.textContent = "共读取到 0 篇教程。";
         els.tutorialList.innerHTML = '<div class="sb-empty">还没有教程。点击“新增教程”开始写入第一篇。</div>';
         return;
       }
 
-      els.tutorialList.innerHTML = tutorials.map(function(tutorial) {
+      const filtered = getFilteredTutorials();
+      const hasActiveFilter = Boolean(getFilterState().search) || getFilterState().category !== "all" || getFilterState().status !== "all";
+      els.listSummary.textContent = hasActiveFilter
+        ? "共 " + tutorials.length + " 篇教程，当前匹配 " + filtered.length + " 篇。"
+        : "共读取到 " + tutorials.length + " 篇教程。";
+
+      if (!filtered.length) {
+        els.tutorialList.innerHTML = '<div class="sb-empty">暂无匹配教程</div>';
+        return;
+      }
+
+      els.tutorialList.innerHTML = filtered.map(function(tutorial) {
         const status = tutorial.status || "draft";
         return [
           '<article class="sb-list-item ' + (String(editingId) === String(tutorial.id) ? "active" : "") + '">',
@@ -1179,6 +1469,7 @@
       els.editorHeading.textContent = editingId ? "编辑教程" : "新增教程";
       els.editorSubheading.textContent = editingId ? "正在编辑 ID：" + editingId : "保存后会写入 Supabase tutorials 表。";
       fillForm(tutorial || {});
+      updatePreviewButton(tutorial && tutorial.slug ? { slug: tutorial.slug, status: tutorial.status || "draft" } : null);
       resetUploadUi();
       renderTutorialList();
     }
@@ -1236,8 +1527,9 @@
 
       setLoading(els.saveButton, "保存中...", true);
       try {
+        let savedRows = null;
         if (editingId) {
-          await requestSupabase("/rest/v1/tutorials?id=eq." + encodeURIComponent(editingId), {
+          savedRows = await requestSupabase("/rest/v1/tutorials?id=eq." + encodeURIComponent(editingId), {
             method: "PATCH",
             headers: authHeaders({
               "Content-Type": "application/json",
@@ -1246,7 +1538,7 @@
             body: JSON.stringify(payload)
           });
         } else {
-          await requestSupabase("/rest/v1/tutorials", {
+          savedRows = await requestSupabase("/rest/v1/tutorials", {
             method: "POST",
             headers: authHeaders({
               "Content-Type": "application/json",
@@ -1256,6 +1548,16 @@
           });
         }
 
+        const savedTutorial = Array.isArray(savedRows) && savedRows[0] ? savedRows[0] : payload;
+        if (savedTutorial.id) {
+          editingId = savedTutorial.id;
+          els.editorHeading.textContent = "编辑教程";
+          els.editorSubheading.textContent = "正在编辑 ID：" + editingId;
+        }
+        updatePreviewButton({
+          slug: savedTutorial.slug || payload.slug,
+          status: savedTutorial.status || payload.status
+        });
         showNotice("success", "保存成功。");
         await fetchTutorials();
       } catch (error) {
@@ -1268,7 +1570,8 @@
     async function handleDelete(id) {
       const tutorial = tutorials.find(function(item) { return String(item.id) === String(id); });
       if (!tutorial) return;
-      if (!window.confirm("确定要删除这篇教程吗？")) return;
+      const title = tutorial.title || "未命名教程";
+      if (!window.confirm("确定要删除《" + title + "》吗？\n这个操作会从 Supabase tutorials 表中删除该教程，无法直接恢复。")) return;
 
       clearNotice();
       try {
@@ -1314,8 +1617,31 @@
     els.tutorialForm.elements.content.addEventListener("keyup", rememberContentCursor);
     els.tutorialForm.elements.content.addEventListener("select", rememberContentCursor);
     els.tutorialForm.elements.content.addEventListener("input", rememberContentCursor);
+    els.tutorialSearchInput.addEventListener("input", renderTutorialList);
+    els.categoryFilter.addEventListener("change", renderTutorialList);
+    els.statusFilter.addEventListener("change", renderTutorialList);
+    els.clearFiltersButton.addEventListener("click", resetFilters);
     els.uploadImageButton.addEventListener("click", handleImageUpload);
     els.imageFileInput.addEventListener("change", uploadSelectedImage);
+    els.imageUploadBox.addEventListener("dragenter", handleUploadDragEnter);
+    els.imageUploadBox.addEventListener("dragover", handleUploadDragOver);
+    els.imageUploadBox.addEventListener("dragleave", handleUploadDragLeave);
+    els.imageUploadBox.addEventListener("drop", handleUploadDrop);
+    els.tutorialForm.addEventListener("click", function(event) {
+      const button = event.target.closest("button[data-insert-markdown]");
+      if (!button) return;
+      event.preventDefault();
+      insertQuickMarkdown(button.dataset.insertMarkdown);
+    });
+    els.previewArticleButton.addEventListener("click", function(event) {
+      if (!savedPreview || !savedPreview.slug) {
+        event.preventDefault();
+        return;
+      }
+      if (savedPreview.status === "draft") {
+        window.alert("当前文章是 draft，正式前台可能不会展示。");
+      }
+    });
     els.insertLastImageButton.addEventListener("click", function() {
       if (!lastUploadedMarkdown) {
         setUploadStatus("warn", "还没有可插入的图片链接，请先上传图片。");
