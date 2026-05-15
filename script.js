@@ -212,6 +212,71 @@ async function loadJSON(key) {
   }
 }
 
+function getSupabaseConfig() {
+  const config = window.HE01_SUPABASE || {};
+  const url = String(config.url || "").trim().replace(/\/+$/, "");
+  const anonKey = String(config.anonKey || "").trim();
+  const isPlaceholder = (value) => /^这里填|^YOUR_|^https:\/\/xxxx\.supabase\.co$/i.test(value);
+  if (!url || !anonKey || isPlaceholder(url) || isPlaceholder(anonKey)) return null;
+  return { url, anonKey };
+}
+
+async function fetchSupabaseTutorialRows(query) {
+  const config = getSupabaseConfig();
+  if (!config) return null;
+  const response = await fetch(`${config.url}/rest/v1/tutorials?${query}`, {
+    cache: "no-store",
+    headers: {
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`
+    }
+  });
+  if (!response.ok) {
+    const message = await response.text().catch(() => "");
+    throw new Error(`Supabase tutorials HTTP ${response.status}${message ? `: ${message}` : ""}`);
+  }
+  return await response.json();
+}
+
+function normalizeSupabaseTutorial(row) {
+  const tags = Array.isArray(row?.tags) ? row.tags : [];
+  const summary = firstValue(row?.summary, row?.content);
+  return normalizeFrontItem("tutorials", {
+    id: firstValue(row?.id, row?.slug),
+    slug: row?.slug || "",
+    title: firstValue(row?.title, "未命名教程"),
+    category: firstValue(row?.category, "教程"),
+    difficulty: firstValue(row?.difficulty, "未标注"),
+    readingTime: firstValue(row?.reading_time, "阅读时间待补充"),
+    description: firstValue(row?.summary, "教程简介正在整理中。"),
+    contentPreview: firstValue(row?.summary, "教程简介正在整理中。"),
+    detailContent: firstValue(row?.content, summary, "正文内容正在整理中。"),
+    coverUrl: row?.cover_url || "",
+    tags,
+    status: row?.status || "",
+    updatedAt: firstValue(row?.updated_at, row?.created_at),
+    createdAt: row?.created_at || "",
+    source: "supabase"
+  });
+}
+
+async function loadSupabaseTutorials() {
+  const rows = await fetchSupabaseTutorialRows("select=*&status=eq.published&order=updated_at.desc");
+  if (!rows) return null;
+  return Array.isArray(rows) ? rows.map(normalizeSupabaseTutorial) : [];
+}
+
+async function loadSupabaseTutorialBySlug(slug) {
+  const rows = await fetchSupabaseTutorialRows(`select=*&slug=eq.${encodeURIComponent(slug)}&status=eq.published&limit=1`);
+  if (!rows || !Array.isArray(rows) || rows.length === 0) return null;
+  return normalizeSupabaseTutorial(rows[0]);
+}
+
+function getUsableTutorials(data) {
+  if (data?.__sources?.tutorials === "fallback") return [];
+  return Array.isArray(data?.tutorials) ? data.tutorials : [];
+}
+
 function showDataNotice(container, source) {
   if (source !== "fallback") return;
   container.insertAdjacentHTML(
@@ -226,6 +291,7 @@ function createDataLink(label, url) {
 }
 
 function detailUrl(type, item, fallback) {
+  if (type === "tutorial" && item?.slug) return `${type}-detail.html?slug=${encodeURIComponent(item.slug)}`;
   if (!item?.id) return fallback;
   return `${type}-detail.html?id=${encodeURIComponent(item.id)}`;
 }
@@ -481,10 +547,8 @@ function renderArticleRelatedResources(items, compact = false) {
 function renderTutorialArticleSidebar(item, related) {
   const toc = [
     ["教程简介", "tutorial-intro"],
-    ["操作步骤", "tutorial-steps"],
-    ["常见问题", "tutorial-faq"],
-    ["相关资源", "tutorial-resources"],
-    ["下一步建议", "tutorial-next"]
+    ["正文内容", "tutorial-content"],
+    ["联系咨询", "tutorial-contact"]
   ];
   return `
     <aside class="tutorial-article-sidebar" aria-label="教程辅助信息">
@@ -502,11 +566,10 @@ function renderTutorialArticleSidebar(item, related) {
           <p class="eyebrow">目录</p>
           ${toc.map(([label, anchor]) => `<a href="#${anchor}">${escapeHTML(label)}</a>`).join("")}
         </nav>
-        <section class="tutorial-sidebar-section">
-          <p class="eyebrow">相关资源</p>
-          ${renderArticleRelatedResources(related.slice(0, 3), true)}
+        <section id="tutorial-contact" class="tutorial-sidebar-section">
+          <p class="eyebrow">咨询</p>
+          <button class="btn btn-primary tutorial-help-button js-contact-modal" type="button"><span>需要陪跑 / 调试</span><i aria-hidden="true"></i></button>
         </section>
-        <button class="btn btn-primary tutorial-help-button js-contact-modal" type="button"><span>需要陪跑 / 调试</span><i aria-hidden="true"></i></button>
       </div>
     </aside>
   `;
@@ -558,21 +621,40 @@ function renderResources(container, items, source) {
   `).join("");
 }
 
-function renderTutorials(container, items, source) {
-  showDataNotice(container, source);
-  if (!Array.isArray(items) || items.length === 0) {
-    container.innerHTML = emptyState("暂无教程数据", "请在 admin.html 添加教程后导出 tutorials.json。");
+async function renderTutorials(container, items, source) {
+  let tutorials = [];
+  try {
+    const supabaseItems = await loadSupabaseTutorials();
+    if (Array.isArray(supabaseItems) && supabaseItems.length > 0) {
+      tutorials = supabaseItems;
+    } else if (Array.isArray(supabaseItems)) {
+      console.warn("Supabase tutorials 返回空数组，尝试读取 data/tutorials.json。");
+    }
+  } catch (error) {
+    console.error("Supabase tutorials 读取失败，尝试读取 data/tutorials.json。", error);
+  }
+
+  if (tutorials.length === 0 && source !== "fallback" && Array.isArray(items)) {
+    tutorials = items;
+  }
+
+  if (tutorials.length === 0) {
+    container.innerHTML = emptyState("教程正在整理中。", "请稍后再来查看新的实战教程。");
     return;
   }
-  container.innerHTML = items.map((item) => `
+  container.innerHTML = tutorials.map((item) => {
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    return `
     <article class="tutorial-card" data-category="${escapeHTML(normalizeCategories(item, "category"))}">
       <span class="tag">${escapeHTML(item.category || item.status || "教程")}</span>
-      <h2>${escapeHTML(item.title)}</h2>
-      <p>${escapeHTML(item.description)}</p>
-      <div class="info-row"><span>${escapeHTML(item.readingTime || "待补充")}</span><span>${escapeHTML(item.difficulty || "待补充")}</span><time>${escapeHTML(formatDate(item.updatedAt))}</time></div>
+      <h2>${escapeHTML(item.title || "未命名教程")}</h2>
+      <p>${escapeHTML(item.description || item.contentPreview || "教程简介正在整理中。")}</p>
+      <div class="info-row"><span>${escapeHTML(item.readingTime || "阅读时间待补充")}</span><span>${escapeHTML(item.difficulty || "未标注")}</span><time>${escapeHTML(formatDate(item.updatedAt))}</time></div>
+      ${tags.length ? `<div class="card-tags">${tags.map((tag) => `<span>${escapeHTML(tag)}</span>`).join("")}</div>` : ""}
       <a class="card-link" href="${escapeHTML(detailUrl("tutorial", item, "tutorials.html"))}"><span>查看教程</span><i aria-hidden="true"></i></a>
     </article>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function renderCases(container, items, source) {
@@ -807,16 +889,35 @@ function renderResourceDetail(container, data) {
   `;
 }
 
-function renderTutorialDetail(container, data) {
+async function renderTutorialDetail(container, data) {
+  const slug = getQueryParam("slug");
   const id = getQueryParam("id");
-  const tutorials = data.tutorials || [];
+  const tutorials = getUsableTutorials(data);
   const resources = data.resources || [];
-  const item = findItemById(tutorials, id);
+  let item = null;
+
+  if (slug) {
+    try {
+      item = await loadSupabaseTutorialBySlug(slug);
+    } catch (error) {
+      console.error("Supabase tutorial detail 读取失败，尝试读取 data/tutorials.json。", error);
+    }
+    if (!item) {
+      item = tutorials.find((tutorial) => String(tutorial.slug || tutorial.id) === String(slug));
+    }
+  } else if (id) {
+    item = findItemById(tutorials, id);
+  }
+
   if (!item) {
-    renderNotFound(container, "教程不存在或正在整理中", "tutorials.html", "← 返回实战教程");
+    renderNotFound(container, "教程正在整理中。", "tutorials.html", "← 返回实战教程");
     return;
   }
+  document.title = `${item.title || "教程详情"} - 贺 · 01`;
   const related = relatedResources(item, resources, 3);
+  const summary = item.description || item.contentPreview || "教程简介正在整理中。";
+  const content = item.detailContent || item.content || summary;
+  const tags = Array.isArray(item.tags) ? item.tags : [];
   container.innerHTML = `
     <section class="tutorial-article-shell reveal is-visible">
       <a class="text-action back-link" href="tutorials.html">← 返回实战教程</a>
@@ -824,44 +925,50 @@ function renderTutorialDetail(container, data) {
         <article class="tutorial-article-main">
           <header class="tutorial-article-hero">
             <div class="tutorial-breadcrumb"><a href="tutorials.html">实战教程</a><span>/</span><span>${escapeHTML(item.category || "当前分类")}</span></div>
-            <h1>${escapeHTML(item.title)}</h1>
-            <p class="tutorial-article-description">${escapeHTML(item.description || item.contentPreview || "教程简介正在整理中。")}</p>
+            <h1>${escapeHTML(item.title || "未命名教程")}</h1>
+            <p class="tutorial-article-description">${escapeHTML(summary)}</p>
             ${renderDetailMeta([
               { label: "更新时间", value: formatDate(item.updatedAt) },
               { label: "阅读时间", value: item.readingTime },
               { label: "难度", value: item.difficulty },
-              { label: "分类", value: item.category },
-              { label: "状态", value: item.status }
+              { label: "分类", value: item.category }
             ])}
-            ${item.contentPreview ? `<p class="tutorial-article-summary">${escapeHTML(item.contentPreview)}</p>` : ""}
+            ${tags.length ? `<div class="detail-tags tutorial-detail-tags">${tags.map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`).join("")}</div>` : ""}
           </header>
 
           <div class="tutorial-article-body">
             <section id="tutorial-intro" class="article-section">
               <p class="eyebrow">Tutorial</p>
               <h2>教程简介</h2>
-              ${renderArticleMarkdown(item.detailContent)}
+              <p class="tutorial-article-summary">${escapeHTML(summary)}</p>
             </section>
-            <section id="tutorial-steps" class="article-section">
-              <p class="eyebrow">Steps</p>
-              <h2>操作步骤</h2>
-              ${renderArticleSteps(item.steps)}
+            <section id="tutorial-content" class="article-section">
+              <p class="eyebrow">Content</p>
+              <h2>正文内容</h2>
+              ${renderArticleMarkdown(content)}
             </section>
-            <section id="tutorial-faq" class="article-section">
-              <p class="eyebrow">FAQ</p>
-              <h2>常见问题</h2>
-              ${renderArticleFaq(item.faq)}
-            </section>
-            <section id="tutorial-resources" class="article-section">
-              <p class="eyebrow">Resources</p>
-              <h2>相关资源</h2>
-              ${renderArticleRelatedResources(related)}
-            </section>
-            <section id="tutorial-next" class="article-section">
-              <p class="eyebrow">Next</p>
-              <h2>下一步建议</h2>
-              ${renderArticleList(item.nextActions)}
-            </section>
+            ${item.source === "supabase" ? "" : `
+              <section id="tutorial-steps" class="article-section">
+                <p class="eyebrow">Steps</p>
+                <h2>操作步骤</h2>
+                ${renderArticleSteps(item.steps)}
+              </section>
+              <section id="tutorial-faq" class="article-section">
+                <p class="eyebrow">FAQ</p>
+                <h2>常见问题</h2>
+                ${renderArticleFaq(item.faq)}
+              </section>
+              <section id="tutorial-resources" class="article-section">
+                <p class="eyebrow">Resources</p>
+                <h2>相关资源</h2>
+                ${renderArticleRelatedResources(related)}
+              </section>
+              <section id="tutorial-next" class="article-section">
+                <p class="eyebrow">Next</p>
+                <h2>下一步建议</h2>
+                ${renderArticleList(item.nextActions)}
+              </section>
+            `}
           </div>
         </article>
         ${renderTutorialArticleSidebar(item, related)}
@@ -939,20 +1046,21 @@ async function initDataRender() {
   const entries = await Promise.all([...requiredKeys].map(async (key) => [key, await loadJSON(key)]));
   const loaded = Object.fromEntries(entries);
   const data = Object.fromEntries(entries.map(([key, result]) => [key, result.data]));
+  data.__sources = Object.fromEntries(entries.map(([key, result]) => [key, result.source]));
   if (data.site) currentSiteData = data.site;
 
-  renderTargets.forEach((target) => {
+  for (const target of renderTargets) {
     const type = target.dataset.render;
     if (type === "tools") renderTools(target, data.tools, loaded.tools.source);
     if (type === "resources") renderResources(target, data.resources, loaded.resources.source);
-    if (type === "tutorials") renderTutorials(target, data.tutorials, loaded.tutorials.source);
+    if (type === "tutorials") await renderTutorials(target, data.tutorials, loaded.tutorials.source);
     if (type === "cases") renderCases(target, data.cases, loaded.cases.source);
     if (type === "services") renderServices(target, data.site, loaded.site.source);
     if (type === "home-preview") renderHomePreview(target, data);
     if (type === "resource-detail") renderResourceDetail(target, data);
-    if (type === "tutorial-detail") renderTutorialDetail(target, data);
+    if (type === "tutorial-detail") await renderTutorialDetail(target, data);
     if (type === "case-detail") renderCaseDetail(target, data);
-  });
+  }
 
   if (data.site) renderSiteFields(data.site);
 }
