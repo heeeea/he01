@@ -130,6 +130,77 @@ function statusClass(status) {
   return "planned";
 }
 
+// ── 资源字段兼容 ──
+function getResourceField(resource, ...names) {
+  for (const name of names) {
+    const val = resource[name];
+    if (val !== null && val !== undefined && String(val).trim() !== "") return val;
+  }
+  return "";
+}
+
+// ── 资源状态推断 ──
+function getResourceStatus(resource) {
+  const explicitStatus = String(getResourceField(resource, "resourceStatus", "downloadStatus", "status")).trim();
+  const downloadUrl = getResourceField(resource, "downloadUrl", "download_url", "url");
+  const hasDownload = downloadUrl && downloadUrl !== "#";
+
+  if (explicitStatus === "需联系获取" || explicitStatus === "contact" || explicitStatus === "need-contact") {
+    return { label: "需联系获取", type: "contact" };
+  }
+  if (explicitStatus === "推荐" || explicitStatus === "recommend") {
+    if (hasDownload) return { label: "可下载 · 推荐", type: "recommend" };
+    return { label: "推荐", type: "recommend" };
+  }
+
+  const tags = toArray(resource.tags);
+  const hasTutorialTag = tags.some(function(tag) { return String(tag).includes("教程配套"); });
+
+  if (hasDownload) {
+    if (hasTutorialTag) return { label: "可下载 · 教程配套", type: "available" };
+    return { label: "可下载", type: "available" };
+  }
+
+  if (hasTutorialTag) return { label: "教程配套", type: "tutorial-match" };
+  return { label: "整理中", type: "organizing" };
+}
+
+// ── 场景关键词匹配 ──
+var SCENE_KEYWORDS = {
+  website: ["网页", "网站", "Codex", "Claude Code", "HTML", "前端", "项目需求", "需求模板", "建站"],
+  comfyui: ["ComfyUI", "AI 图像", "模型", "节点", "模型路径", "图像"],
+  install: ["安装", "排查", "环境", "路径", "配置", "工具清单", "安装排查"],
+  delivery: ["项目", "案例", "Demo", "交付", "项目案例", "项目交付", "小商户"],
+  prompt: ["提示词", "模板", "文案", "需求", "提示词模板"],
+  checklist: ["排查", "检查表", "清单", "调试", "报错", "安装排查", "工具清单"]
+};
+
+function matchesResourceScene(resource, scene) {
+  if (scene === "all") return true;
+  var keywords = SCENE_KEYWORDS[scene] || [];
+  if (keywords.length === 0) return true;
+
+  var searchText = [
+    resource.title, resource.name,
+    resource.type, resource.category,
+    resource.description, resource.summary,
+    getResourceField(resource, "suitableFor", "targetUser", "audience"),
+    resource.format, resource.fileType,
+    toArray(resource.tags).join(" ")
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  return keywords.some(function(kw) { return searchText.includes(kw.toLowerCase()); });
+}
+
+// ── 资源过滤状态 ──
+var resourceFilterState = {
+  items: [],
+  source: "fallback",
+  activeCategory: "all",
+  activeScene: "all",
+  searchQuery: ""
+};
+
 function emptyState(title, description) {
   return `<article class="empty-state"><h2>${escapeHTML(title)}</h2><p>${escapeHTML(description)}</p></article>`;
 }
@@ -606,28 +677,126 @@ function renderTools(container, items, source) {
   `).join("");
 }
 
-function renderResources(container, items, source) {
-  showDataNotice(container, source);
-  if (!Array.isArray(items) || items.length === 0) {
+function renderResourceCard(item) {
+  var statusInfo = getResourceStatus(item);
+  var downloadUrl = getResourceField(item, "downloadUrl", "download_url", "url");
+  var tutorialUrl = getResourceField(item, "tutorialUrl", "tutorial_url");
+  var hasDownload = downloadUrl && downloadUrl !== "#";
+  var hasTutorial = tutorialUrl && tutorialUrl !== "#";
+  var formatVal = getResourceField(item, "format", "fileType") || "待补充";
+  var sizeVal = getResourceField(item, "size") || "";
+  var formatSize = sizeVal && sizeVal !== "待补充" ? formatVal + " · " + sizeVal : formatVal;
+  var audience = getResourceField(item, "suitableFor", "targetUser", "audience") || "—";
+  var tags = toArray(item.tags);
+
+  var buttons = [
+    '<a class="card-link" href="' + escapeHTML(detailUrl("resource", item, "resources.html")) + '"><span>查看详情</span><i aria-hidden="true"></i></a>'
+  ];
+
+  if (hasDownload) {
+    buttons.push('<a class="card-link" href="' + escapeHTML(downloadUrl) + '" target="_blank" rel="noopener"><span>下载资源</span><i aria-hidden="true"></i></a>');
+  } else if (statusInfo.type === "contact") {
+    buttons.push('<button class="card-link js-contact-modal" type="button"><span>联系获取</span><i aria-hidden="true"></i></button>');
+  } else {
+    buttons.push('<span class="card-link is-disabled" aria-disabled="true"><span>资源整理中</span></span>');
+  }
+
+  if (hasTutorial) {
+    buttons.push('<a class="card-link" href="' + escapeHTML(tutorialUrl) + '"><span>相关教程</span><i aria-hidden="true"></i></a>');
+  }
+
+  return [
+    '<article class="resource-card" data-resource-card data-id="' + escapeHTML(item.id || "") + '">',
+      '<div class="resource-card-topline">',
+        '<span class="tag">' + escapeHTML(item.type || item.category || "资源") + '</span>',
+        '<span class="resource-status-badge status-' + escapeHTML(statusInfo.type) + '">' + escapeHTML(statusInfo.label) + '</span>',
+      '</div>',
+      '<h2>' + escapeHTML(item.title || "未命名资源") + '</h2>',
+      '<p>' + escapeHTML(item.description || item.summary || "简介正在整理中。") + '</p>',
+      '<div class="resource-card-meta">',
+        '<span class="resource-meta-item"><span class="resource-meta-label">格式/大小</span>' + escapeHTML(formatSize) + '</span>',
+        '<span class="resource-meta-item"><span class="resource-meta-label">适合人群</span>' + escapeHTML(audience) + '</span>',
+      '</div>',
+      tags.length ? '<div class="resource-card-tags">' + tags.map(function(tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("") + '</div>' : "",
+      '<div class="card-actions">' + buttons.join("\n") + '</div>',
+    '</article>'
+  ].join("\n");
+}
+
+function renderResourceEmpty(container) {
+  container.innerHTML = [
+    '<div class="resource-empty-state">',
+      '<div class="resource-empty-icon" aria-hidden="true"></div>',
+      '<h2>暂无匹配资源</h2>',
+      '<p>可以换个关键词，或点击联系合作获取人工推荐。</p>',
+      '<button class="btn btn-primary js-contact-modal" type="button"><span>联系获取</span><i aria-hidden="true"></i></button>',
+    '</div>'
+  ].join("\n");
+}
+
+function filterAndRenderResources(container) {
+  var state = resourceFilterState;
+  if (!Array.isArray(state.items) || state.items.length === 0) {
     container.innerHTML = emptyState("暂无资源数据", "请在 admin.html 添加资源后导出 resources.json。");
     return;
   }
-  container.innerHTML = items.map((item) => `
-    <article class="resource-card" data-category="${escapeHTML(normalizeCategories(item, "type"))}">
-      <div><span class="tag">${escapeHTML(item.type || item.status || "资源")}</span><time datetime="${escapeHTML(item.updatedAt)}">${escapeHTML(formatDate(item.updatedAt))}</time></div>
-      <h2>${escapeHTML(item.title)}</h2>
-      <p>${escapeHTML(item.description)}</p>
-      <dl>
-        <dt>格式/大小</dt><dd>${escapeHTML(item.format || "待补充")} · ${escapeHTML(item.size || "待补充")}</dd>
-        <dt>适合谁用</dt><dd>${escapeHTML(item.targetUser)}</dd>
-      </dl>
-      <div class="card-actions">
-        <a class="card-link" href="${escapeHTML(detailUrl("resource", item, "resources.html"))}"><span>查看详情</span><i aria-hidden="true"></i></a>
-        ${createDataLink("下载资源", item.downloadUrl)}
-        ${createDataLink("相关教程", item.tutorialUrl)}
-      </div>
-    </article>
-  `).join("");
+
+  var filtered = state.items.filter(function(item) {
+    // 分类筛选
+    if (state.activeCategory !== "all") {
+      var categories = normalizeCategories(item, "type");
+      if (!categories.includes(state.activeCategory)) return false;
+    }
+    // 场景筛选
+    if (!matchesResourceScene(item, state.activeScene)) return false;
+    // 搜索筛选
+    if (state.searchQuery) {
+      var q = state.searchQuery.toLowerCase();
+      var searchText = [
+        item.title, item.name,
+        item.type, item.category,
+        item.description, item.summary,
+        getResourceField(item, "suitableFor", "targetUser", "audience"),
+        item.format, item.fileType,
+        toArray(item.tags).join(" "),
+        item.detailContent, item.content,
+        toArray(item.usageSteps).map(function(s) { return typeof s === "object" ? s.title + " " + s.description : s; }).join(" ")
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!searchText.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    renderResourceEmpty(container);
+    return;
+  }
+
+  container.innerHTML = filtered.map(function(item) {
+    return renderResourceCard(item);
+  }).join("");
+}
+
+function renderResources(container, items, source) {
+  showDataNotice(container, source);
+  resourceFilterState.items = Array.isArray(items) ? items : [];
+  resourceFilterState.source = source;
+  resourceFilterState.activeCategory = "all";
+  resourceFilterState.activeScene = "all";
+  resourceFilterState.searchQuery = "";
+  var searchInput = document.getElementById("resourceSearchInput");
+  if (searchInput) searchInput.value = "";
+  // 重置分类按钮
+  var categoryBar = document.querySelector("[data-resource-category-bar]");
+  if (categoryBar) {
+    categoryBar.querySelectorAll(".filter-button").forEach(function(btn) { btn.classList.toggle("active", btn.dataset.filter === "all"); });
+  }
+  // 重置场景按钮
+  var sceneBar = document.querySelector("[data-resource-scene-bar]");
+  if (sceneBar) {
+    sceneBar.querySelectorAll(".scene-button").forEach(function(btn) { btn.classList.toggle("active", btn.dataset.scene === "all"); });
+  }
+  filterAndRenderResources(container);
 }
 
 async function renderTutorials(container, items, source) {
@@ -1114,57 +1283,112 @@ function openSearchModal() {
 }
 
 function renderResourceDetail(container, data) {
-  const slug = getQueryParam("slug");
-  const id = getQueryParam("id");
-  const resources = data.resources || [];
-  const item = slug
-    ? resources.find((resource) => String(resource.slug || resource.id) === String(slug))
+  var slug = getQueryParam("slug");
+  var id = getQueryParam("id");
+  var resources = data.resources || [];
+  var item = slug
+    ? resources.find(function(resource) { return String(resource.slug || resource.id) === String(slug); })
     : findItemById(resources, id);
   if (!item) {
     renderNotFound(container, "资源不存在或正在整理中", "resources.html", "← 返回资源下载");
     return;
   }
-  const related = relatedResources(item, resources, 3);
-  container.innerHTML = `
-    <section class="detail-shell reveal is-visible">
-      <a class="text-action back-link" href="resources.html">← 返回资源下载</a>
-      <div class="detail-layout">
-        <article class="detail-main">
-          <header class="detail-hero-card">
-            <div class="detail-kicker"><span class="tag">${escapeHTML(item.type || "资源")}</span><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "待补充")}</span></div>
-            <h1>${escapeHTML(item.title)}</h1>
-            <p>${escapeHTML(item.description)}</p>
-            ${renderDetailMeta([
-              { label: "更新时间", value: formatDate(item.updatedAt) },
-              { label: "适合谁用", value: item.targetUser },
-              { label: "格式", value: item.format },
-              { label: "文件大小", value: item.size }
-            ])}
-          </header>
+  var statusInfo = getResourceStatus(item);
+  var downloadUrl = getResourceField(item, "downloadUrl", "download_url", "url");
+  var tutorialUrl = getResourceField(item, "tutorialUrl", "tutorial_url");
+  var hasDownload = downloadUrl && downloadUrl !== "#";
+  var hasTutorial = tutorialUrl && tutorialUrl !== "#";
+  var formatVal = getResourceField(item, "format", "fileType") || "待补充";
+  var sizeVal = getResourceField(item, "size") || "";
+  var formatSize = sizeVal && sizeVal !== "待补充" ? formatVal + " · " + sizeVal : formatVal;
+  var audience = getResourceField(item, "suitableFor", "targetUser", "audience") || "—";
+  var related = relatedResources(item, resources, 3);
+  var tags = toArray(item.tags);
+  var detailContent = getResourceField(item, "detailContent", "content", "description") || "详细说明正在整理中。";
+  var usageSteps = item.usageSteps || item.steps || [];
+  var notes = toArray(item.notes || item.tips);
+  var faqItems = normalizeFaq(item.faq);
 
-          <section class="detail-card"><p class="eyebrow">Overview</p><h2>详细说明</h2>${renderTextBlock(item.detailContent)}</section>
-          <section class="detail-card"><p class="eyebrow">Steps</p><h2>使用步骤</h2>${renderSteps(item.usageSteps)}</section>
-          <section class="detail-card action-card">
-            <div><p class="eyebrow">Download</p><h2>下载资源</h2><p>下载资料或先查看相关教程，按自己的场景补齐真实项目内容。</p></div>
-            <div class="card-actions">
-              <button class="btn btn-primary js-open-link" type="button" data-url="${escapeHTML(item.downloadUrl || "#")}" data-empty-message="该资源正在整理中，后续会更新真实下载链接。"><span>下载资源</span><i aria-hidden="true"></i></button>
-              <button class="btn btn-secondary js-open-link" type="button" data-url="${escapeHTML(item.tutorialUrl || "#")}"><span>相关教程</span><i aria-hidden="true"></i></button>
-            </div>
-          </section>
-          <section class="detail-card"><p class="eyebrow">Notes</p><h2>注意事项</h2>${renderListItems(item.notes)}</section>
-          <section class="detail-card"><p class="eyebrow">FAQ</p><h2>常见问题</h2>${renderFaq(item.faq)}</section>
-          <section class="detail-card"><p class="eyebrow">Related</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
-          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>需要帮你安装调试或跑通工具？</h2><p>可以把当前资源、工具环境和卡住的位置发给我，一起拆解下一步。</p></div><a class="btn btn-primary js-contact-modal" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
-        </article>
-        ${renderSidebar(item.type || "资源", [
-          { label: "类型", value: item.type },
-          { label: "更新时间", value: formatDate(item.updatedAt) },
-          { label: "状态", value: item.status },
-          { label: "格式", value: item.format }
-        ], item.tags, "resources.html")}
-      </div>
-    </section>
-  `;
+  var downloadBtn = "";
+  if (hasDownload) {
+    downloadBtn = '<a class="btn btn-primary resource-dl-btn" href="' + escapeHTML(downloadUrl) + '" target="_blank" rel="noopener"><span>下载资源</span><i aria-hidden="true"></i></a>';
+  } else if (statusInfo.type === "contact") {
+    downloadBtn = '<button class="btn btn-primary resource-dl-btn js-contact-modal" type="button"><span>联系获取</span><i aria-hidden="true"></i></button>';
+  } else {
+    downloadBtn = '<span class="btn btn-primary resource-dl-btn is-disabled" aria-disabled="true"><span>资源整理中</span></span>';
+  }
+
+  var tutorialBtn = "";
+  if (hasTutorial) {
+    tutorialBtn = '<a class="btn btn-secondary resource-dl-btn" href="' + escapeHTML(tutorialUrl) + '"><span>相关教程</span><i aria-hidden="true"></i></a>';
+  }
+
+  container.innerHTML = [
+    '<section class="detail-shell reveal is-visible">',
+      '<a class="text-action back-link" href="resources.html">← 返回资源下载</a>',
+
+      // ── 顶部标题区 ──
+      '<header class="resource-detail-hero">',
+        '<div class="resource-detail-hero-top">',
+          '<span class="tag">' + escapeHTML(item.type || item.category || "资源") + '</span>',
+          '<span class="resource-status-badge status-' + escapeHTML(statusInfo.type) + '">' + escapeHTML(statusInfo.label) + '</span>',
+        '</div>',
+        '<h1>' + escapeHTML(item.title || "未命名资源") + '</h1>',
+        '<p class="resource-detail-desc">' + escapeHTML(item.description || item.summary || "简介正在整理中。") + '</p>',
+        '<div class="resource-detail-meta-row">',
+          '<span><strong>格式/大小</strong>' + escapeHTML(formatSize) + '</span>',
+          '<span><strong>更新时间</strong>' + escapeHTML(formatDate(item.updatedAt)) + '</span>',
+          '<span><strong>适合人群</strong>' + escapeHTML(audience) + '</span>',
+        '</div>',
+      '</header>',
+
+      // ── 主内容 + 侧边栏 ──
+      '<div class="resource-detail-layout">',
+        // 左侧主内容
+        '<article class="resource-detail-main">',
+          '<section class="detail-card" id="res-what">',
+            '<p class="eyebrow">Overview</p>',
+            '<h2>这个资源是什么？</h2>',
+            renderArticleMarkdown(detailContent),
+          '</section>',
+          '<section class="detail-card" id="res-who">',
+            '<p class="eyebrow">Audience</p>',
+            '<h2>适合谁用？</h2>',
+            '<p class="detail-text">' + escapeHTML(audience) + '</p>',
+          '</section>',
+          usageSteps.length ? '<section class="detail-card" id="res-steps"><p class="eyebrow">Steps</p><h2>使用方法</h2>' + renderArticleSteps(usageSteps) + '</section>' : "",
+          notes.length ? '<section class="detail-card" id="res-notes"><p class="eyebrow">Notes</p><h2>注意事项</h2>' + renderArticleList(notes) + '</section>' : "",
+          faqItems.length ? '<section class="detail-card" id="res-faq"><p class="eyebrow">FAQ</p><h2>常见问题</h2>' + renderArticleFaq(faqItems) + '</section>' : "",
+          related.length ? '<section class="detail-card" id="res-related"><p class="eyebrow">Related</p><h2>关联教程与资源</h2>' + renderArticleRelatedResources(related) + '</section>' : "",
+          '<section class="contact-cta detail-cta">',
+            '<div><p class="eyebrow">Collaboration</p><h2>需要帮你安装调试或跑通工具？</h2><p>可以把当前资源、工具环境和卡住的位置发给我，一起拆解下一步。</p></div>',
+            '<button class="btn btn-primary js-contact-modal" type="button"><span>联系合作</span><i aria-hidden="true"></i></button>',
+          '</section>',
+        '</article>',
+
+        // 右侧栏
+        '<aside class="resource-detail-sidebar" aria-label="资源信息">',
+          '<div class="resource-sidebar-panel">',
+            '<section class="resource-sidebar-section">',
+              '<p class="eyebrow">资源信息</p>',
+              '<dl class="resource-sidebar-dl">',
+                '<div><dt>状态</dt><dd><span class="resource-status-badge status-' + escapeHTML(statusInfo.type) + '">' + escapeHTML(statusInfo.label) + '</span></dd></div>',
+                '<div><dt>格式/大小</dt><dd>' + escapeHTML(formatSize) + '</dd></div>',
+                '<div><dt>分类</dt><dd>' + escapeHTML(item.type || item.category || "—") + '</dd></div>',
+                '<div><dt>更新时间</dt><dd>' + escapeHTML(formatDate(item.updatedAt)) + '</dd></div>',
+              '</dl>',
+            '</section>',
+            tags.length ? '<section class="resource-sidebar-section"><p class="eyebrow">标签</p><div class="resource-sidebar-tags">' + tags.map(function(tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("") + '</div></section>' : "",
+            '<div class="resource-sidebar-actions">',
+              downloadBtn,
+              tutorialBtn,
+              '<a class="card-link" href="resources.html"><span>返回列表</span><i aria-hidden="true"></i></a>',
+            '</div>',
+          '</div>',
+        '</aside>',
+      '</div>',
+    '</section>'
+  ].join("\n");
 }
 
 async function renderTutorialDetail(container, data) {
@@ -1559,6 +1783,17 @@ document.addEventListener("click", (event) => {
   if (filterButton) {
     const bar = filterButton.closest(".filter-bar");
     const filter = filterButton.dataset.filter || "all";
+
+    // 资源页专用过滤逻辑
+    if (bar && bar.dataset.resourceCategoryBar !== undefined) {
+      bar.querySelectorAll(".filter-button").forEach(function(item) { item.classList.toggle("active", item === filterButton); });
+      resourceFilterState.activeCategory = filter;
+      var grid = document.querySelector('[data-render="resources"]');
+      if (grid) filterAndRenderResources(grid);
+      return;
+    }
+
+    // 原有通用过滤逻辑
     const list = bar?.nextElementSibling;
     const cards = list?.querySelectorAll("[data-category]") || [];
     bar?.querySelectorAll(".filter-button").forEach((item) => item.classList.toggle("active", item === filterButton));
@@ -1567,17 +1802,46 @@ document.addEventListener("click", (event) => {
       const shouldShow = filter === "all" || categories.includes(filter);
       card.classList.toggle("is-filtered-out", !shouldShow);
     });
+    return;
+  }
+
+  // 场景筛选按钮
+  const sceneButton = event.target.closest(".scene-button");
+  if (sceneButton) {
+    var sceneBar = sceneButton.closest("[data-resource-scene-bar]");
+    var scene = sceneButton.dataset.scene || "all";
+    if (sceneBar) {
+      sceneBar.querySelectorAll(".scene-button").forEach(function(btn) { btn.classList.toggle("active", btn === sceneButton); });
+    }
+    resourceFilterState.activeScene = scene;
+    var grid = document.querySelector('[data-render="resources"]');
+    if (grid) filterAndRenderResources(grid);
+    return;
   }
 });
 
 document.addEventListener("input", (event) => {
   const searchInput = event.target.closest("[data-search-input]");
-  if (!searchInput) return;
-  window.clearTimeout(searchDebounceTimer);
-  searchState.query = searchInput.value;
-  searchDebounceTimer = window.setTimeout(() => {
-    renderSearchResults(searchInput.value);
-  }, SEARCH_DEBOUNCE_MS);
+  if (searchInput) {
+    window.clearTimeout(searchDebounceTimer);
+    searchState.query = searchInput.value;
+    searchDebounceTimer = window.setTimeout(function() {
+      renderSearchResults(searchInput.value);
+    }, SEARCH_DEBOUNCE_MS);
+    return;
+  }
+
+  const resourceSearch = event.target.closest("[data-resource-search]");
+  if (resourceSearch) {
+    window.clearTimeout(searchDebounceTimer);
+    var query = resourceSearch.value;
+    searchDebounceTimer = window.setTimeout(function() {
+      resourceFilterState.searchQuery = query.trim();
+      var grid = document.querySelector('[data-render="resources"]');
+      if (grid) filterAndRenderResources(grid);
+    }, SEARCH_DEBOUNCE_MS);
+    return;
+  }
 });
 
 if (!reduceMotion && heroVisual) {

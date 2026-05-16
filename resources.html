@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="贺 · 01 资源下载中心，整理提示词、模板、安装排查清单和项目资料。">
+  <meta name="description" content="贺 · 01 资源下载中心 — 教程配套资料、提示词模板、检查清单、工具配置文件和项目案例包。">
   <title>资源下载中心 - 贺 · 01</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -24,7 +24,7 @@
             <li><a href="contact.html">联系合作</a></li>
           </ul>
           <div class="nav-actions">
-            <button class="search-button" type="button" aria-label="搜索" data-modal-message="搜索功能将在后续版本接入。"><span class="search-icon" aria-hidden="true"></span></button>
+            <button class="search-button" type="button" aria-label="搜索" data-search-modal><span class="search-icon" aria-hidden="true"></span></button>
             <a class="btn btn-small btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a>
           </div>
         </div>
@@ -33,12 +33,19 @@
 
     <main>
       <section class="page-hero reveal">
-        <p class="eyebrow">Download Center</p>
+        <p class="eyebrow">Resource Center</p>
         <h1>资源下载中心</h1>
-        <p>整理提示词、模板、安装排查清单、项目资料和实战工具包。</p>
+        <p>这里整理的是教程配套资料、提示词模板、检查清单、工具配置文件和项目案例包。适合边看教程边下载使用，部分资源整理中，可通过联系合作获取。</p>
       </section>
 
-      <section class="filter-bar reveal" aria-label="资源分类筛选">
+      <!-- 搜索栏 -->
+      <div class="resource-search-wrap reveal" aria-label="资源搜索">
+        <span class="resource-search-icon" aria-hidden="true"></span>
+        <input id="resourceSearchInput" type="search" placeholder="搜索资源、提示词、模板、工具清单..." autocomplete="off" data-resource-search>
+      </div>
+
+      <!-- 分类筛选 -->
+      <section class="filter-bar reveal" aria-label="资源分类筛选" data-resource-category-bar>
         <button class="filter-button active" type="button" data-filter="all">全部</button>
         <button class="filter-button" type="button" data-filter="提示词">提示词</button>
         <button class="filter-button" type="button" data-filter="模板">模板</button>
@@ -48,6 +55,18 @@
         <button class="filter-button" type="button" data-filter="安装排查">安装排查</button>
       </section>
 
+      <!-- 场景筛选 -->
+      <section class="scene-bar reveal" aria-label="按场景筛选资源" data-resource-scene-bar>
+        <button class="scene-button active" type="button" data-scene="all">全部场景</button>
+        <button class="scene-button" type="button" data-scene="website">做网站用</button>
+        <button class="scene-button" type="button" data-scene="comfyui">学 ComfyUI 用</button>
+        <button class="scene-button" type="button" data-scene="install">AI 工具安装用</button>
+        <button class="scene-button" type="button" data-scene="delivery">项目交付用</button>
+        <button class="scene-button" type="button" data-scene="prompt">提示词模板</button>
+        <button class="scene-button" type="button" data-scene="checklist">排错检查表</button>
+      </section>
+
+      <!-- 资源列表 -->
       <section class="content-grid resources-grid reveal" aria-label="资源列表" data-render="resources"></section>
     </main>
 
