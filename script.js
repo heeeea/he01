@@ -253,6 +253,18 @@ function normalizeFrontItem(key, source) {
     item.nextActions = toArray(item.nextActions);
     if (item.nextActions.length === 0) item.nextActions = ["打开相关资源，补齐模板或检查清单。", "把教程步骤套到自己的项目里跑一遍。"];
   }
+  if (key === "tools") {
+    item.name ||= item.title || "未命名工具";
+    item.title ||= item.name || "未命名工具";
+    item.description ||= `「${item.name || item.title || "工具"}」是一款 AI 工具，适合用在项目中的特定环节。`;
+    item.suitableFor ||= item.suitable_for || "—";
+    item.usageTip ||= item.usage_tip || "建议先了解工具的基本功能，再结合实际任务使用。";
+    item.officialUrl ||= item.official_url || "#";
+    item.tutorialUrl ||= item.tutorial_url || "#";
+    item.coverUrl ||= item.cover_url || item.imageUrl || "";
+    item.toolStatus ||= item.tool_status || item.status || "整理中";
+    item.tags = Array.isArray(item.tags) ? item.tags : [];
+  }
   if (key === "cases") {
     item.background ||= `这个案例来自「${item.title || "项目"}」方向的实战整理，重点记录需求背景、实现过程和后续可升级空间。`;
     item.process = Array.isArray(item.process) ? item.process : [];
@@ -531,6 +543,67 @@ async function loadSupabaseCaseById(id) {
     return normalizeSupabaseCase(rows[0]);
   } catch (error) {
     console.error("Supabase case detail 读取失败。", error);
+    return null;
+  }
+}
+
+// ── Supabase 工具读取 ──
+async function fetchSupabaseToolRows(query) {
+  const config = getSupabaseConfig();
+  if (!config) return null;
+  const response = await fetch(`${config.url}/rest/v1/tools?${query}`, {
+    cache: "no-store",
+    headers: {
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`
+    }
+  });
+  if (!response.ok) {
+    const message = await response.text().catch(() => "");
+    throw new Error(`Supabase tools HTTP ${response.status}${message ? `: ${message}` : ""}`);
+  }
+  return await response.json();
+}
+
+function normalizeSupabaseTool(row) {
+  const tags = Array.isArray(row?.tags) ? row.tags : [];
+  return normalizeFrontItem("tools", {
+    id: firstValue(row?.id, row?.slug),
+    slug: row?.slug || "",
+    name: firstValue(row?.name, row?.title, "未命名工具"),
+    title: firstValue(row?.name, row?.title, "未命名工具"),
+    category: firstValue(row?.category, "AI 对话"),
+    description: firstValue(row?.description, row?.summary, "工具简介正在整理中。"),
+    summary: firstValue(row?.description, row?.summary, "工具简介正在整理中。"),
+    suitableFor: firstValue(row?.suitable_for, ""),
+    suitable_for: firstValue(row?.suitable_for, ""),
+    usageTip: firstValue(row?.usage_tip, ""),
+    usage_tip: firstValue(row?.usage_tip, ""),
+    officialUrl: row?.official_url || "#",
+    official_url: row?.official_url || "#",
+    tutorialUrl: row?.tutorial_url || "#",
+    tutorial_url: row?.tutorial_url || "#",
+    coverUrl: row?.cover_url || "",
+    cover_url: row?.cover_url || "",
+    imageUrl: row?.cover_url || "",
+    tags: tags,
+    toolStatus: firstValue(row?.tool_status, "整理中"),
+    tool_status: firstValue(row?.tool_status, "整理中"),
+    status: firstValue(row?.tool_status, "整理中"),
+    publishStatus: row?.status || "draft",
+    updatedAt: firstValue(row?.updated_at, row?.created_at),
+    createdAt: row?.created_at || "",
+    source: "supabase"
+  });
+}
+
+async function loadSupabaseTools() {
+  try {
+    const rows = await fetchSupabaseToolRows("select=*&status=eq.published&order=updated_at.desc");
+    if (!rows) return null;
+    return Array.isArray(rows) ? rows.map(normalizeSupabaseTool) : [];
+  } catch (error) {
+    console.error("Supabase tools 读取失败。", error);
     return null;
   }
 }
@@ -840,26 +913,191 @@ function renderTutorialArticleSidebar(item, related) {
   `;
 }
 
-function renderTools(container, items, source) {
-  showDataNotice(container, source);
-  if (!Array.isArray(items) || items.length === 0) {
-    container.innerHTML = emptyState("暂无工具数据", "请在 admin.html 添加工具后导出 tools.json。");
+async function renderTools(container, items, source) {
+  var toolItems = [];
+  var toolSource = source;
+
+  // 优先读取 Supabase
+  console.log("[tools] trying supabase");
+  try {
+    var supabaseItems = await loadSupabaseTools();
+    if (Array.isArray(supabaseItems) && supabaseItems.length > 0) {
+      toolItems = supabaseItems;
+      toolSource = "supabase";
+      console.log("[tools] supabase loaded", toolItems.length);
+    } else if (Array.isArray(supabaseItems)) {
+      console.warn("[tools] supabase returned empty array, fallback to json");
+    }
+  } catch (error) {
+    console.warn("[tools] supabase failed, fallback to json", error);
+  }
+
+  // 兜底 JSON
+  if (toolItems.length === 0 && source !== "fallback" && Array.isArray(items) && items.length > 0) {
+    toolItems = items;
+    toolSource = source;
+    console.log("[tools] json loaded", toolItems.length);
+  }
+
+  // JSON 也失败 → fallback
+  if (toolItems.length === 0) {
+    toolItems = Array.isArray(FALLBACK_DATA.tools) ? FALLBACK_DATA.tools : [];
+    toolSource = "fallback";
+    console.log("[tools] using fallback data", toolItems.length);
+  }
+
+  showDataNotice(container, toolSource);
+  if (!Array.isArray(toolItems) || toolItems.length === 0) {
+    container.innerHTML = emptyState("暂无工具数据", "工具正在整理中，可通过联系合作获取最新推荐。");
     return;
   }
-  container.innerHTML = items.map((item) => `
-    <article class="tool-card" data-category="${escapeHTML(normalizeCategories(item, "category"))}">
-      <div><h2>${escapeHTML(item.name)}</h2><span class="tag">${escapeHTML(item.category || item.status || "待分类")}</span></div>
-      <p>${escapeHTML(item.description)}</p>
-      <dl>
-        <dt>适合人群</dt><dd>${escapeHTML(item.suitableFor)}</dd>
-        <dt>使用建议</dt><dd>${escapeHTML(item.usageTip)}</dd>
-      </dl>
-      <div class="card-actions">
-        ${createDataLink("官网", item.officialUrl)}
-        ${createDataLink("教程", item.tutorialUrl)}
-      </div>
-    </article>
-  `).join("");
+
+  // Store items for dynamic filtering
+  container._toolsData = toolItems;
+  renderToolCards(container);
+}
+
+function renderToolCards(container) {
+  var displayItems = container._toolsData || [];
+  // Apply search filter
+  var searchInput = document.getElementById("toolSearchInput");
+  var searchQuery = searchInput ? String(searchInput.value || "").trim().toLowerCase() : "";
+  // Apply category filter
+  var activeCategory = "all";
+  var activeCategoryButton = document.querySelector("[data-tool-filter].active");
+  if (activeCategoryButton) activeCategory = activeCategoryButton.dataset.toolFilter || "all";
+  // Apply scene filter
+  var activeScene = "all";
+  var activeSceneButton = document.querySelector("[data-tool-scene].active");
+  if (activeSceneButton) activeScene = activeSceneButton.dataset.toolScene || "all";
+
+  var filtered = displayItems.filter(function(item) {
+    // Category filter
+    if (activeCategory !== "all") {
+      var categories = normalizeCategories(item, "category");
+      if (!categories.includes(activeCategory)) return false;
+    }
+    // Scene filter
+    if (activeScene !== "all") {
+      if (!matchesToolScene(item, activeScene)) return false;
+    }
+    // Search filter
+    if (searchQuery) {
+      var tags = Array.isArray(item.tags) ? item.tags.join(" ") : String(item.tags || "");
+      var searchText = [
+        item.name, item.title,
+        item.category,
+        item.description, item.summary,
+        item.suitableFor, item.suitable_for,
+        item.usageTip, item.usage_tip,
+        tags
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!searchText.includes(searchQuery)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="resource-empty-state"><div class="resource-empty-icon" aria-hidden="true"></div><h2>暂无匹配工具</h2><p>可以换个关键词，或点击联系合作获取人工推荐。</p><button class="btn btn-primary js-contact-modal" type="button"><span>联系获取</span><i aria-hidden="true"></i></button></div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(function(item) {
+    var name = item.name || item.title || "未命名工具";
+    var category = item.category || "AI 对话";
+    var description = item.description || item.summary || "工具简介正在整理中。";
+    var suitableFor = item.suitableFor || item.suitable_for || "—";
+    var usageTip = item.usageTip || item.usage_tip || "暂无使用建议。";
+    var officialUrl = item.officialUrl || item.official_url || "#";
+    var tutorialUrl = item.tutorialUrl || item.tutorial_url || "#";
+    var coverUrl = item.coverUrl || item.cover_url || item.imageUrl || "";
+    var toolStatus = item.toolStatus || item.tool_status || item.status || "整理中";
+    var tags = Array.isArray(item.tags) ? item.tags : [];
+
+    // Status badge class
+    var statusClass = "status-default";
+    if (toolStatus === "推荐") statusClass = "status-recommended";
+    else if (toolStatus === "常用") statusClass = "status-common";
+    else if (toolStatus === "进阶") statusClass = "status-advanced";
+    else if (toolStatus === "需联系") statusClass = "status-contact";
+
+    // Buttons
+    var buttons = [];
+    var hasOfficial = officialUrl && officialUrl !== "#";
+    var hasTutorial = tutorialUrl && tutorialUrl !== "#";
+    var isContactOnly = toolStatus === "需联系";
+    var noUrls = !hasOfficial && !hasTutorial;
+
+    if (hasOfficial) {
+      buttons.push('<a class="card-link" href="' + escapeHTML(officialUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()"><span>官网</span><i aria-hidden="true"></i></a>');
+    }
+    if (hasTutorial) {
+      buttons.push('<a class="card-link" href="' + escapeHTML(tutorialUrl) + '" onclick="event.stopPropagation()"><span>教程</span><i aria-hidden="true"></i></a>');
+    }
+    if (isContactOnly || noUrls) {
+      buttons.push('<button class="card-link js-contact-modal" type="button"><span>联系获取</span><i aria-hidden="true"></i></button>');
+    }
+    if (!hasTutorial && !isContactOnly && !noUrls) {
+      buttons.push('<span class="tool-tidying-hint">教程整理中</span>');
+    }
+
+    return [
+      '<article class="tool-card" data-tool-card data-official-url="' + escapeHTML(officialUrl) + '" data-tutorial-url="' + escapeHTML(tutorialUrl) + '" data-category="' + escapeHTML(normalizeCategories(item, "category")) + '">',
+        coverUrl ? '<div class="tool-card-cover"><img src="' + escapeHTML(coverUrl) + '" alt="' + escapeHTML(name) + '" loading="lazy"></div>' : "",
+        '<div class="tool-card-body">',
+          '<div class="tool-card-header">',
+            '<h2>' + escapeHTML(name) + '</h2>',
+            '<span class="tool-status-badge ' + statusClass + '">' + escapeHTML(toolStatus) + '</span>',
+          '</div>',
+          '<span class="tag">' + escapeHTML(category) + '</span>',
+          '<p>' + escapeHTML(description) + '</p>',
+          '<dl>',
+            '<dt>适合人群</dt><dd>' + escapeHTML(suitableFor) + '</dd>',
+            '<dt>使用建议</dt><dd>' + escapeHTML(usageTip) + '</dd>',
+          '</dl>',
+          (function(visibleTags) { return visibleTags.length ? '<div class="resource-card-tags">' + visibleTags.map(function(tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("") + '</div>' : ""; })(tags.slice(0, 3)),
+          '<div class="card-actions">' + buttons.join("\n") + '</div>',
+        '</div>',
+      '</article>'
+    ].join("");
+  }).join("");
+}
+
+function matchesToolScene(item, scene) {
+  var text = [
+    item.name, item.title,
+    item.category,
+    item.description, item.summary,
+    item.suitableFor, item.suitable_for,
+    item.usageTip, item.usage_tip,
+    Array.isArray(item.tags) ? item.tags.join(" ") : String(item.tags || "")
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  var sceneKeywords = {
+    "write": ["写作", "文案", "写文案", "内容", "文字", "文档", "文章", "chatgpt", "claude", "gemini", "deepseek"],
+    "website": ["网站", "网页", "建站", "做网站", "前端", "html", "codex", "编程", "开发"],
+    "image": ["图片", "做图片", "图像", "绘画", "设计", "comfyui", "图", "视觉"],
+    "video": ["视频", "做视频", "剪辑", "动画", "生成视频"],
+    "code": ["编程", "写代码", "代码", "开发", "命令行", "codex", "claude code", "编程助手"],
+    "local": ["本地部署", "本地", "部署", "离线", "自部署", "开源", "comfyui"],
+    "automation": ["自动化", "工作流", "流程", "机器人", "智能体", "openclaw", "coze", "自动"]
+  };
+
+  var keywords = sceneKeywords[scene] || [];
+  return keywords.some(function(kw) { return text.includes(kw.toLowerCase()); });
+}
+
+function handleToolCardClick(officialUrl, tutorialUrl) {
+  var hasTutorial = tutorialUrl && tutorialUrl !== "#";
+  var hasOfficial = officialUrl && officialUrl !== "#";
+
+  if (hasTutorial) {
+    window.location.href = tutorialUrl;
+  } else if (hasOfficial) {
+    window.open(officialUrl, "_blank", "noopener");
+  } else {
+    tryOpenContactModal(null);
+  }
 }
 
 function renderResourceCard(item) {
@@ -1840,7 +2078,7 @@ async function initDataRender() {
 
   for (const target of renderTargets) {
     const type = target.dataset.render;
-    if (type === "tools") renderTools(target, data.tools, loaded.tools.source);
+    if (type === "tools") await renderTools(target, data.tools, loaded.tools.source);
     if (type === "resources") await renderResources(target, data.resources, loaded.resources.source);
     if (type === "tutorials") await renderTutorials(target, data.tutorials, loaded.tutorials.source);
     if (type === "cases") await renderCases(target, data.cases, loaded.cases.source);
@@ -2008,6 +2246,13 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const toolCard = event.target.closest("[data-tool-card]");
+  if (toolCard && !event.target.closest("a, button, .card-link")) {
+    event.preventDefault();
+    handleToolCardClick(toolCard.dataset.officialUrl, toolCard.dataset.tutorialUrl);
+    return;
+  }
+
   const contactIntentTrigger = event.target.closest("a, button");
   if (isContactModalIntent(contactIntentTrigger)) {
     event.preventDefault();
@@ -2077,6 +2322,14 @@ document.addEventListener("click", (event) => {
       return;
     }
 
+    // 工具页专用过滤逻辑
+    if (bar && bar.dataset.toolCategoryBar !== undefined) {
+      bar.querySelectorAll(".filter-button").forEach(function(item) { item.classList.toggle("active", item === filterButton); });
+      var toolGrid = document.querySelector('[data-render="tools"]');
+      if (toolGrid) renderToolCards(toolGrid);
+      return;
+    }
+
     // 原有通用过滤逻辑
     const list = bar?.nextElementSibling;
     const cards = list?.querySelectorAll("[data-category]") || [];
@@ -2093,14 +2346,23 @@ document.addEventListener("click", (event) => {
   const sceneButton = event.target.closest(".scene-button");
   if (sceneButton) {
     var sceneBar = sceneButton.closest("[data-resource-scene-bar]");
+    var toolSceneBar = sceneButton.closest("[data-tool-scene-bar]");
     var scene = sceneButton.dataset.scene || "all";
+
     if (sceneBar) {
       sceneBar.querySelectorAll(".scene-button").forEach(function(btn) { btn.classList.toggle("active", btn === sceneButton); });
+      resourceFilterState.activeScene = scene;
+      var grid = document.querySelector('[data-render="resources"]');
+      if (grid) filterAndRenderResources(grid);
+      return;
     }
-    resourceFilterState.activeScene = scene;
-    var grid = document.querySelector('[data-render="resources"]');
-    if (grid) filterAndRenderResources(grid);
-    return;
+
+    if (toolSceneBar) {
+      toolSceneBar.querySelectorAll(".scene-button").forEach(function(btn) { btn.classList.toggle("active", btn === sceneButton); });
+      var toolGrid = document.querySelector('[data-render="tools"]');
+      if (toolGrid) renderToolCards(toolGrid);
+      return;
+    }
   }
 });
 
@@ -2123,6 +2385,17 @@ document.addEventListener("input", (event) => {
       resourceFilterState.searchQuery = query.trim();
       var grid = document.querySelector('[data-render="resources"]');
       if (grid) filterAndRenderResources(grid);
+    }, SEARCH_DEBOUNCE_MS);
+    return;
+  }
+
+  const toolSearch = event.target.closest("[data-tool-search]");
+  if (toolSearch) {
+    window.clearTimeout(searchDebounceTimer);
+    var toolQuery = toolSearch.value;
+    searchDebounceTimer = window.setTimeout(function() {
+      var toolGrid = document.querySelector('[data-render="tools"]');
+      if (toolGrid) renderToolCards(toolGrid);
     }, SEARCH_DEBOUNCE_MS);
     return;
   }

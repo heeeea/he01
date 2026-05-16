@@ -24,7 +24,7 @@
             <li><a href="contact.html">联系合作</a></li>
           </ul>
           <div class="nav-actions">
-            <button class="search-button" type="button" aria-label="搜索" data-modal-message="搜索功能将在后续版本接入。"><span class="search-icon" aria-hidden="true"></span></button>
+            <button class="search-button" type="button" aria-label="搜索" data-search-modal><span class="search-icon" aria-hidden="true"></span></button>
             <a class="btn btn-small btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a>
           </div>
         </div>
@@ -38,17 +38,37 @@
         <p>按使用场景整理常用 AI 工具，方便新手快速找到适合自己的工具。</p>
       </section>
 
-      <section class="filter-bar reveal" aria-label="工具分类筛选">
-        <button class="filter-button active" type="button" data-filter="all">全部</button>
-        <button class="filter-button" type="button" data-filter="AI 对话">AI 对话</button>
-        <button class="filter-button" type="button" data-filter="AI 编程">AI 编程</button>
-        <button class="filter-button" type="button" data-filter="AI 图像">AI 图像</button>
-        <button class="filter-button" type="button" data-filter="AI 视频">AI 视频</button>
-        <button class="filter-button" type="button" data-filter="AI 自动化">AI 自动化</button>
-        <button class="filter-button" type="button" data-filter="AI 办公">AI 办公</button>
-        <button class="filter-button" type="button" data-filter="本地部署">本地部署</button>
+      <!-- 搜索栏 -->
+      <div class="resource-search-wrap reveal" aria-label="工具搜索">
+        <span class="resource-search-icon" aria-hidden="true"></span>
+        <input id="toolSearchInput" type="search" placeholder="搜索工具名称、分类、简介、适合人群、使用建议..." autocomplete="off" data-tool-search>
+      </div>
+
+      <!-- 分类筛选 -->
+      <section class="filter-bar reveal" aria-label="工具分类筛选" data-tool-category-bar>
+        <button class="filter-button active" type="button" data-tool-filter="all">全部</button>
+        <button class="filter-button" type="button" data-tool-filter="AI 对话">AI 对话</button>
+        <button class="filter-button" type="button" data-tool-filter="AI 编程">AI 编程</button>
+        <button class="filter-button" type="button" data-tool-filter="AI 图像">AI 图像</button>
+        <button class="filter-button" type="button" data-tool-filter="AI 视频">AI 视频</button>
+        <button class="filter-button" type="button" data-tool-filter="AI 办公">AI 办公</button>
+        <button class="filter-button" type="button" data-tool-filter="AI 自动化">AI 自动化</button>
+        <button class="filter-button" type="button" data-tool-filter="本地部署">本地部署</button>
       </section>
 
+      <!-- 场景筛选 -->
+      <section class="scene-bar reveal" aria-label="按场景筛选工具" data-tool-scene-bar>
+        <button class="scene-button active" type="button" data-tool-scene="all">全部场景</button>
+        <button class="scene-button" type="button" data-tool-scene="write">写文案</button>
+        <button class="scene-button" type="button" data-tool-scene="website">做网站</button>
+        <button class="scene-button" type="button" data-tool-scene="image">做图片</button>
+        <button class="scene-button" type="button" data-tool-scene="video">做视频</button>
+        <button class="scene-button" type="button" data-tool-scene="code">写代码</button>
+        <button class="scene-button" type="button" data-tool-scene="local">本地部署</button>
+        <button class="scene-button" type="button" data-tool-scene="automation">自动化</button>
+      </section>
+
+      <!-- 工具列表 -->
       <section class="content-grid tools-grid reveal" aria-label="AI 工具列表" data-render="tools"></section>
     </main>
 

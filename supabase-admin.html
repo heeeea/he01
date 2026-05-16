@@ -697,6 +697,7 @@
       <button class="sb-module-tab active" type="button" data-module="tutorials">教程管理</button>
       <button class="sb-module-tab" type="button" data-module="resources">资源管理</button>
       <button class="sb-module-tab" type="button" data-module="cases">案例管理</button>
+      <button class="sb-module-tab" type="button" data-module="tools">AI 工具管理</button>
     </div>
 
     <main id="adminView" class="sb-admin-main" aria-label="Supabase 管理后台">
@@ -1156,6 +1157,153 @@
           </form>
         </section>
       </div>
+
+      <!-- ========== AI 工具管理模块 ========== -->
+      <div class="sb-module-panel" data-module-panel="tools">
+        <section class="sb-panel">
+          <div class="sb-panel-head">
+            <div>
+              <h2>AI 工具列表</h2>
+              <p id="toolListSummary">登录后读取 tools 表。</p>
+            </div>
+            <div class="sb-actions" style="margin-top: 0;">
+              <button id="toolRefreshButton" class="sb-button ghost" type="button">刷新列表</button>
+              <button id="toolNewButton" class="sb-button primary" type="button">新增工具</button>
+            </div>
+          </div>
+          <div class="sb-list-tools" aria-label="工具筛选">
+            <input id="toolSearchInput" class="sb-list-search" type="search" placeholder="搜索工具名称 / 标识 / 简介 / 分类 / 适合人群 / 使用建议 / 标签" autocomplete="off">
+            <div class="sb-list-filter-row">
+              <select id="toolCategoryFilter" aria-label="分类筛选">
+                <option value="all">全部分类</option>
+              </select>
+              <select id="toolStatusFilter" aria-label="发布状态筛选">
+                <option value="all">全部发布状态</option>
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+              </select>
+              <select id="toolToolStatusFilter" aria-label="工具状态筛选">
+                <option value="all">全部工具状态</option>
+                <option value="推荐">推荐</option>
+                <option value="常用">常用</option>
+                <option value="进阶">进阶</option>
+                <option value="整理中">整理中</option>
+                <option value="需联系">需联系</option>
+              </select>
+              <button id="toolClearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
+            </div>
+          </div>
+          <div id="toolList" class="sb-list"></div>
+        </section>
+
+        <section class="sb-panel sb-editor">
+          <div class="sb-editor-title">
+            <div>
+              <h2 id="toolEditorHeading">新增工具</h2>
+              <p id="toolEditorSubheading">保存后会写入 Supabase tools 表。</p>
+            </div>
+            <button id="toolResetFormButton" class="sb-button ghost" type="button">清空表单</button>
+          </div>
+
+          <form id="toolForm" class="sb-form-grid">
+            <div id="toolPreviewArea" class="sb-preview-area" aria-live="polite">
+              <p id="toolPreviewHint"></p>
+              <a id="toolPreviewButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览工具</a>
+            </div>
+            <label class="sb-field">
+              工具标识 / 链接名
+              <input name="slug" type="text" placeholder="chatgpt" required>
+              <small>建议使用英文小写和短横线，例如：chatgpt、claude-code。</small>
+            </label>
+            <label class="sb-field">
+              发布状态
+              <select name="status">
+                <option value="draft">草稿 draft</option>
+                <option value="published">已发布 published</option>
+              </select>
+              <small>草稿不会在正式前台展示；已发布会进入前台读取范围。</small>
+            </label>
+            <label class="sb-field full">
+              工具名称
+              <input name="name" type="text" placeholder="ChatGPT" required>
+              <small>工具的名称，会显示在卡片标题位置。</small>
+            </label>
+            <label class="sb-field">
+              工具分类
+              <input name="category" type="text" placeholder="AI 对话 / AI 编程 / AI 图像 / AI 视频 / AI 办公 / AI 自动化 / 本地部署">
+              <small>用来在前台分类筛选和标记工具方向。</small>
+            </label>
+            <label class="sb-field">
+              工具状态
+              <select name="tool_status">
+                <option value="推荐">推荐</option>
+                <option value="常用">常用</option>
+                <option value="进阶">进阶</option>
+                <option value="整理中">整理中</option>
+                <option value="需联系">需联系</option>
+              </select>
+              <small>前台会根据工具状态显示不同标签和按钮。</small>
+            </label>
+            <label class="sb-field full">
+              工具简介
+              <textarea name="description" placeholder="用一两句话说明这个工具是什么、适合做什么。"></textarea>
+              <small>会显示在工具卡片上。</small>
+            </label>
+            <label class="sb-field">
+              适合人群
+              <input name="suitable_for" type="text" placeholder="新手、内容创作者、项目负责人">
+              <small>帮助读者判断这个工具是否适合自己。</small>
+            </label>
+            <label class="sb-field">
+              使用建议
+              <input name="usage_tip" type="text" placeholder="先用于需求整理和方案拆解，再接入具体工具执行。">
+              <small>给读者的使用建议，会显示在工具卡片上。</small>
+            </label>
+            <label class="sb-field">
+              官网链接
+              <input name="official_url" type="url" placeholder="https://example.com">
+              <small>工具或服务的官方网站地址。</small>
+            </label>
+            <label class="sb-field">
+              教程链接
+              <input name="tutorial_url" type="url" placeholder="tutorial-detail.html?slug=xxx">
+              <small>如果这个工具有配套教程，可以填写教程详情页链接。</small>
+            </label>
+            <label class="sb-field">
+              封面图链接
+              <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
+              <small>填写图片网址；没有封面时可以先留空。</small>
+            </label>
+            <div class="sb-upload-box" id="toolImageUploadBox">
+              <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后链接会自动写入封面图字段。</p>
+              <label class="sb-field" style="margin: 0;">
+                图片说明
+                <input id="toolImageAltInput" type="text" placeholder="例如：ChatGPT 截图">
+              </label>
+              <div class="sb-actions" style="margin: 0;">
+                <input id="toolImageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                <button id="toolUploadImageButton" class="sb-button ghost" type="button">上传封面图</button>
+              </div>
+              <div id="toolUploadStatus" class="sb-upload-status">上传状态：未上传</div>
+              <div id="toolUploadPreview" class="sb-upload-preview">
+                <label class="sb-field" style="margin: 0;">
+                  上传成功后的图片链接
+                  <input id="toolUploadedImageUrl" type="url" readonly>
+                </label>
+                <button id="toolUseCoverButton" class="sb-button ghost" type="button">设为封面图</button>
+              </div>
+            </div>
+            <label class="sb-field full">
+              标签
+              <input name="tags" type="text" placeholder="AI 对话,写作,项目构思">
+              <small>多个标签请用英文逗号分隔，例如：AI 对话,写作,项目构思。</small>
+            </label>
+            <div class="sb-actions full">
+              <button id="toolSaveButton" class="sb-button primary" type="submit">保存工具</button>
+            </div>
+          </form>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -1237,6 +1385,11 @@
     let caseLastUploadedUrl = "";
     let caseSavedPreview = null;
     let caseDragDepth = 0;
+    let tools = [];
+    let toolEditingId = null;
+    let toolLastUploadedUrl = "";
+    let toolSavedPreview = null;
+    let toolDragDepth = 0;
 
     function normalizeUrl(url) {
       return String(url || "").trim().replace(/\/+$/, "");
@@ -1756,10 +1909,12 @@
         if (activeModule === "tutorials") fetchTutorials();
         if (activeModule === "resources") fetchResources();
         if (activeModule === "cases") fetchCases();
+        if (activeModule === "tools") fetchTools();
       } else {
         renderTutorialList();
         document.getElementById("resourceList").innerHTML = "";
         document.getElementById("caseList").innerHTML = "";
+        document.getElementById("toolList").innerHTML = "";
       }
     }
 
@@ -2012,6 +2167,9 @@
       }
       if (module === "cases" && session && session.access_token) {
         fetchCases();
+      }
+      if (module === "tools" && session && session.access_token) {
+        fetchTools();
       }
     }
 
@@ -2546,9 +2704,11 @@
       tutorials = [];
       resources = [];
       cases = [];
+      tools = [];
       setFormMode("new");
       setResourceFormMode("new");
       setCaseFormMode("new");
+      setToolFormMode("new");
       showNotice("success", "已退出登录。");
       updateAuthUi();
     });
@@ -3188,6 +3348,488 @@
         return;
       }
       handleCaseUploadSelectedImage(file);
+    });
+
+    // ── AI 工具管理 ──
+
+    function toolSearchText(tool) {
+      var tags = Array.isArray(tool.tags) ? tool.tags.join(" ") : String(tool.tags || "");
+      return [
+        tool.name,
+        tool.slug,
+        tool.description,
+        tool.category,
+        tool.suitable_for,
+        tool.usage_tip,
+        tags
+      ].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function getToolFilterState() {
+      return {
+        search: String(document.getElementById("toolSearchInput").value || "").trim().toLowerCase(),
+        category: document.getElementById("toolCategoryFilter").value || "all",
+        status: document.getElementById("toolStatusFilter").value || "all",
+        toolStatus: document.getElementById("toolToolStatusFilter").value || "all"
+      };
+    }
+
+    function getFilteredTools() {
+      var filter = getToolFilterState();
+      return tools.filter(function(tool) {
+        var category = tool.category || "";
+        var status = tool.status || "draft";
+        var toolStatus = tool.tool_status || "整理中";
+        var matchesSearch = !filter.search || toolSearchText(tool).includes(filter.search);
+        var matchesCategory = filter.category === "all" || category === filter.category;
+        var matchesStatus = filter.status === "all" || status === filter.status;
+        var matchesToolStatus = filter.toolStatus === "all" || toolStatus === filter.toolStatus;
+        return matchesSearch && matchesCategory && matchesStatus && matchesToolStatus;
+      });
+    }
+
+    function refreshToolCategoryFilterOptions() {
+      var select = document.getElementById("toolCategoryFilter");
+      var current = select.value || "all";
+      var categories = Array.from(new Set(tools.map(function(t) {
+        return t.category || "";
+      }).filter(Boolean))).sort(function(a, b) {
+        return a.localeCompare(b, "zh-CN");
+      });
+      select.innerHTML = '<option value="all">全部分类</option>' + categories.map(function(cat) {
+        return '<option value="' + escapeHtml(cat) + '">' + escapeHtml(cat) + '</option>';
+      }).join("");
+      select.value = categories.includes(current) ? current : "all";
+    }
+
+    function resetToolFilters() {
+      document.getElementById("toolSearchInput").value = "";
+      document.getElementById("toolCategoryFilter").value = "all";
+      document.getElementById("toolStatusFilter").value = "all";
+      document.getElementById("toolToolStatusFilter").value = "all";
+      renderToolList();
+    }
+
+    async function fetchTools() {
+      if (!session || !session.access_token) return;
+      setLoading(document.getElementById("toolRefreshButton"), "读取中...", true);
+      try {
+        tools = await requestSupabase("/rest/v1/tools?select=*&order=created_at.desc", {
+          method: "GET",
+          headers: authHeaders()
+        });
+        renderToolList();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "读取工具列表"));
+        if (error.status === 401) {
+          clearSession();
+          updateAuthUi();
+        }
+      } finally {
+        setLoading(document.getElementById("toolRefreshButton"), "读取中...", false);
+      }
+    }
+
+    function renderToolList() {
+      var list = document.getElementById("toolList");
+      if (!session || !session.access_token) {
+        list.innerHTML = "";
+        return;
+      }
+
+      refreshToolCategoryFilterOptions();
+
+      if (!tools.length) {
+        document.getElementById("toolListSummary").textContent = "共读取到 0 个工具。";
+        list.innerHTML = '<div class="sb-empty">还没有工具。点击"新增工具"开始写入第一个。</div>';
+        return;
+      }
+
+      var filtered = getFilteredTools();
+      var filter = getToolFilterState();
+      var hasActiveFilter = Boolean(filter.search) || filter.category !== "all" || filter.status !== "all" || filter.toolStatus !== "all";
+      document.getElementById("toolListSummary").textContent = hasActiveFilter
+        ? "共 " + tools.length + " 个工具，当前匹配 " + filtered.length + " 个。"
+        : "共读取到 " + tools.length + " 个工具。";
+
+      if (!filtered.length) {
+        list.innerHTML = '<div class="sb-empty">暂无匹配工具</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(function(tool) {
+        var status = tool.status || "draft";
+        var toolStatus = tool.tool_status || "整理中";
+        return [
+          '<article class="sb-list-item ' + (String(toolEditingId) === String(tool.id) ? "active" : "") + '">',
+            '<h3 class="sb-list-title"><span>名称：</span>' + escapeHtml(tool.name || "未命名工具") + '</h3>',
+            '<div class="sb-list-meta">',
+              '<span class="sb-badge">分类：' + escapeHtml(tool.category || "未分类") + '</span>',
+              '<span class="sb-badge ' + escapeHtml(status) + '">发布：' + escapeHtml(status === "published" ? "已发布" : "草稿") + '</span>',
+              '<span class="sb-badge">状态：' + escapeHtml(toolStatus) + '</span>',
+              '<span>更新时间：' + escapeHtml(formatDate(tool.updated_at)) + '</span>',
+            '</div>',
+            '<div class="sb-list-actions">',
+              '<button class="sb-button ghost" type="button" data-tool-action="edit" data-id="' + escapeHtml(tool.id) + '">编辑</button>',
+              '<button class="sb-button danger" type="button" data-tool-action="delete" data-id="' + escapeHtml(tool.id) + '">删除工具</button>',
+            '</div>',
+          '</article>'
+        ].join("");
+      }).join("");
+    }
+
+    function getToolFormPayload() {
+      var form = document.getElementById("toolForm");
+      return {
+        slug: form.elements.slug.value.trim(),
+        name: form.elements.name.value.trim(),
+        category: form.elements.category.value.trim(),
+        description: form.elements.description.value.trim(),
+        suitable_for: form.elements.suitable_for.value.trim(),
+        usage_tip: form.elements.usage_tip.value.trim(),
+        official_url: form.elements.official_url.value.trim(),
+        tutorial_url: form.elements.tutorial_url.value.trim(),
+        cover_url: form.elements.cover_url.value.trim(),
+        tags: parseTags(form.elements.tags.value),
+        tool_status: form.elements.tool_status.value,
+        status: form.elements.status.value,
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    function fillToolForm(tool) {
+      var form = document.getElementById("toolForm");
+      form.elements.slug.value = tool.slug || "";
+      form.elements.name.value = tool.name || "";
+      form.elements.category.value = tool.category || "";
+      form.elements.description.value = tool.description || "";
+      form.elements.suitable_for.value = tool.suitable_for || "";
+      form.elements.usage_tip.value = tool.usage_tip || "";
+      form.elements.official_url.value = tool.official_url || "";
+      form.elements.tutorial_url.value = tool.tutorial_url || "";
+      form.elements.cover_url.value = tool.cover_url || "";
+      form.elements.tags.value = tagsToInput(tool.tags);
+      form.elements.tool_status.value = tool.tool_status || "整理中";
+      form.elements.status.value = tool.status || "draft";
+    }
+
+    function resetToolUploadUi() {
+      toolLastUploadedUrl = "";
+      document.getElementById("toolImageAltInput").value = "";
+      document.getElementById("toolImageFileInput").value = "";
+      document.getElementById("toolUploadedImageUrl").value = "";
+      document.getElementById("toolUploadPreview").classList.remove("show");
+      setToolUploadStatus("", session && session.access_token ? "上传状态：未上传" : "请先登录后再上传图片。");
+    }
+
+    function setToolUploadStatus(type, message) {
+      var el = document.getElementById("toolUploadStatus");
+      el.className = "sb-upload-status" + (type ? " " + type : "");
+      el.textContent = message;
+    }
+
+    function getToolCurrentFormPreview() {
+      var form = document.getElementById("toolForm");
+      var slug = form.elements.slug.value.trim();
+      if (!slug) return null;
+      return {
+        slug: slug,
+        status: form.elements.status.value || "draft"
+      };
+    }
+
+    function updateToolPreviewButton(preview) {
+      toolSavedPreview = preview || null;
+      var area = document.getElementById("toolPreviewArea");
+      var hint = document.getElementById("toolPreviewHint");
+      var button = document.getElementById("toolPreviewButton");
+      if (!toolSavedPreview || !toolSavedPreview.slug) {
+        area.className = "sb-preview-area";
+        hint.textContent = "";
+        button.href = "#";
+        return;
+      }
+      var isDraft = toolSavedPreview.status === "draft";
+      area.className = "sb-preview-area show" + (isDraft ? " warn" : "");
+      hint.textContent = isDraft
+        ? "当前工具是草稿 draft，正式前台可能不会展示。"
+        : "工具已保存，可以打开工具导航页预览。";
+      button.href = "tools.html";
+    }
+
+    function setToolFormMode(mode, tool) {
+      toolEditingId = mode === "edit" && tool ? tool.id : null;
+      document.getElementById("toolEditorHeading").textContent = toolEditingId ? "编辑工具" : "新增工具";
+      document.getElementById("toolEditorSubheading").textContent = toolEditingId ? "正在编辑 ID：" + toolEditingId : "保存后会写入 Supabase tools 表。";
+      fillToolForm(tool || {});
+      updateToolPreviewButton(tool && tool.slug ? { slug: tool.slug, status: tool.status || "draft" } : null);
+      resetToolUploadUi();
+      renderToolList();
+    }
+
+    function buildToolImagePath(file) {
+      var timestamp = Date.now();
+      var slug = String(document.getElementById("toolForm").elements.slug.value || "").trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_]+|[-_]+$/g, "") || "draft";
+      var extByType = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif"
+      };
+      var fallbackExt = extByType[file.type] || "png";
+      var originalName = file.name || "";
+      var dotIndex = originalName.lastIndexOf(".");
+      var rawBase = dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
+      var rawExt = dotIndex > 0 ? originalName.slice(dotIndex + 1).toLowerCase() : "";
+      var ext = ["png", "jpg", "jpeg", "webp", "gif"].includes(rawExt) ? rawExt : fallbackExt;
+      var base = rawBase
+        .normalize("NFKD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9._-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_.]+|[-_.]+$/g, "")
+        .toLowerCase();
+
+      return "tools/" + slug + "/" + timestamp + "-" + (base || "image") + "." + ext;
+    }
+
+    async function uploadToolImageFile(file) {
+      var config = getConfig();
+      if (!config.url || !config.anonKey) {
+        throw Object.assign(new Error("请先填写 Supabase URL 和 anon key。"), { friendlyStatus: 0 });
+      }
+      if (!session || !session.access_token) {
+        throw Object.assign(new Error("请先登录后再上传图片。"), { friendlyStatus: 401 });
+      }
+
+      var filePath = buildToolImagePath(file);
+      var response = await fetch(config.url + "/storage/v1/object/" + STORAGE_BUCKET + "/" + encodeStoragePath(filePath), {
+        method: "POST",
+        headers: {
+          apikey: config.anonKey,
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": file.type,
+          "x-upsert": "true"
+        },
+        body: file
+      });
+
+      if (!response.ok) {
+        var errorMessage = response.statusText;
+        try {
+          var errorJson = await response.json();
+          errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
+        } catch (e) {
+          errorMessage = response.statusText;
+        }
+        var uploadError = new Error(errorMessage);
+        uploadError.status = response.status;
+        throw uploadError;
+      }
+      return { publicUrl: getPublicImageUrl(filePath) };
+    }
+
+    async function handleToolImageUpload() {
+      if (!session || !session.access_token) {
+        setToolUploadStatus("error", "请先登录后再上传图片。");
+        return;
+      }
+      document.getElementById("toolImageFileInput").click();
+    }
+
+    async function handleToolUploadSelectedImage(fileFromDrop) {
+      var fileInput = document.getElementById("toolImageFileInput");
+      var file = fileFromDrop instanceof File ? fileFromDrop : (fileInput.files && fileInput.files[0]);
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        setToolUploadStatus("error", "只支持 png、jpg、webp、gif 图片。");
+        fileInput.value = "";
+        return;
+      }
+
+      var sizeWarning = file.size > IMAGE_SIZE_WARN_BYTES
+        ? "图片较大，建议先压缩后再上传。仍会继续上传。\n"
+        : "";
+      var uploadButton = document.getElementById("toolUploadImageButton");
+      setLoading(uploadButton, "上传中...", true);
+      setToolUploadStatus(file.size > IMAGE_SIZE_WARN_BYTES ? "warn" : "", sizeWarning + "上传中...");
+      document.getElementById("toolUploadPreview").classList.remove("show");
+
+      try {
+        var result = await uploadToolImageFile(file);
+        var publicUrl = result.publicUrl;
+        toolLastUploadedUrl = publicUrl;
+        document.getElementById("toolUploadedImageUrl").value = publicUrl;
+        document.getElementById("toolUploadPreview").classList.add("show");
+        document.getElementById("toolForm").elements.cover_url.value = publicUrl;
+        setToolUploadStatus("success", "上传成功，封面图链接已自动填入。");
+      } catch (error) {
+        setToolUploadStatus("error", friendlyUploadError(error.status || error.friendlyStatus, error.message));
+      } finally {
+        fileInput.value = "";
+        setLoading(uploadButton, "上传中...", false);
+      }
+    }
+
+    async function handleToolSave(event) {
+      event.preventDefault();
+      clearNotice();
+
+      var payload = getToolFormPayload();
+      if (!payload.slug || !payload.name) {
+        showNotice("warn", "工具标识 / 链接名和工具名称必填。");
+        return;
+      }
+
+      var saveButton = document.getElementById("toolSaveButton");
+      setLoading(saveButton, "保存中...", true);
+      try {
+        var savedRows = null;
+        if (toolEditingId) {
+          savedRows = await requestSupabase("/rest/v1/tools?id=eq." + encodeURIComponent(toolEditingId), {
+            method: "PATCH",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        } else {
+          savedRows = await requestSupabase("/rest/v1/tools", {
+            method: "POST",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        }
+
+        var savedTool = Array.isArray(savedRows) && savedRows[0] ? savedRows[0] : payload;
+        if (savedTool.id) {
+          toolEditingId = savedTool.id;
+          document.getElementById("toolEditorHeading").textContent = "编辑工具";
+          document.getElementById("toolEditorSubheading").textContent = "正在编辑 ID：" + toolEditingId;
+        }
+        updateToolPreviewButton({
+          slug: savedTool.slug || payload.slug,
+          status: savedTool.status || payload.status
+        });
+        showNotice("success", "保存成功。");
+        await fetchTools();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "保存工具"));
+      } finally {
+        setLoading(saveButton, "保存中...", false);
+      }
+    }
+
+    async function handleToolDelete(id) {
+      var tool = tools.find(function(item) { return String(item.id) === String(id); });
+      if (!tool) return;
+      var name = tool.name || "未命名工具";
+      if (!window.confirm("确定要删除《" + name + "》吗？\n这个操作会从 Supabase tools 表中删除该工具，无法直接恢复。")) return;
+
+      clearNotice();
+      try {
+        await requestSupabase("/rest/v1/tools?id=eq." + encodeURIComponent(id), {
+          method: "DELETE",
+          headers: authHeaders()
+        });
+        showNotice("success", "删除成功。");
+        if (String(toolEditingId) === String(id)) {
+          setToolFormMode("new");
+        }
+        await fetchTools();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "删除工具"));
+      }
+    }
+
+    // ── AI 工具管理事件 ──
+    document.getElementById("toolForm").addEventListener("submit", handleToolSave);
+    document.getElementById("toolSearchInput").addEventListener("input", renderToolList);
+    document.getElementById("toolCategoryFilter").addEventListener("change", renderToolList);
+    document.getElementById("toolStatusFilter").addEventListener("change", renderToolList);
+    document.getElementById("toolToolStatusFilter").addEventListener("change", renderToolList);
+    document.getElementById("toolClearFiltersButton").addEventListener("click", resetToolFilters);
+    document.getElementById("toolUploadImageButton").addEventListener("click", handleToolImageUpload);
+    document.getElementById("toolImageFileInput").addEventListener("change", handleToolUploadSelectedImage);
+    document.getElementById("toolUseCoverButton").addEventListener("click", function() {
+      if (toolLastUploadedUrl) {
+        document.getElementById("toolForm").elements.cover_url.value = toolLastUploadedUrl;
+        setToolUploadStatus("success", "封面图链接已设置。");
+      }
+    });
+    document.getElementById("toolRefreshButton").addEventListener("click", fetchTools);
+    document.getElementById("toolNewButton").addEventListener("click", function() {
+      clearNotice();
+      setToolFormMode("new");
+    });
+    document.getElementById("toolResetFormButton").addEventListener("click", function() {
+      clearNotice();
+      setToolFormMode("new");
+    });
+    document.getElementById("toolList").addEventListener("click", function(event) {
+      var button = event.target.closest("button[data-tool-action]");
+      if (!button) return;
+      var id = button.dataset.id;
+      if (button.dataset.toolAction === "edit") {
+        var tool = tools.find(function(item) { return String(item.id) === String(id); });
+        if (tool) {
+          clearNotice();
+          setToolFormMode("edit", tool);
+        }
+      }
+      if (button.dataset.toolAction === "delete") {
+        handleToolDelete(id);
+      }
+    });
+    document.getElementById("toolPreviewButton").addEventListener("click", function(event) {
+      if (!toolSavedPreview || !toolSavedPreview.slug) {
+        event.preventDefault();
+        return;
+      }
+      if (toolSavedPreview.status === "draft") {
+        window.alert("当前工具是草稿 draft，正式前台可能不会展示。");
+      }
+    });
+
+    // ── 工具图片拖拽上传 ──
+    var toolUploadBox = document.getElementById("toolImageUploadBox");
+    toolUploadBox.addEventListener("dragenter", function(event) {
+      event.preventDefault();
+      toolDragDepth += 1;
+      toolUploadBox.classList.add("drag-active");
+    });
+    toolUploadBox.addEventListener("dragover", function(event) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      toolUploadBox.classList.add("drag-active");
+    });
+    toolUploadBox.addEventListener("dragleave", function(event) {
+      event.preventDefault();
+      toolDragDepth = Math.max(0, toolDragDepth - 1);
+      if (toolDragDepth === 0) toolUploadBox.classList.remove("drag-active");
+    });
+    toolUploadBox.addEventListener("drop", function(event) {
+      event.preventDefault();
+      toolDragDepth = 0;
+      toolUploadBox.classList.remove("drag-active");
+      var files = Array.from(event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files : []);
+      var file = files.find(function(f) { return ALLOWED_IMAGE_TYPES.includes(f.type); }) || files[0] || null;
+      if (!file) {
+        setToolUploadStatus("error", "没有识别到可上传的图片文件。");
+        return;
+      }
+      handleToolUploadSelectedImage(file);
     });
 
     refreshConfigUi();
