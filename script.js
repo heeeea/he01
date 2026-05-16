@@ -352,6 +352,82 @@ async function loadSupabaseTutorialBySlug(slug) {
   return normalizeSupabaseTutorial(rows[0]);
 }
 
+// ── Supabase 资源读取 ──
+async function fetchSupabaseResourceRows(query) {
+  const config = getSupabaseConfig();
+  if (!config) return null;
+  const response = await fetch(`${config.url}/rest/v1/resources?${query}`, {
+    cache: "no-store",
+    headers: {
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`
+    }
+  });
+  if (!response.ok) {
+    const message = await response.text().catch(() => "");
+    throw new Error(`Supabase resources HTTP ${response.status}${message ? `: ${message}` : ""}`);
+  }
+  return await response.json();
+}
+
+function normalizeSupabaseResource(row) {
+  return normalizeFrontItem("resources", {
+    id: firstValue(row?.id, row?.slug),
+    slug: row?.slug || "",
+    title: firstValue(row?.title, "未命名资源"),
+    type: firstValue(row?.category, "资源"),
+    category: row?.category || "",
+    description: firstValue(row?.description, "资源简介正在整理中。"),
+    detailContent: firstValue(row?.detail_content, row?.description, "详细说明正在整理中。"),
+    suitableFor: firstValue(row?.suitable_for, "—"),
+    format: firstValue(row?.format, "待补充"),
+    size: "",
+    downloadUrl: firstValue(row?.download_url, "#"),
+    tutorialUrl: firstValue(row?.tutorial_url, "#"),
+    officialUrl: firstValue(row?.official_url, "#"),
+    coverUrl: row?.cover_url || "",
+    tags: Array.isArray(row?.tags) ? row.tags : [],
+    resourceStatus: firstValue(row?.resource_status, "整理中"),
+    status: row?.status || "draft",
+    updatedAt: firstValue(row?.updated_at, row?.created_at),
+    createdAt: row?.created_at || "",
+    source: "supabase"
+  });
+}
+
+async function loadSupabaseResources() {
+  try {
+    const rows = await fetchSupabaseResourceRows("select=*&status=eq.published&order=updated_at.desc");
+    if (!rows) return null;
+    return Array.isArray(rows) ? rows.map(normalizeSupabaseResource) : [];
+  } catch (error) {
+    console.error("Supabase resources 读取失败。", error);
+    return null;
+  }
+}
+
+async function loadSupabaseResourceBySlug(slug) {
+  try {
+    const rows = await fetchSupabaseResourceRows(`select=*&slug=eq.${encodeURIComponent(slug)}&status=eq.published&limit=1`);
+    if (!rows || !Array.isArray(rows) || rows.length === 0) return null;
+    return normalizeSupabaseResource(rows[0]);
+  } catch (error) {
+    console.error("Supabase resource detail 读取失败。", error);
+    return null;
+  }
+}
+
+async function loadSupabaseResourceById(id) {
+  try {
+    const rows = await fetchSupabaseResourceRows(`select=*&id=eq.${encodeURIComponent(id)}&status=eq.published&limit=1`);
+    if (!rows || !Array.isArray(rows) || rows.length === 0) return null;
+    return normalizeSupabaseResource(rows[0]);
+  } catch (error) {
+    console.error("Supabase resource detail 读取失败。", error);
+    return null;
+  }
+}
+
 function getUsableTutorials(data) {
   if (data?.__sources?.tutorials === "fallback") return [];
   return Array.isArray(data?.tutorials) ? data.tutorials : [];
@@ -372,6 +448,7 @@ function createDataLink(label, url) {
 
 function detailUrl(type, item, fallback) {
   if (type === "tutorial" && item?.slug) return `${type}-detail.html?slug=${encodeURIComponent(item.slug)}`;
+  if (type === "resource" && item?.slug) return `${type}-detail.html?slug=${encodeURIComponent(item.slug)}`;
   if (!item?.id) return fallback;
   return `${type}-detail.html?id=${encodeURIComponent(item.id)}`;
 }
@@ -777,10 +854,38 @@ function filterAndRenderResources(container) {
   }).join("");
 }
 
-function renderResources(container, items, source) {
-  showDataNotice(container, source);
-  resourceFilterState.items = Array.isArray(items) ? items : [];
-  resourceFilterState.source = source;
+async function renderResources(container, items, source) {
+  var resources = [];
+  var resourceSource = source;
+
+  // 优先读取 Supabase
+  try {
+    var supabaseItems = await loadSupabaseResources();
+    if (Array.isArray(supabaseItems) && supabaseItems.length > 0) {
+      resources = supabaseItems;
+      resourceSource = "supabase";
+    } else if (Array.isArray(supabaseItems)) {
+      console.warn("Supabase resources 返回空数组，尝试读取 data/resources.json。");
+    }
+  } catch (error) {
+    console.error("Supabase resources 读取失败，尝试读取 data/resources.json。", error);
+  }
+
+  // 兜底 JSON
+  if (resources.length === 0 && source !== "fallback" && Array.isArray(items)) {
+    resources = items;
+    resourceSource = source;
+  }
+
+  // JSON 也失败
+  if (resources.length === 0) {
+    container.innerHTML = emptyState("资源正在整理中。", "请稍后再来查看，或通过联系合作获取最新资源。");
+    return;
+  }
+
+  showDataNotice(container, resourceSource === "fallback" ? "fallback" : "supabase");
+  resourceFilterState.items = resources;
+  resourceFilterState.source = resourceSource;
   resourceFilterState.activeCategory = "all";
   resourceFilterState.activeScene = "all";
   resourceFilterState.searchQuery = "";
@@ -1282,13 +1387,34 @@ function openSearchModal() {
     });
 }
 
-function renderResourceDetail(container, data) {
+async function renderResourceDetail(container, data) {
   var slug = getQueryParam("slug");
   var id = getQueryParam("id");
   var resources = data.resources || [];
-  var item = slug
-    ? resources.find(function(resource) { return String(resource.slug || resource.id) === String(slug); })
-    : findItemById(resources, id);
+  var item = null;
+
+  // 优先从 Supabase 读取（slug 或 id 模式）
+  if (slug) {
+    try {
+      item = await loadSupabaseResourceBySlug(slug);
+    } catch (error) {
+      console.error("Supabase resource detail 读取失败，尝试 JSON 兜底。", error);
+    }
+  } else if (id) {
+    try {
+      item = await loadSupabaseResourceById(id);
+    } catch (error) {
+      console.error("Supabase resource detail 读取失败，尝试 JSON 兜底。", error);
+    }
+  }
+
+  // 兜底 JSON
+  if (!item) {
+    item = slug
+      ? resources.find(function(resource) { return String(resource.slug || resource.id) === String(slug); })
+      : findItemById(resources, id);
+  }
+
   if (!item) {
     renderNotFound(container, "资源不存在或正在整理中", "resources.html", "← 返回资源下载");
     return;
@@ -1557,12 +1683,12 @@ async function initDataRender() {
   for (const target of renderTargets) {
     const type = target.dataset.render;
     if (type === "tools") renderTools(target, data.tools, loaded.tools.source);
-    if (type === "resources") renderResources(target, data.resources, loaded.resources.source);
+    if (type === "resources") await renderResources(target, data.resources, loaded.resources.source);
     if (type === "tutorials") await renderTutorials(target, data.tutorials, loaded.tutorials.source);
     if (type === "cases") renderCases(target, data.cases, loaded.cases.source);
     if (type === "services") renderServices(target, data.site, loaded.site.source);
     if (type === "home-preview") renderHomePreview(target, data);
-    if (type === "resource-detail") renderResourceDetail(target, data);
+    if (type === "resource-detail") await renderResourceDetail(target, data);
     if (type === "tutorial-detail") await renderTutorialDetail(target, data);
     if (type === "case-detail") renderCaseDetail(target, data);
   }

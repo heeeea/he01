@@ -323,6 +323,44 @@
       display: grid;
     }
 
+    .sb-module-tabs {
+      display: none;
+      gap: 6px;
+      margin: 0 0 16px;
+    }
+
+    .sb-module-tabs.active {
+      display: flex;
+    }
+
+    .sb-module-tab {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 9px 16px;
+      color: var(--text-soft);
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      font-weight: 700;
+      font: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .sb-module-tab.active {
+      color: var(--cyan);
+      border-color: rgba(105, 226, 255, 0.42);
+      background: rgba(105, 226, 255, 0.1);
+      box-shadow: 0 0 0 3px rgba(105, 226, 255, 0.08);
+    }
+
+    .sb-module-panel {
+      display: none;
+    }
+
+    .sb-module-panel.active {
+      display: contents;
+    }
+
     .sb-panel {
       padding: clamp(18px, 3vw, 26px);
     }
@@ -600,7 +638,7 @@
     <header class="sb-topbar">
       <a class="sb-brand" href="index.html" aria-label="返回贺01首页">
         <strong>贺 · 01 Supabase 测试后台</strong>
-        <span>登录、读取、新增、编辑、删除 tutorials 表数据</span>
+        <span>登录、读取、新增、编辑、删除 tutorials / resources 表数据</span>
       </a>
       <div class="sb-user-area">
         <span id="currentEmail" class="sb-user-meta">未登录</span>
@@ -655,7 +693,13 @@
       </div>
     </section>
 
-    <main id="adminView" class="sb-admin-main" aria-label="Supabase 教程管理后台">
+    <div class="sb-module-tabs active" id="moduleTabs" aria-label="模块切换">
+      <button class="sb-module-tab active" type="button" data-module="tutorials">教程管理</button>
+      <button class="sb-module-tab" type="button" data-module="resources">资源管理</button>
+    </div>
+
+    <main id="adminView" class="sb-admin-main" aria-label="Supabase 管理后台">
+      <div class="sb-module-panel active" data-module-panel="tutorials">
       <section class="sb-panel">
         <div class="sb-panel-head">
           <div>
@@ -782,6 +826,171 @@
           </div>
         </form>
       </section>
+      </div>
+
+      <!-- ========== 资源管理模块 ========== -->
+      <div class="sb-module-panel" data-module-panel="resources">
+        <section class="sb-panel">
+          <div class="sb-panel-head">
+            <div>
+              <h2>资源列表</h2>
+              <p id="resourceListSummary">登录后读取 resources 表。</p>
+            </div>
+            <div class="sb-actions" style="margin-top: 0;">
+              <button id="resourceRefreshButton" class="sb-button ghost" type="button">刷新列表</button>
+              <button id="resourceNewButton" class="sb-button primary" type="button">新增资源</button>
+            </div>
+          </div>
+          <div class="sb-list-tools" aria-label="资源筛选">
+            <input id="resourceSearchInput" class="sb-list-search" type="search" placeholder="搜索资源标题 / 标识 / 简介 / 分类 / 标签 / 适合人群" autocomplete="off">
+            <div class="sb-list-filter-row">
+              <select id="resourceCategoryFilter" aria-label="分类筛选">
+                <option value="all">全部分类</option>
+              </select>
+              <select id="resourceStatusFilter" aria-label="发布状态筛选">
+                <option value="all">全部发布状态</option>
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+              </select>
+              <select id="resourceResourceStatusFilter" aria-label="资源状态筛选">
+                <option value="all">全部资源状态</option>
+                <option value="可下载">可下载</option>
+                <option value="整理中">整理中</option>
+                <option value="需联系获取">需联系获取</option>
+                <option value="教程配套">教程配套</option>
+                <option value="推荐">推荐</option>
+              </select>
+              <button id="resourceClearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
+            </div>
+          </div>
+          <div id="resourceList" class="sb-list"></div>
+        </section>
+
+        <section class="sb-panel sb-editor">
+          <div class="sb-editor-title">
+            <div>
+              <h2 id="resourceEditorHeading">新增资源</h2>
+              <p id="resourceEditorSubheading">保存后会写入 Supabase resources 表。</p>
+            </div>
+            <button id="resourceResetFormButton" class="sb-button ghost" type="button">清空表单</button>
+          </div>
+
+          <form id="resourceForm" class="sb-form-grid">
+            <div id="resourcePreviewArea" class="sb-preview-area" aria-live="polite">
+              <p id="resourcePreviewHint"></p>
+              <a id="resourcePreviewButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览资源</a>
+            </div>
+            <label class="sb-field">
+              资源标识 / 链接名
+              <input name="slug" type="text" placeholder="codex-prompt-template" required>
+              <small>建议使用英文小写和短横线，例如：codex-prompt-template。会出现在资源详情链接里。</small>
+            </label>
+            <label class="sb-field">
+              发布状态
+              <select name="status">
+                <option value="draft">草稿 draft</option>
+                <option value="published">已发布 published</option>
+              </select>
+              <small>草稿不会在正式前台展示；已发布会进入前台读取范围。</small>
+            </label>
+            <label class="sb-field full">
+              资源标题
+              <input name="title" type="text" placeholder="资源标题" required>
+              <small>写给读者看的标题，建议清楚说明这份资源解决什么问题。</small>
+            </label>
+            <label class="sb-field">
+              分类
+              <input name="category" type="text" placeholder="提示词 / 模板 / 教程资料 / 工具清单 / 项目案例 / 安装排查">
+              <small>用来在前台分类筛选和标记资源方向。</small>
+            </label>
+            <label class="sb-field">
+              资源状态
+              <select name="resource_status">
+                <option value="整理中">整理中</option>
+                <option value="可下载">可下载</option>
+                <option value="需联系获取">需联系获取</option>
+                <option value="教程配套">教程配套</option>
+                <option value="推荐">推荐</option>
+              </select>
+              <small>前台会根据资源状态显示不同按钮（下载 / 联系获取 / 整理中）。</small>
+            </label>
+            <label class="sb-field">
+              格式 / 大小
+              <input name="format" type="text" placeholder="PDF · 约 500KB">
+              <small>例如：PDF、TXT、ZIP，可附带文件大小。</small>
+            </label>
+            <label class="sb-field">
+              适合人群
+              <input name="suitable_for" type="text" placeholder="AI 编程初学者、ComfyUI 新手">
+              <small>帮助读者判断这份资源是否适合自己。</small>
+            </label>
+            <label class="sb-field">
+              下载链接
+              <input name="download_url" type="url" placeholder="https://example.com/download.zip">
+              <small>填写真实文件下载地址；没有下载链接时留空，前台会显示"资源整理中"。</small>
+            </label>
+            <label class="sb-field">
+              官网链接
+              <input name="official_url" type="url" placeholder="https://example.com">
+              <small>工具或资源的官方网站地址。</small>
+            </label>
+            <label class="sb-field">
+              关联教程链接
+              <input name="tutorial_url" type="url" placeholder="tutorial-detail.html?slug=xxx">
+              <small>如果这份资源有配套教程，可以填写教程详情页链接。</small>
+            </label>
+            <label class="sb-field">
+              封面图链接
+              <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
+              <small>填写图片网址；没有封面时可以先留空。</small>
+            </label>
+            <label class="sb-field full">
+              资源简介
+              <textarea name="description" placeholder="用一两句话说明这份资源是什么、能帮读者解决什么问题。"></textarea>
+              <small>会显示在资源卡片和详情页顶部。</small>
+            </label>
+            <label class="sb-field full">
+              资源详细说明
+              <div class="sb-markdown-tools" aria-label="正文快捷插入">
+                <button class="sb-button ghost" type="button" data-insert-markdown="h2">插入二级标题</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="h3">插入三级标题</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="tip">插入提示框</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="code">插入代码块</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
+              </div>
+              <textarea name="detail_content" placeholder="资源的详细说明，支持 Markdown 写法。"></textarea>
+              <small>支持 Markdown 写法，可以用上面的按钮快速插入标题、提示、代码块和分割线。</small>
+            </label>
+            <div class="sb-upload-box" id="resourceImageUploadBox">
+              <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后链接会自动写入封面图字段。</p>
+              <label class="sb-field" style="margin: 0;">
+                图片说明
+                <input id="resourceImageAltInput" type="text" placeholder="例如：Codex 提示词模板封面">
+              </label>
+              <div class="sb-actions" style="margin: 0;">
+                <input id="resourceImageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                <button id="resourceUploadImageButton" class="sb-button ghost" type="button">上传封面图</button>
+              </div>
+              <div id="resourceUploadStatus" class="sb-upload-status">上传状态：未上传</div>
+              <div id="resourceUploadPreview" class="sb-upload-preview">
+                <label class="sb-field" style="margin: 0;">
+                  上传成功后的图片链接
+                  <input id="resourceUploadedImageUrl" type="url" readonly>
+                </label>
+                <button id="resourceUseCoverButton" class="sb-button ghost" type="button">设为封面图</button>
+              </div>
+            </div>
+            <label class="sb-field full">
+              标签
+              <input name="tags" type="text" placeholder="Codex,提示词,项目需求,教程配套">
+              <small>多个标签请用英文逗号分隔，例如：Codex,提示词,项目需求,教程配套。</small>
+            </label>
+            <div class="sb-actions full">
+              <button id="resourceSaveButton" class="sb-button primary" type="submit">保存资源</button>
+            </div>
+          </form>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -851,6 +1060,13 @@
     let lastUploadedMarkdown = "";
     let savedPreview = null;
     let dragDepth = 0;
+    let activeModule = "tutorials";
+    let resources = [];
+    let resourceEditingId = null;
+    let resourceContentCursor = null;
+    let resourceLastUploadedUrl = "";
+    let resourceSavedPreview = null;
+    let resourceDragDepth = 0;
 
     function normalizeUrl(url) {
       return String(url || "").trim().replace(/\/+$/, "");
@@ -1364,11 +1580,14 @@
       els.adminView.classList.toggle("active", loggedIn);
       els.logoutButton.classList.toggle("sb-hidden", !loggedIn);
       els.currentEmail.textContent = loggedIn ? "当前登录：" + (session.email || "未知邮箱") : "未登录";
+      document.querySelector(".sb-module-tabs").classList.toggle("active", loggedIn);
 
       if (loggedIn) {
-        fetchTutorials();
+        if (activeModule === "tutorials") fetchTutorials();
+        if (activeModule === "resources") fetchResources();
       } else {
         renderTutorialList();
+        document.getElementById("resourceList").innerHTML = "";
       }
     }
 
@@ -1603,6 +1822,480 @@
       }
     }
 
+    // ============================================================
+    // 模块切换
+    // ============================================================
+    function switchModule(module) {
+      activeModule = module;
+      document.querySelectorAll(".sb-module-tab").forEach(function(tab) {
+        tab.classList.toggle("active", tab.dataset.module === module);
+      });
+      document.querySelectorAll("[data-module-panel]").forEach(function(panel) {
+        panel.classList.toggle("active", panel.dataset.modulePanel === module);
+      });
+      els.adminView.classList.toggle("active", Boolean(session && session.access_token));
+      document.querySelector(".sb-module-tabs").classList.toggle("active", Boolean(session && session.access_token));
+      if (module === "resources" && session && session.access_token) {
+        fetchResources();
+      }
+    }
+
+    // ============================================================
+    // 资源管理 — 状态变量在顶部
+    // ============================================================
+
+    function resourceSearchText(resource) {
+      var tags = Array.isArray(resource.tags) ? resource.tags.join(" ") : String(resource.tags || "");
+      return [
+        resource.title,
+        resource.slug,
+        resource.description,
+        resource.category,
+        resource.suitable_for,
+        tags
+      ].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function getResourceFilterState() {
+      return {
+        search: String(document.getElementById("resourceSearchInput").value || "").trim().toLowerCase(),
+        category: document.getElementById("resourceCategoryFilter").value || "all",
+        status: document.getElementById("resourceStatusFilter").value || "all",
+        resourceStatus: document.getElementById("resourceResourceStatusFilter").value || "all"
+      };
+    }
+
+    function getFilteredResources() {
+      var filter = getResourceFilterState();
+      return resources.filter(function(resource) {
+        var category = resource.category || "";
+        var status = resource.status || "draft";
+        var resourceStatus = resource.resource_status || "整理中";
+        var matchesSearch = !filter.search || resourceSearchText(resource).includes(filter.search);
+        var matchesCategory = filter.category === "all" || category === filter.category;
+        var matchesStatus = filter.status === "all" || status === filter.status;
+        var matchesResourceStatus = filter.resourceStatus === "all" || resourceStatus === filter.resourceStatus;
+        return matchesSearch && matchesCategory && matchesStatus && matchesResourceStatus;
+      });
+    }
+
+    function refreshResourceCategoryFilterOptions() {
+      var select = document.getElementById("resourceCategoryFilter");
+      var current = select.value || "all";
+      var categories = Array.from(new Set(resources.map(function(r) {
+        return r.category || "";
+      }).filter(Boolean))).sort(function(a, b) {
+        return a.localeCompare(b, "zh-CN");
+      });
+      select.innerHTML = '<option value="all">全部分类</option>' + categories.map(function(c) {
+        return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
+      }).join("");
+      select.value = categories.includes(current) ? current : "all";
+    }
+
+    function resetResourceFilters() {
+      document.getElementById("resourceSearchInput").value = "";
+      document.getElementById("resourceCategoryFilter").value = "all";
+      document.getElementById("resourceStatusFilter").value = "all";
+      document.getElementById("resourceResourceStatusFilter").value = "all";
+      renderResourceList();
+    }
+
+    async function fetchResources() {
+      if (!session || !session.access_token) return;
+      setLoading(document.getElementById("resourceRefreshButton"), "读取中...", true);
+      try {
+        resources = await requestSupabase("/rest/v1/resources?select=*&order=created_at.desc", {
+          method: "GET",
+          headers: authHeaders()
+        });
+        renderResourceList();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "读取资源列表"));
+        if (error.status === 401) {
+          clearSession();
+          updateAuthUi();
+        }
+      } finally {
+        setLoading(document.getElementById("resourceRefreshButton"), "读取中...", false);
+      }
+    }
+
+    function renderResourceList() {
+      var list = document.getElementById("resourceList");
+      if (!session || !session.access_token) {
+        list.innerHTML = "";
+        return;
+      }
+
+      refreshResourceCategoryFilterOptions();
+
+      if (!resources.length) {
+        document.getElementById("resourceListSummary").textContent = "共读取到 0 个资源。";
+        list.innerHTML = '<div class="sb-empty">还没有资源。点击"新增资源"开始写入第一个。</div>';
+        return;
+      }
+
+      var filtered = getFilteredResources();
+      var filter = getResourceFilterState();
+      var hasActiveFilter = Boolean(filter.search) || filter.category !== "all" || filter.status !== "all" || filter.resourceStatus !== "all";
+      document.getElementById("resourceListSummary").textContent = hasActiveFilter
+        ? "共 " + resources.length + " 个资源，当前匹配 " + filtered.length + " 个。"
+        : "共读取到 " + resources.length + " 个资源。";
+
+      if (!filtered.length) {
+        list.innerHTML = '<div class="sb-empty">暂无匹配资源</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(function(resource) {
+        var status = resource.status || "draft";
+        var resourceStatus = resource.resource_status || "整理中";
+        return [
+          '<article class="sb-list-item ' + (String(resourceEditingId) === String(resource.id) ? "active" : "") + '">',
+            '<h3 class="sb-list-title"><span>标题：</span>' + escapeHtml(resource.title || "未命名资源") + '</h3>',
+            '<div class="sb-list-meta">',
+              '<span class="sb-badge">分类：' + escapeHtml(resource.category || "未分类") + '</span>',
+              '<span class="sb-badge ' + escapeHtml(status) + '">发布：' + escapeHtml(status === "published" ? "已发布" : "草稿") + '</span>',
+              '<span class="sb-badge">资源：' + escapeHtml(resourceStatus) + '</span>',
+              '<span>更新时间：' + escapeHtml(formatDate(resource.updated_at)) + '</span>',
+            '</div>',
+            '<div class="sb-list-actions">',
+              '<button class="sb-button ghost" type="button" data-resource-action="edit" data-id="' + escapeHtml(resource.id) + '">编辑</button>',
+              '<button class="sb-button danger" type="button" data-resource-action="delete" data-id="' + escapeHtml(resource.id) + '">删除资源</button>',
+            '</div>',
+          '</article>'
+        ].join("");
+      }).join("");
+    }
+
+    function getResourceFormPayload() {
+      var form = document.getElementById("resourceForm");
+      return {
+        slug: form.elements.slug.value.trim(),
+        title: form.elements.title.value.trim(),
+        category: form.elements.category.value.trim(),
+        description: form.elements.description.value.trim(),
+        detail_content: form.elements.detail_content.value,
+        suitable_for: form.elements.suitable_for.value.trim(),
+        format: form.elements.format.value.trim(),
+        download_url: form.elements.download_url.value.trim(),
+        official_url: form.elements.official_url.value.trim(),
+        tutorial_url: form.elements.tutorial_url.value.trim(),
+        cover_url: form.elements.cover_url.value.trim(),
+        tags: parseTags(form.elements.tags.value),
+        resource_status: form.elements.resource_status.value,
+        status: form.elements.status.value,
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    function fillResourceForm(resource) {
+      var form = document.getElementById("resourceForm");
+      form.elements.slug.value = resource.slug || "";
+      form.elements.title.value = resource.title || "";
+      form.elements.category.value = resource.category || "";
+      form.elements.description.value = resource.description || "";
+      form.elements.detail_content.value = resource.detail_content || "";
+      form.elements.suitable_for.value = resource.suitable_for || "";
+      form.elements.format.value = resource.format || "";
+      form.elements.download_url.value = resource.download_url || "";
+      form.elements.official_url.value = resource.official_url || "";
+      form.elements.tutorial_url.value = resource.tutorial_url || "";
+      form.elements.cover_url.value = resource.cover_url || "";
+      form.elements.tags.value = tagsToInput(resource.tags);
+      form.elements.resource_status.value = resource.resource_status || "整理中";
+      form.elements.status.value = resource.status || "draft";
+    }
+
+    function resetResourceUploadUi() {
+      resourceContentCursor = null;
+      resourceLastUploadedUrl = "";
+      document.getElementById("resourceImageAltInput").value = "";
+      document.getElementById("resourceImageFileInput").value = "";
+      document.getElementById("resourceUploadedImageUrl").value = "";
+      document.getElementById("resourceUploadPreview").classList.remove("show");
+      setResourceUploadStatus("", session && session.access_token ? "上传状态：未上传" : "请先登录后再上传图片。");
+    }
+
+    function setResourceUploadStatus(type, message) {
+      var el = document.getElementById("resourceUploadStatus");
+      el.className = "sb-upload-status" + (type ? " " + type : "");
+      el.textContent = message;
+    }
+
+    function getResourceCurrentFormPreview() {
+      var form = document.getElementById("resourceForm");
+      var slug = form.elements.slug.value.trim();
+      if (!slug) return null;
+      return {
+        slug: slug,
+        status: form.elements.status.value || "draft"
+      };
+    }
+
+    function updateResourcePreviewButton(preview) {
+      resourceSavedPreview = preview || null;
+      var area = document.getElementById("resourcePreviewArea");
+      var hint = document.getElementById("resourcePreviewHint");
+      var button = document.getElementById("resourcePreviewButton");
+      if (!resourceSavedPreview || !resourceSavedPreview.slug) {
+        area.className = "sb-preview-area";
+        hint.textContent = "";
+        button.href = "#";
+        return;
+      }
+      var isDraft = resourceSavedPreview.status === "draft";
+      area.className = "sb-preview-area show" + (isDraft ? " warn" : "");
+      hint.textContent = isDraft
+        ? "当前资源是草稿 draft，正式前台可能不会展示。"
+        : "资源已保存，可以打开正式详情页预览。";
+      button.href = "resource-detail.html?slug=" + encodeURIComponent(resourceSavedPreview.slug);
+    }
+
+    function setResourceFormMode(mode, resource) {
+      resourceEditingId = mode === "edit" && resource ? resource.id : null;
+      document.getElementById("resourceEditorHeading").textContent = resourceEditingId ? "编辑资源" : "新增资源";
+      document.getElementById("resourceEditorSubheading").textContent = resourceEditingId ? "正在编辑 ID：" + resourceEditingId : "保存后会写入 Supabase resources 表。";
+      fillResourceForm(resource || {});
+      updateResourcePreviewButton(resource && resource.slug ? { slug: resource.slug, status: resource.status || "draft" } : null);
+      resetResourceUploadUi();
+      renderResourceList();
+    }
+
+    function rememberResourceContentCursor() {
+      var textarea = document.getElementById("resourceForm").elements.detail_content;
+      if (document.activeElement === textarea) {
+        resourceContentCursor = {
+          start: textarea.selectionStart,
+          end: textarea.selectionEnd
+        };
+      }
+    }
+
+    function insertResourceMarkdownAtCursor(markdown) {
+      var textarea = document.getElementById("resourceForm").elements.detail_content;
+      var value = textarea.value || "";
+      var start = resourceContentCursor && Number.isInteger(resourceContentCursor.start) ? resourceContentCursor.start : value.length;
+      var end = resourceContentCursor && Number.isInteger(resourceContentCursor.end) ? resourceContentCursor.end : start;
+      var before = value.slice(0, start);
+      var after = value.slice(end);
+      var cursorToken = "{cursor}";
+      var cursorIndex = markdown.indexOf(cursorToken);
+      var cleanMarkdown = cursorIndex >= 0 ? markdown.replace(cursorToken, "") : markdown;
+      var prefix = before && !before.endsWith("\n") ? "\n\n" : (before.endsWith("\n\n") || !before ? "" : "\n");
+      var suffix = after && !after.startsWith("\n") ? "\n\n" : (after.startsWith("\n\n") || !after ? "" : "\n");
+      var insertText = prefix + cleanMarkdown + suffix;
+      var nextCursor = cursorIndex >= 0
+        ? before.length + prefix.length + cursorIndex
+        : before.length + insertText.length;
+
+      textarea.value = before + insertText + after;
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+      resourceContentCursor = { start: nextCursor, end: nextCursor };
+    }
+
+    function insertResourceQuickMarkdown(type) {
+      var snippets = {
+        h2: "## {cursor}小标题",
+        h3: "### {cursor}小标题",
+        tip: "> 提示：{cursor}这里填写提醒内容",
+        code: "```text\n{cursor}这里填写代码或命令\n```",
+        divider: "---"
+      };
+      if (!snippets[type]) return;
+      rememberResourceContentCursor();
+      insertResourceMarkdownAtCursor(snippets[type]);
+    }
+
+    async function handleResourceImageUpload() {
+      if (!session || !session.access_token) {
+        setResourceUploadStatus("error", "请先登录后再上传图片。");
+        return;
+      }
+      document.getElementById("resourceImageFileInput").click();
+    }
+
+    function buildResourceImagePath(file) {
+      var timestamp = Date.now();
+      var slug = String(document.getElementById("resourceForm").elements.slug.value || "").trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_]+|[-_]+$/g, "") || "draft";
+      var extByType = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif"
+      };
+      var fallbackExt = extByType[file.type] || "png";
+      var originalName = file.name || "";
+      var dotIndex = originalName.lastIndexOf(".");
+      var rawBase = dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
+      var rawExt = dotIndex > 0 ? originalName.slice(dotIndex + 1).toLowerCase() : "";
+      var ext = ["png", "jpg", "jpeg", "webp", "gif"].includes(rawExt) ? rawExt : fallbackExt;
+      var base = rawBase
+        .normalize("NFKD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9._-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_.]+|[-_.]+$/g, "")
+        .toLowerCase();
+
+      return "resources/" + slug + "/" + timestamp + "-" + (base || "image") + "." + ext;
+    }
+
+    async function uploadResourceImageFile(file) {
+      var config = getConfig();
+      if (!config.url || !config.anonKey) {
+        throw Object.assign(new Error("请先填写 Supabase URL 和 anon key。"), { friendlyStatus: 0 });
+      }
+      if (!session || !session.access_token) {
+        throw Object.assign(new Error("请先登录后再上传图片。"), { friendlyStatus: 401 });
+      }
+
+      var filePath = buildResourceImagePath(file);
+      var response = await fetch(config.url + "/storage/v1/object/" + STORAGE_BUCKET + "/" + encodeStoragePath(filePath), {
+        method: "POST",
+        headers: {
+          apikey: config.anonKey,
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": file.type,
+          "x-upsert": "true"
+        },
+        body: file
+      });
+
+      if (!response.ok) {
+        var errorMessage = response.statusText;
+        try {
+          var errorJson = await response.json();
+          errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
+        } catch (e) {
+          errorMessage = response.statusText;
+        }
+        var uploadError = new Error(errorMessage);
+        uploadError.status = response.status;
+        throw uploadError;
+      }
+      return { publicUrl: getPublicImageUrl(filePath) };
+    }
+
+    async function handleResourceUploadSelectedImage(fileFromDrop) {
+      var fileInput = document.getElementById("resourceImageFileInput");
+      var file = fileFromDrop instanceof File ? fileFromDrop : (fileInput.files && fileInput.files[0]);
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        setResourceUploadStatus("error", "只支持 png、jpg、webp、gif 图片。");
+        fileInput.value = "";
+        return;
+      }
+
+      var sizeWarning = file.size > IMAGE_SIZE_WARN_BYTES
+        ? "图片较大，建议先压缩后再上传。仍会继续上传。\n"
+        : "";
+      var uploadButton = document.getElementById("resourceUploadImageButton");
+      setLoading(uploadButton, "上传中...", true);
+      setResourceUploadStatus(file.size > IMAGE_SIZE_WARN_BYTES ? "warn" : "", sizeWarning + "上传中...");
+      document.getElementById("resourceUploadPreview").classList.remove("show");
+
+      try {
+        var result = await uploadResourceImageFile(file);
+        var publicUrl = result.publicUrl;
+        resourceLastUploadedUrl = publicUrl;
+        document.getElementById("resourceUploadedImageUrl").value = publicUrl;
+        document.getElementById("resourceUploadPreview").classList.add("show");
+        // 自动填入封面图链接
+        document.getElementById("resourceForm").elements.cover_url.value = publicUrl;
+        setResourceUploadStatus("success", "上传成功，封面图链接已自动填入。");
+      } catch (error) {
+        setResourceUploadStatus("error", friendlyUploadError(error.status || error.friendlyStatus, error.message));
+      } finally {
+        fileInput.value = "";
+        setLoading(uploadButton, "上传中...", false);
+      }
+    }
+
+    async function handleResourceSave(event) {
+      event.preventDefault();
+      clearNotice();
+
+      var payload = getResourceFormPayload();
+      if (!payload.slug || !payload.title) {
+        showNotice("warn", "资源标识 / 链接名和资源标题必填。");
+        return;
+      }
+
+      var saveButton = document.getElementById("resourceSaveButton");
+      setLoading(saveButton, "保存中...", true);
+      try {
+        var savedRows = null;
+        if (resourceEditingId) {
+          savedRows = await requestSupabase("/rest/v1/resources?id=eq." + encodeURIComponent(resourceEditingId), {
+            method: "PATCH",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        } else {
+          savedRows = await requestSupabase("/rest/v1/resources", {
+            method: "POST",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        }
+
+        var savedResource = Array.isArray(savedRows) && savedRows[0] ? savedRows[0] : payload;
+        if (savedResource.id) {
+          resourceEditingId = savedResource.id;
+          document.getElementById("resourceEditorHeading").textContent = "编辑资源";
+          document.getElementById("resourceEditorSubheading").textContent = "正在编辑 ID：" + resourceEditingId;
+        }
+        updateResourcePreviewButton({
+          slug: savedResource.slug || payload.slug,
+          status: savedResource.status || payload.status
+        });
+        showNotice("success", "保存成功。");
+        await fetchResources();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "保存资源"));
+      } finally {
+        setLoading(saveButton, "保存中...", false);
+      }
+    }
+
+    async function handleResourceDelete(id) {
+      var resource = resources.find(function(item) { return String(item.id) === String(id); });
+      if (!resource) return;
+      var title = resource.title || "未命名资源";
+      if (!window.confirm("确定要删除《" + title + "》吗？\n这个操作会从 Supabase resources 表中删除该资源，无法直接恢复。")) return;
+
+      clearNotice();
+      try {
+        await requestSupabase("/rest/v1/resources?id=eq." + encodeURIComponent(id), {
+          method: "DELETE",
+          headers: authHeaders()
+        });
+        showNotice("success", "删除成功。");
+        if (String(resourceEditingId) === String(id)) {
+          setResourceFormMode("new");
+        }
+        await fetchResources();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "删除资源"));
+      }
+    }
+
     function saveRuntimeConfig() {
       const url = normalizeUrl(els.runtimeUrl.value);
       const anonKey = els.runtimeAnonKey.value.trim();
@@ -1676,7 +2369,9 @@
     els.logoutButton.addEventListener("click", function() {
       clearSession();
       tutorials = [];
+      resources = [];
       setFormMode("new");
+      setResourceFormMode("new");
       showNotice("success", "已退出登录。");
       updateAuthUi();
     });
@@ -1696,6 +2391,103 @@
       if (button.dataset.action === "delete") {
         handleDelete(id);
       }
+    });
+
+    // ── 模块切换 ──
+    document.getElementById("moduleTabs").addEventListener("click", function(event) {
+      const tab = event.target.closest("[data-module]");
+      if (!tab) return;
+      clearNotice();
+      switchModule(tab.dataset.module);
+    });
+
+    // ── 资源管理事件 ──
+    document.getElementById("resourceForm").addEventListener("submit", handleResourceSave);
+    document.getElementById("resourceForm").elements.detail_content.addEventListener("click", rememberResourceContentCursor);
+    document.getElementById("resourceForm").elements.detail_content.addEventListener("keyup", rememberResourceContentCursor);
+    document.getElementById("resourceForm").elements.detail_content.addEventListener("select", rememberResourceContentCursor);
+    document.getElementById("resourceForm").elements.detail_content.addEventListener("input", rememberResourceContentCursor);
+    document.getElementById("resourceSearchInput").addEventListener("input", renderResourceList);
+    document.getElementById("resourceCategoryFilter").addEventListener("change", renderResourceList);
+    document.getElementById("resourceStatusFilter").addEventListener("change", renderResourceList);
+    document.getElementById("resourceResourceStatusFilter").addEventListener("change", renderResourceList);
+    document.getElementById("resourceClearFiltersButton").addEventListener("click", resetResourceFilters);
+    document.getElementById("resourceUploadImageButton").addEventListener("click", handleResourceImageUpload);
+    document.getElementById("resourceImageFileInput").addEventListener("change", handleResourceUploadSelectedImage);
+    document.getElementById("resourceUseCoverButton").addEventListener("click", function() {
+      if (resourceLastUploadedUrl) {
+        document.getElementById("resourceForm").elements.cover_url.value = resourceLastUploadedUrl;
+        setResourceUploadStatus("success", "封面图链接已设置。");
+      }
+    });
+    document.getElementById("resourceRefreshButton").addEventListener("click", fetchResources);
+    document.getElementById("resourceNewButton").addEventListener("click", function() {
+      clearNotice();
+      setResourceFormMode("new");
+    });
+    document.getElementById("resourceResetFormButton").addEventListener("click", function() {
+      clearNotice();
+      setResourceFormMode("new");
+    });
+    document.getElementById("resourceList").addEventListener("click", function(event) {
+      var button = event.target.closest("button[data-resource-action]");
+      if (!button) return;
+      var id = button.dataset.id;
+      if (button.dataset.resourceAction === "edit") {
+        var resource = resources.find(function(item) { return String(item.id) === String(id); });
+        if (resource) {
+          clearNotice();
+          setResourceFormMode("edit", resource);
+        }
+      }
+      if (button.dataset.resourceAction === "delete") {
+        handleResourceDelete(id);
+      }
+    });
+    document.getElementById("resourceForm").addEventListener("click", function(event) {
+      var button = event.target.closest("button[data-insert-markdown]");
+      if (!button) return;
+      event.preventDefault();
+      insertResourceQuickMarkdown(button.dataset.insertMarkdown);
+    });
+    document.getElementById("resourcePreviewButton").addEventListener("click", function(event) {
+      if (!resourceSavedPreview || !resourceSavedPreview.slug) {
+        event.preventDefault();
+        return;
+      }
+      if (resourceSavedPreview.status === "draft") {
+        window.alert("当前资源是草稿 draft，正式前台可能不会展示。");
+      }
+    });
+
+    // ── 资源图片拖拽上传 ──
+    var resourceUploadBox = document.getElementById("resourceImageUploadBox");
+    resourceUploadBox.addEventListener("dragenter", function(event) {
+      event.preventDefault();
+      resourceDragDepth += 1;
+      resourceUploadBox.classList.add("drag-active");
+    });
+    resourceUploadBox.addEventListener("dragover", function(event) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      resourceUploadBox.classList.add("drag-active");
+    });
+    resourceUploadBox.addEventListener("dragleave", function(event) {
+      event.preventDefault();
+      resourceDragDepth = Math.max(0, resourceDragDepth - 1);
+      if (resourceDragDepth === 0) resourceUploadBox.classList.remove("drag-active");
+    });
+    resourceUploadBox.addEventListener("drop", function(event) {
+      event.preventDefault();
+      resourceDragDepth = 0;
+      resourceUploadBox.classList.remove("drag-active");
+      var files = Array.from(event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files : []);
+      var file = files.find(function(f) { return ALLOWED_IMAGE_TYPES.includes(f.type); }) || files[0] || null;
+      if (!file) {
+        setResourceUploadStatus("error", "没有识别到可上传的图片文件。");
+        return;
+      }
+      handleResourceUploadSelectedImage(file);
     });
 
     refreshConfigUi();
