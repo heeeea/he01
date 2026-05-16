@@ -264,8 +264,13 @@ function normalizeFrontItem(key, source) {
     item.upgrades = toArray(item.upgrades);
     if (item.upgrades.length === 0) item.upgrades = ["补充真实业务数据。", "增加搜索、筛选或自动化提醒。"];
     item.relatedResourceIds = toIdArray(item.relatedResourceIds);
+    item.toolsUsed = Array.isArray(item.toolsUsed) ? item.toolsUsed : toArray(item.toolsUsed);
     item.result ||= "项目目前以演示和复盘为主，后续可继续接入真实业务数据。";
     item.lessons ||= "先把最小流程跑通，再决定是否升级数据库、登录和在线后台。";
+    item.problem ||= item.description || "";
+    item.features = Array.isArray(item.features) ? item.features : toArray(item.features);
+    item.targetUser ||= "—";
+    item.description ||= item.problem || item.summary || "";
   }
   return item;
 }
@@ -428,6 +433,108 @@ async function loadSupabaseResourceById(id) {
   }
 }
 
+// ── Supabase 案例读取 ──
+async function fetchSupabaseCaseRows(query) {
+  const config = getSupabaseConfig();
+  if (!config) return null;
+  const response = await fetch(`${config.url}/rest/v1/cases?${query}`, {
+    cache: "no-store",
+    headers: {
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`
+    }
+  });
+  if (!response.ok) {
+    const message = await response.text().catch(() => "");
+    throw new Error(`Supabase cases HTTP ${response.status}${message ? `: ${message}` : ""}`);
+  }
+  return await response.json();
+}
+
+function normalizeSupabaseCase(row) {
+  var processArray = [];
+  if (row?.process) {
+    try {
+      var parsed = JSON.parse(row.process);
+      if (Array.isArray(parsed)) processArray = parsed;
+    } catch (e) {
+      processArray = [{ title: "实现过程", description: row.process }];
+    }
+  }
+
+  var upgradesArray = [];
+  if (row?.upgrades) {
+    try {
+      var parsedUp = JSON.parse(row.upgrades);
+      if (Array.isArray(parsedUp)) upgradesArray = parsedUp;
+    } catch (e) {
+      upgradesArray = String(row.upgrades).split(/[\n\r]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+    }
+  }
+
+  var toolsUsed = Array.isArray(row?.tools_used) ? row.tools_used : [];
+  var tags = Array.isArray(row?.tags) ? row.tags : [];
+
+  return normalizeFrontItem("cases", {
+    id: firstValue(row?.id, row?.slug),
+    slug: row?.slug || "",
+    title: firstValue(row?.title, "未命名案例"),
+    category: firstValue(row?.category, "案例"),
+    status: firstValue(row?.case_status, "展示中"),
+    targetUser: firstValue(row?.suitable_for, "—"),
+    problem: firstValue(row?.summary, ""),
+    description: firstValue(row?.summary, row?.content, "案例简介正在整理中。"),
+    features: toolsUsed,
+    toolsUsed: toolsUsed,
+    imageUrl: row?.cover_url || "",
+    detailUrl: row?.slug ? "case-detail.html?slug=" + encodeURIComponent(row.slug) : "#",
+    tags: tags,
+    updatedAt: firstValue(row?.updated_at, row?.created_at),
+    createdAt: row?.created_at || "",
+    background: firstValue(row?.background, ""),
+    process: processArray,
+    result: firstValue(row?.result, ""),
+    lessons: firstValue(row?.lessons, ""),
+    upgrades: upgradesArray,
+    content: firstValue(row?.content, ""),
+    publishStatus: row?.status || "draft",
+    source: "supabase"
+  });
+}
+
+async function loadSupabaseCases() {
+  try {
+    const rows = await fetchSupabaseCaseRows("select=*&status=eq.published&order=updated_at.desc");
+    if (!rows) return null;
+    return Array.isArray(rows) ? rows.map(normalizeSupabaseCase) : [];
+  } catch (error) {
+    console.error("Supabase cases 读取失败。", error);
+    return null;
+  }
+}
+
+async function loadSupabaseCaseBySlug(slug) {
+  try {
+    const rows = await fetchSupabaseCaseRows(`select=*&slug=eq.${encodeURIComponent(slug)}&status=eq.published&limit=1`);
+    if (!rows || !Array.isArray(rows) || rows.length === 0) return null;
+    return normalizeSupabaseCase(rows[0]);
+  } catch (error) {
+    console.error("Supabase case detail 读取失败。", error);
+    return null;
+  }
+}
+
+async function loadSupabaseCaseById(id) {
+  try {
+    const rows = await fetchSupabaseCaseRows(`select=*&id=eq.${encodeURIComponent(id)}&status=eq.published&limit=1`);
+    if (!rows || !Array.isArray(rows) || rows.length === 0) return null;
+    return normalizeSupabaseCase(rows[0]);
+  } catch (error) {
+    console.error("Supabase case detail 读取失败。", error);
+    return null;
+  }
+}
+
 function getUsableTutorials(data) {
   if (data?.__sources?.tutorials === "fallback") return [];
   return Array.isArray(data?.tutorials) ? data.tutorials : [];
@@ -449,6 +556,7 @@ function createDataLink(label, url) {
 function detailUrl(type, item, fallback) {
   if (type === "tutorial" && item?.slug) return `${type}-detail.html?slug=${encodeURIComponent(item.slug)}`;
   if (type === "resource" && item?.slug) return `${type}-detail.html?slug=${encodeURIComponent(item.slug)}`;
+  if (type === "case" && item?.slug) return `case-detail.html?slug=${encodeURIComponent(item.slug)}`;
   if (!item?.id) return fallback;
   return `${type}-detail.html?id=${encodeURIComponent(item.id)}`;
 }
@@ -940,28 +1048,52 @@ async function renderTutorials(container, items, source) {
   }).join("");
 }
 
-function renderCases(container, items, source) {
-  showDataNotice(container, source);
-  if (!Array.isArray(items) || items.length === 0) {
-    container.innerHTML = emptyState("暂无案例数据", "请在 admin.html 添加案例后导出 cases.json。");
+async function renderCases(container, items, source) {
+  var caseItems = [];
+  var caseSource = source;
+
+  // 优先读取 Supabase
+  try {
+    var supabaseItems = await loadSupabaseCases();
+    if (Array.isArray(supabaseItems) && supabaseItems.length > 0) {
+      caseItems = supabaseItems;
+      caseSource = "supabase";
+    } else if (Array.isArray(supabaseItems)) {
+      console.warn("Supabase cases 返回空数组，尝试读取 data/cases.json。");
+    }
+  } catch (error) {
+    console.error("Supabase cases 读取失败，尝试读取 data/cases.json。", error);
+  }
+
+  // 兜底 JSON
+  if (caseItems.length === 0 && source !== "fallback" && Array.isArray(items)) {
+    caseItems = items;
+    caseSource = source;
+  }
+
+  // JSON 也失败
+  if (caseItems.length === 0) {
+    container.innerHTML = emptyState("案例正在整理中。", "请稍后再来查看，或通过联系合作获取最新案例。");
     return;
   }
-  container.innerHTML = items.map((item) => {
-    const image = item.imageUrl
-      ? `<img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}">`
-      : `<span>${escapeHTML(item.title)}截图占位</span>`;
-    return `
-      <article class="case-card" data-category="${escapeHTML(normalizeCategories(item, "category"))}">
-        <div class="case-shot">${image}</div>
-        <div class="case-title-row"><h2>${escapeHTML(item.title)}</h2><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "规划中")}</span></div>
-        <dl>
-          <dt>适合人群</dt><dd>${escapeHTML(item.targetUser)}</dd>
-          <dt>解决问题</dt><dd>${escapeHTML(item.problem)}</dd>
-          <dt>核心功能</dt><dd>${escapeHTML((item.features || []).join("、"))}</dd>
-        </dl>
-        <a class="card-link" href="${escapeHTML(detailUrl("case", item, "cases.html"))}"><span>查看案例</span><i aria-hidden="true"></i></a>
-      </article>
-    `;
+
+  showDataNotice(container, caseSource === "fallback" ? "fallback" : "supabase");
+  container.innerHTML = caseItems.map(function(item) {
+    var image = item.imageUrl
+      ? '<img src="' + escapeHTML(item.imageUrl) + '" alt="' + escapeHTML(item.title) + '">'
+      : '<span>' + escapeHTML(item.title) + '截图占位</span>';
+    return [
+      '<article class="case-card" data-category="' + escapeHTML(normalizeCategories(item, "category")) + '">',
+        '<div class="case-shot">' + image + '</div>',
+        '<div class="case-title-row"><h2>' + escapeHTML(item.title) + '</h2><span class="status ' + statusClass(item.status) + '">' + escapeHTML(item.status || "规划中") + '</span></div>',
+        '<dl>',
+          '<dt>适合人群</dt><dd>' + escapeHTML(item.targetUser) + '</dd>',
+          '<dt>解决问题</dt><dd>' + escapeHTML(item.problem) + '</dd>',
+          '<dt>核心功能</dt><dd>' + escapeHTML((item.features || []).join("、")) + '</dd>',
+        '</dl>',
+        '<a class="card-link" href="' + escapeHTML(detailUrl("case", item, "cases.html")) + '"><span>查看案例</span><i aria-hidden="true"></i></a>',
+      '</article>'
+    ].join("");
   }).join("");
 }
 
@@ -1605,57 +1737,83 @@ async function renderTutorialDetail(container, data) {
   `;
 }
 
-function renderCaseDetail(container, data) {
-  const slug = getQueryParam("slug");
-  const id = getQueryParam("id");
-  const cases = data.cases || [];
-  const resources = data.resources || [];
-  const item = slug
-    ? cases.find((caseItem) => String(caseItem.slug || caseItem.id) === String(slug))
-    : findItemById(cases, id);
+async function renderCaseDetail(container, data) {
+  var slug = getQueryParam("slug");
+  var id = getQueryParam("id");
+  var casesData = data.cases || [];
+  var resources = data.resources || [];
+  var item = null;
+
+  // 优先从 Supabase 读取（slug 或 id 模式）
+  if (slug) {
+    try {
+      item = await loadSupabaseCaseBySlug(slug);
+    } catch (error) {
+      console.error("Supabase case detail 读取失败，尝试 JSON 兜底。", error);
+    }
+  } else if (id) {
+    try {
+      item = await loadSupabaseCaseById(id);
+    } catch (error) {
+      console.error("Supabase case detail 读取失败，尝试 JSON 兜底。", error);
+    }
+  }
+
+  // 兜底 JSON
+  if (!item) {
+    item = slug
+      ? casesData.find(function(caseItem) { return String(caseItem.slug || caseItem.id) === String(slug); })
+      : findItemById(casesData, id);
+  }
+
   if (!item) {
     renderNotFound(container, "案例不存在或正在整理中", "cases.html", "← 返回作品案例");
     return;
   }
-  const hasImage = item.imageUrl && item.imageUrl !== "#";
-  const related = relatedResources(item, resources, 3);
-  container.innerHTML = `
-    <section class="detail-shell reveal is-visible">
-      <a class="text-action back-link" href="cases.html">← 返回作品案例</a>
-      <div class="detail-layout">
-        <article class="detail-main">
-          <header class="detail-hero-card">
-            <div class="detail-kicker"><span class="tag">${escapeHTML(item.category || "案例")}</span><span class="status ${statusClass(item.status)}">${escapeHTML(item.status || "规划中")}</span></div>
-            <h1>${escapeHTML(item.title)}</h1>
-            <p>${escapeHTML(item.description)}</p>
-            ${renderDetailMeta([
+  var hasImage = item.imageUrl && item.imageUrl !== "#";
+  var related = relatedResources(item, resources, 3);
+  var toolsUsed = item.toolsUsed || item.features || [];
+  var toolsUsedText = toolsUsed.length ? toolsUsed.join("、") : "待补充";
+
+  container.innerHTML = [
+    '<section class="detail-shell reveal is-visible">',
+      '<a class="text-action back-link" href="cases.html">← 返回作品案例</a>',
+      '<div class="detail-layout">',
+        '<article class="detail-main">',
+          '<header class="detail-hero-card">',
+            '<div class="detail-kicker"><span class="tag">' + escapeHTML(item.category || "案例") + '</span><span class="status ' + statusClass(item.status) + '">' + escapeHTML(item.status || "规划中") + '</span></div>',
+            '<h1>' + escapeHTML(item.title) + '</h1>',
+            '<p>' + escapeHTML(item.description) + '</p>',
+            renderDetailMeta([
               { label: "适合人群", value: item.targetUser },
               { label: "更新时间", value: formatDate(item.updatedAt) },
               { label: "分类", value: item.category },
               { label: "状态", value: item.status }
-            ])}
-          </header>
+            ]),
+          '</header>',
 
-          <section class="detail-card"><p class="eyebrow">Background</p><h2>项目背景</h2>${renderTextBlock(item.background)}</section>
-          <section class="detail-card"><p class="eyebrow">Problem</p><h2>解决的问题</h2>${renderTextBlock(item.problem)}</section>
-          <section class="detail-card"><p class="eyebrow">Features</p><h2>核心功能</h2>${renderListItems(item.features)}</section>
-          <section class="detail-card"><p class="eyebrow">Process</p><h2>实现过程</h2>${renderSteps(item.process)}</section>
-          <section class="detail-card"><p class="eyebrow">Screenshot</p><h2>项目截图</h2><div class="detail-shot">${hasImage ? `<img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}">` : "<span>项目截图待补充</span>"}</div></section>
-          <section class="detail-card"><p class="eyebrow">Upgrade</p><h2>后续升级方向</h2>${renderListItems(item.upgrades)}</section>
-          <section class="detail-card"><p class="eyebrow">Result</p><h2>项目结果</h2>${renderTextBlock(item.result)}</section>
-          <section class="detail-card"><p class="eyebrow">Lessons</p><h2>经验总结</h2>${renderTextBlock(item.lessons)}</section>
-          <section class="detail-card"><p class="eyebrow">Resources</p><h2>相关资源</h2>${renderRelatedResourceCards(related)}</section>
-          <section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>想做类似项目？</h2><p>可以把行业、目标用户和你想解决的问题发来，一起拆成可落地版本。</p></div><a class="btn btn-primary js-contact-modal" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>
-        </article>
-        ${renderSidebar(item.category || "案例", [
+          '<section class="detail-card"><p class="eyebrow">Background</p><h2>项目背景</h2>' + renderTextBlock(item.background) + '</section>',
+          '<section class="detail-card"><p class="eyebrow">Problem</p><h2>解决的问题</h2>' + renderTextBlock(item.problem) + '</section>',
+          '<section class="detail-card"><p class="eyebrow">Features</p><h2>核心功能</h2>' + renderListItems(item.features) + '</section>',
+          '<section class="detail-card"><p class="eyebrow">Process</p><h2>实现过程</h2>' + renderSteps(item.process) + '</section>',
+          '<section class="detail-card"><p class="eyebrow">Tools</p><h2>使用工具</h2><p class="detail-text">' + escapeHTML(toolsUsedText) + '</p></section>',
+          '<section class="detail-card"><p class="eyebrow">Screenshot</p><h2>项目截图</h2><div class="detail-shot">' + (hasImage ? '<img src="' + escapeHTML(item.imageUrl) + '" alt="' + escapeHTML(item.title) + '">' : "<span>项目截图待补充</span>") + '</div></section>',
+          '<section class="detail-card"><p class="eyebrow">Upgrade</p><h2>后续升级方向</h2>' + renderListItems(item.upgrades) + '</section>',
+          '<section class="detail-card"><p class="eyebrow">Result</p><h2>项目结果</h2>' + renderTextBlock(item.result) + '</section>',
+          '<section class="detail-card"><p class="eyebrow">Lessons</p><h2>经验总结</h2>' + renderTextBlock(item.lessons) + '</section>',
+          '<section class="detail-card"><p class="eyebrow">Resources</p><h2>相关资源</h2>' + renderRelatedResourceCards(related) + '</section>',
+          '<section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>想做类似项目？</h2><p>可以把行业、目标用户和你想解决的问题发来，一起拆成可落地版本。</p></div><a class="btn btn-primary js-contact-modal" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>',
+        '</article>',
+        renderSidebar(item.category || "案例", [
           { label: "分类", value: item.category },
           { label: "适合人群", value: item.targetUser },
           { label: "更新时间", value: formatDate(item.updatedAt) },
-          { label: "状态", value: item.status }
-        ], item.tags, "cases.html")}
-      </div>
-    </section>
-  `;
+          { label: "状态", value: item.status },
+          { label: "使用工具", value: toolsUsedText }
+        ], item.tags, "cases.html", "想做类似项目"),
+      '</div>',
+    '</section>'
+  ].join("");
 }
 
 async function initDataRender() {
@@ -1685,12 +1843,12 @@ async function initDataRender() {
     if (type === "tools") renderTools(target, data.tools, loaded.tools.source);
     if (type === "resources") await renderResources(target, data.resources, loaded.resources.source);
     if (type === "tutorials") await renderTutorials(target, data.tutorials, loaded.tutorials.source);
-    if (type === "cases") renderCases(target, data.cases, loaded.cases.source);
+    if (type === "cases") await renderCases(target, data.cases, loaded.cases.source);
     if (type === "services") renderServices(target, data.site, loaded.site.source);
     if (type === "home-preview") renderHomePreview(target, data);
     if (type === "resource-detail") await renderResourceDetail(target, data);
     if (type === "tutorial-detail") await renderTutorialDetail(target, data);
-    if (type === "case-detail") renderCaseDetail(target, data);
+    if (type === "case-detail") await renderCaseDetail(target, data);
   }
 
   if (data.site) renderSiteFields(data.site);

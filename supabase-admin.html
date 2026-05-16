@@ -696,6 +696,7 @@
     <div class="sb-module-tabs active" id="moduleTabs" aria-label="模块切换">
       <button class="sb-module-tab active" type="button" data-module="tutorials">教程管理</button>
       <button class="sb-module-tab" type="button" data-module="resources">资源管理</button>
+      <button class="sb-module-tab" type="button" data-module="cases">案例管理</button>
     </div>
 
     <main id="adminView" class="sb-admin-main" aria-label="Supabase 管理后台">
@@ -991,6 +992,170 @@
           </form>
         </section>
       </div>
+
+      <!-- ========== 案例管理模块 ========== -->
+      <div class="sb-module-panel" data-module-panel="cases">
+        <section class="sb-panel">
+          <div class="sb-panel-head">
+            <div>
+              <h2>案例列表</h2>
+              <p id="caseListSummary">登录后读取 cases 表。</p>
+            </div>
+            <div class="sb-actions" style="margin-top: 0;">
+              <button id="caseRefreshButton" class="sb-button ghost" type="button">刷新列表</button>
+              <button id="caseNewButton" class="sb-button primary" type="button">新增案例</button>
+            </div>
+          </div>
+          <div class="sb-list-tools" aria-label="案例筛选">
+            <input id="caseSearchInput" class="sb-list-search" type="search" placeholder="搜索案例标题 / 标识 / 简介 / 分类 / 标签 / 使用工具" autocomplete="off">
+            <div class="sb-list-filter-row">
+              <select id="caseCategoryFilter" aria-label="分类筛选">
+                <option value="all">全部分类</option>
+              </select>
+              <select id="caseStatusFilter" aria-label="发布状态筛选">
+                <option value="all">全部发布状态</option>
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+              </select>
+              <select id="caseCaseStatusFilter" aria-label="案例状态筛选">
+                <option value="all">全部案例状态</option>
+                <option value="展示中">展示中</option>
+                <option value="重点案例">重点案例</option>
+                <option value="整理中">整理中</option>
+                <option value="隐藏">隐藏</option>
+              </select>
+              <button id="caseClearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
+            </div>
+          </div>
+          <div id="caseList" class="sb-list"></div>
+        </section>
+
+        <section class="sb-panel sb-editor">
+          <div class="sb-editor-title">
+            <div>
+              <h2 id="caseEditorHeading">新增案例</h2>
+              <p id="caseEditorSubheading">保存后会写入 Supabase cases 表。</p>
+            </div>
+            <button id="caseResetFormButton" class="sb-button ghost" type="button">清空表单</button>
+          </div>
+
+          <form id="caseForm" class="sb-form-grid">
+            <div id="casePreviewArea" class="sb-preview-area" aria-live="polite">
+              <p id="casePreviewHint"></p>
+              <a id="casePreviewButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览案例</a>
+            </div>
+            <label class="sb-field">
+              案例标识 / 链接名
+              <input name="slug" type="text" placeholder="case-poya-member-tool" required>
+              <small>建议使用英文小写和短横线，例如：case-poya-member-tool。会出现在案例详情链接里。</small>
+            </label>
+            <label class="sb-field">
+              发布状态
+              <select name="status">
+                <option value="draft">草稿 draft</option>
+                <option value="published">已发布 published</option>
+              </select>
+              <small>草稿不会在正式前台展示；已发布会进入前台读取范围。</small>
+            </label>
+            <label class="sb-field full">
+              案例标题
+              <input name="title" type="text" placeholder="案例标题" required>
+              <small>写给读者看的标题，建议清楚说明这个案例解决什么问题。</small>
+            </label>
+            <label class="sb-field">
+              分类
+              <input name="category" type="text" placeholder="小商户工具 / AI 自动化 / 网站项目 / 线索接待 / 资源库">
+              <small>用来在前台分类筛选和标记案例方向。</small>
+            </label>
+            <label class="sb-field">
+              案例状态
+              <select name="case_status">
+                <option value="展示中">展示中</option>
+                <option value="重点案例">重点案例</option>
+                <option value="整理中">整理中</option>
+                <option value="隐藏">隐藏</option>
+              </select>
+              <small>前台会根据案例状态显示不同标签样式。</small>
+            </label>
+            <label class="sb-field">
+              使用工具
+              <input name="tools_used" type="text" placeholder="Codex,ComfyUI,Claude Code">
+              <small>多个工具请用英文逗号分隔，例如：Codex,ComfyUI,Claude Code。</small>
+            </label>
+            <label class="sb-field">
+              封面图链接
+              <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
+              <small>填写图片网址；没有封面时可以先留空。</small>
+            </label>
+            <label class="sb-field full">
+              案例简介
+              <textarea name="summary" placeholder="用一两句话说明这个案例是什么、解决什么问题。"></textarea>
+              <small>会显示在案例卡片和详情页顶部。</small>
+            </label>
+            <label class="sb-field full">
+              案例正文
+              <div class="sb-markdown-tools" aria-label="正文快捷插入">
+                <button class="sb-button ghost" type="button" data-insert-markdown="h2">插入二级标题</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="h3">插入三级标题</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="tip">插入提示框</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="code">插入代码块</button>
+                <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
+              </div>
+              <textarea name="content" placeholder="案例正文，支持 Markdown 写法。"></textarea>
+              <small>支持 Markdown 写法，可以用上面的按钮快速插入标题、提示、代码块和分割线。</small>
+            </label>
+            <label class="sb-field full">
+              项目背景
+              <textarea name="background" placeholder="描述项目的来源、目标用户和真实使用场景。"></textarea>
+            </label>
+            <label class="sb-field full">
+              实现过程
+              <textarea name="process" placeholder="按步骤描述从需求拆解到交付的过程。每行一个步骤，或使用 JSON 数组格式。"></textarea>
+              <small>可以写成文本段落，也可以用 JSON 数组格式：[{"title":"需求拆解","description":"..."}]。</small>
+            </label>
+            <label class="sb-field full">
+              最终结果
+              <textarea name="result" placeholder="描述项目的最终交付结果和实际效果。"></textarea>
+            </label>
+            <label class="sb-field full">
+              经验总结
+              <textarea name="lessons" placeholder="记录项目过程中的关键经验和教训。"></textarea>
+            </label>
+            <label class="sb-field full">
+              后续升级
+              <textarea name="upgrades" placeholder="描述后续可以升级或扩展的方向。每行一个升级项。"></textarea>
+              <small>每行写一个升级方向，前台会自动转为列表展示。</small>
+            </label>
+            <div class="sb-upload-box" id="caseImageUploadBox">
+              <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后链接会自动写入封面图字段。</p>
+              <label class="sb-field" style="margin: 0;">
+                图片说明
+                <input id="caseImageAltInput" type="text" placeholder="例如：项目截图">
+              </label>
+              <div class="sb-actions" style="margin: 0;">
+                <input id="caseImageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                <button id="caseUploadImageButton" class="sb-button ghost" type="button">上传封面图</button>
+              </div>
+              <div id="caseUploadStatus" class="sb-upload-status">上传状态：未上传</div>
+              <div id="caseUploadPreview" class="sb-upload-preview">
+                <label class="sb-field" style="margin: 0;">
+                  上传成功后的图片链接
+                  <input id="caseUploadedImageUrl" type="url" readonly>
+                </label>
+                <button id="caseUseCoverButton" class="sb-button ghost" type="button">设为封面图</button>
+              </div>
+            </div>
+            <label class="sb-field full">
+              标签
+              <input name="tags" type="text" placeholder="小商户工具,会员管理,已完成">
+              <small>多个标签请用英文逗号分隔，例如：小商户工具,会员管理,已完成。</small>
+            </label>
+            <div class="sb-actions full">
+              <button id="caseSaveButton" class="sb-button primary" type="submit">保存案例</button>
+            </div>
+          </form>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -1067,6 +1232,11 @@
     let resourceLastUploadedUrl = "";
     let resourceSavedPreview = null;
     let resourceDragDepth = 0;
+    let cases = [];
+    let caseEditingId = null;
+    let caseLastUploadedUrl = "";
+    let caseSavedPreview = null;
+    let caseDragDepth = 0;
 
     function normalizeUrl(url) {
       return String(url || "").trim().replace(/\/+$/, "");
@@ -1585,9 +1755,11 @@
       if (loggedIn) {
         if (activeModule === "tutorials") fetchTutorials();
         if (activeModule === "resources") fetchResources();
+        if (activeModule === "cases") fetchCases();
       } else {
         renderTutorialList();
         document.getElementById("resourceList").innerHTML = "";
+        document.getElementById("caseList").innerHTML = "";
       }
     }
 
@@ -1837,6 +2009,9 @@
       document.querySelector(".sb-module-tabs").classList.toggle("active", Boolean(session && session.access_token));
       if (module === "resources" && session && session.access_token) {
         fetchResources();
+      }
+      if (module === "cases" && session && session.access_token) {
+        fetchCases();
       }
     }
 
@@ -2370,8 +2545,10 @@
       clearSession();
       tutorials = [];
       resources = [];
+      cases = [];
       setFormMode("new");
       setResourceFormMode("new");
+      setCaseFormMode("new");
       showNotice("success", "已退出登录。");
       updateAuthUi();
     });
@@ -2488,6 +2665,529 @@
         return;
       }
       handleResourceUploadSelectedImage(file);
+    });
+
+    // ============================================================
+    // 案例管理
+    // ============================================================
+
+    function caseSearchText(caseItem) {
+      var tags = Array.isArray(caseItem.tags) ? caseItem.tags.join(" ") : String(caseItem.tags || "");
+      var tools = Array.isArray(caseItem.tools_used) ? caseItem.tools_used.join(" ") : String(caseItem.tools_used || "");
+      return [
+        caseItem.title,
+        caseItem.slug,
+        caseItem.summary,
+        caseItem.category,
+        tags,
+        tools
+      ].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function getCaseFilterState() {
+      return {
+        search: String(document.getElementById("caseSearchInput").value || "").trim().toLowerCase(),
+        category: document.getElementById("caseCategoryFilter").value || "all",
+        status: document.getElementById("caseStatusFilter").value || "all",
+        caseStatus: document.getElementById("caseCaseStatusFilter").value || "all"
+      };
+    }
+
+    function getFilteredCases() {
+      var filter = getCaseFilterState();
+      return cases.filter(function(caseItem) {
+        var category = caseItem.category || "";
+        var status = caseItem.status || "draft";
+        var caseStatus = caseItem.case_status || "展示中";
+        var matchesSearch = !filter.search || caseSearchText(caseItem).includes(filter.search);
+        var matchesCategory = filter.category === "all" || category === filter.category;
+        var matchesStatus = filter.status === "all" || status === filter.status;
+        var matchesCaseStatus = filter.caseStatus === "all" || caseStatus === filter.caseStatus;
+        return matchesSearch && matchesCategory && matchesStatus && matchesCaseStatus;
+      });
+    }
+
+    function refreshCaseCategoryFilterOptions() {
+      var select = document.getElementById("caseCategoryFilter");
+      var current = select.value || "all";
+      var categories = Array.from(new Set(cases.map(function(c) {
+        return c.category || "";
+      }).filter(Boolean))).sort(function(a, b) {
+        return a.localeCompare(b, "zh-CN");
+      });
+      select.innerHTML = '<option value="all">全部分类</option>' + categories.map(function(cat) {
+        return '<option value="' + escapeHtml(cat) + '">' + escapeHtml(cat) + '</option>';
+      }).join("");
+      select.value = categories.includes(current) ? current : "all";
+    }
+
+    function resetCaseFilters() {
+      document.getElementById("caseSearchInput").value = "";
+      document.getElementById("caseCategoryFilter").value = "all";
+      document.getElementById("caseStatusFilter").value = "all";
+      document.getElementById("caseCaseStatusFilter").value = "all";
+      renderCaseList();
+    }
+
+    async function fetchCases() {
+      if (!session || !session.access_token) return;
+      setLoading(document.getElementById("caseRefreshButton"), "读取中...", true);
+      try {
+        cases = await requestSupabase("/rest/v1/cases?select=*&order=created_at.desc", {
+          method: "GET",
+          headers: authHeaders()
+        });
+        renderCaseList();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "读取案例列表"));
+        if (error.status === 401) {
+          clearSession();
+          updateAuthUi();
+        }
+      } finally {
+        setLoading(document.getElementById("caseRefreshButton"), "读取中...", false);
+      }
+    }
+
+    function renderCaseList() {
+      var list = document.getElementById("caseList");
+      if (!session || !session.access_token) {
+        list.innerHTML = "";
+        return;
+      }
+
+      refreshCaseCategoryFilterOptions();
+
+      if (!cases.length) {
+        document.getElementById("caseListSummary").textContent = "共读取到 0 个案例。";
+        list.innerHTML = '<div class="sb-empty">还没有案例。点击"新增案例"开始写入第一个。</div>';
+        return;
+      }
+
+      var filtered = getFilteredCases();
+      var filter = getCaseFilterState();
+      var hasActiveFilter = Boolean(filter.search) || filter.category !== "all" || filter.status !== "all" || filter.caseStatus !== "all";
+      document.getElementById("caseListSummary").textContent = hasActiveFilter
+        ? "共 " + cases.length + " 个案例，当前匹配 " + filtered.length + " 个。"
+        : "共读取到 " + cases.length + " 个案例。";
+
+      if (!filtered.length) {
+        list.innerHTML = '<div class="sb-empty">暂无匹配案例</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(function(caseItem) {
+        var status = caseItem.status || "draft";
+        var caseStatus = caseItem.case_status || "展示中";
+        return [
+          '<article class="sb-list-item ' + (String(caseEditingId) === String(caseItem.id) ? "active" : "") + '">',
+            '<h3 class="sb-list-title"><span>标题：</span>' + escapeHtml(caseItem.title || "未命名案例") + '</h3>',
+            '<div class="sb-list-meta">',
+              '<span class="sb-badge">分类：' + escapeHtml(caseItem.category || "未分类") + '</span>',
+              '<span class="sb-badge ' + escapeHtml(status) + '">发布：' + escapeHtml(status === "published" ? "已发布" : "草稿") + '</span>',
+              '<span class="sb-badge">案例：' + escapeHtml(caseStatus) + '</span>',
+              '<span>更新时间：' + escapeHtml(formatDate(caseItem.updated_at)) + '</span>',
+            '</div>',
+            '<div class="sb-list-actions">',
+              '<button class="sb-button ghost" type="button" data-case-action="edit" data-id="' + escapeHtml(caseItem.id) + '">编辑</button>',
+              '<button class="sb-button danger" type="button" data-case-action="delete" data-id="' + escapeHtml(caseItem.id) + '">删除案例</button>',
+            '</div>',
+          '</article>'
+        ].join("");
+      }).join("");
+    }
+
+    function getCaseFormPayload() {
+      var form = document.getElementById("caseForm");
+      return {
+        slug: form.elements.slug.value.trim(),
+        title: form.elements.title.value.trim(),
+        category: form.elements.category.value.trim(),
+        summary: form.elements.summary.value.trim(),
+        content: form.elements.content.value,
+        background: form.elements.background.value.trim(),
+        process: form.elements.process.value.trim(),
+        result: form.elements.result.value.trim(),
+        lessons: form.elements.lessons.value.trim(),
+        upgrades: form.elements.upgrades.value.trim(),
+        tools_used: parseTags(form.elements.tools_used.value),
+        cover_url: form.elements.cover_url.value.trim(),
+        tags: parseTags(form.elements.tags.value),
+        case_status: form.elements.case_status.value,
+        status: form.elements.status.value,
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    function fillCaseForm(caseItem) {
+      var form = document.getElementById("caseForm");
+      form.elements.slug.value = caseItem.slug || "";
+      form.elements.title.value = caseItem.title || "";
+      form.elements.category.value = caseItem.category || "";
+      form.elements.summary.value = caseItem.summary || "";
+      form.elements.content.value = caseItem.content || "";
+      form.elements.background.value = caseItem.background || "";
+      form.elements.process.value = caseItem.process || "";
+      form.elements.result.value = caseItem.result || "";
+      form.elements.lessons.value = caseItem.lessons || "";
+      form.elements.upgrades.value = caseItem.upgrades || "";
+      form.elements.tools_used.value = tagsToInput(caseItem.tools_used);
+      form.elements.cover_url.value = caseItem.cover_url || "";
+      form.elements.tags.value = tagsToInput(caseItem.tags);
+      form.elements.case_status.value = caseItem.case_status || "展示中";
+      form.elements.status.value = caseItem.status || "draft";
+    }
+
+    function resetCaseUploadUi() {
+      caseLastUploadedUrl = "";
+      document.getElementById("caseImageAltInput").value = "";
+      document.getElementById("caseImageFileInput").value = "";
+      document.getElementById("caseUploadedImageUrl").value = "";
+      document.getElementById("caseUploadPreview").classList.remove("show");
+      setCaseUploadStatus("", session && session.access_token ? "上传状态：未上传" : "请先登录后再上传图片。");
+    }
+
+    function setCaseUploadStatus(type, message) {
+      var el = document.getElementById("caseUploadStatus");
+      el.className = "sb-upload-status" + (type ? " " + type : "");
+      el.textContent = message;
+    }
+
+    function getCaseCurrentFormPreview() {
+      var form = document.getElementById("caseForm");
+      var slug = form.elements.slug.value.trim();
+      if (!slug) return null;
+      return {
+        slug: slug,
+        status: form.elements.status.value || "draft"
+      };
+    }
+
+    function updateCasePreviewButton(preview) {
+      caseSavedPreview = preview || null;
+      var area = document.getElementById("casePreviewArea");
+      var hint = document.getElementById("casePreviewHint");
+      var button = document.getElementById("casePreviewButton");
+      if (!caseSavedPreview || !caseSavedPreview.slug) {
+        area.className = "sb-preview-area";
+        hint.textContent = "";
+        button.href = "#";
+        return;
+      }
+      var isDraft = caseSavedPreview.status === "draft";
+      area.className = "sb-preview-area show" + (isDraft ? " warn" : "");
+      hint.textContent = isDraft
+        ? "当前案例是草稿 draft，正式前台可能不会展示。"
+        : "案例已保存，可以打开正式详情页预览。";
+      button.href = "case-detail.html?slug=" + encodeURIComponent(caseSavedPreview.slug);
+    }
+
+    function setCaseFormMode(mode, caseItem) {
+      caseEditingId = mode === "edit" && caseItem ? caseItem.id : null;
+      document.getElementById("caseEditorHeading").textContent = caseEditingId ? "编辑案例" : "新增案例";
+      document.getElementById("caseEditorSubheading").textContent = caseEditingId ? "正在编辑 ID：" + caseEditingId : "保存后会写入 Supabase cases 表。";
+      fillCaseForm(caseItem || {});
+      updateCasePreviewButton(caseItem && caseItem.slug ? { slug: caseItem.slug, status: caseItem.status || "draft" } : null);
+      resetCaseUploadUi();
+      renderCaseList();
+    }
+
+    function buildCaseImagePath(file) {
+      var timestamp = Date.now();
+      var slug = String(document.getElementById("caseForm").elements.slug.value || "").trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_]+|[-_]+$/g, "") || "draft";
+      var extByType = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif"
+      };
+      var fallbackExt = extByType[file.type] || "png";
+      var originalName = file.name || "";
+      var dotIndex = originalName.lastIndexOf(".");
+      var rawBase = dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
+      var rawExt = dotIndex > 0 ? originalName.slice(dotIndex + 1).toLowerCase() : "";
+      var ext = ["png", "jpg", "jpeg", "webp", "gif"].includes(rawExt) ? rawExt : fallbackExt;
+      var base = rawBase
+        .normalize("NFKD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9._-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^[-_.]+|[-_.]+$/g, "")
+        .toLowerCase();
+
+      return "cases/" + slug + "/" + timestamp + "-" + (base || "image") + "." + ext;
+    }
+
+    async function uploadCaseImageFile(file) {
+      var config = getConfig();
+      if (!config.url || !config.anonKey) {
+        throw Object.assign(new Error("请先填写 Supabase URL 和 anon key。"), { friendlyStatus: 0 });
+      }
+      if (!session || !session.access_token) {
+        throw Object.assign(new Error("请先登录后再上传图片。"), { friendlyStatus: 401 });
+      }
+
+      var filePath = buildCaseImagePath(file);
+      var response = await fetch(config.url + "/storage/v1/object/" + STORAGE_BUCKET + "/" + encodeStoragePath(filePath), {
+        method: "POST",
+        headers: {
+          apikey: config.anonKey,
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": file.type,
+          "x-upsert": "true"
+        },
+        body: file
+      });
+
+      if (!response.ok) {
+        var errorMessage = response.statusText;
+        try {
+          var errorJson = await response.json();
+          errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
+        } catch (e) {
+          errorMessage = response.statusText;
+        }
+        var uploadError = new Error(errorMessage);
+        uploadError.status = response.status;
+        throw uploadError;
+      }
+      return { publicUrl: getPublicImageUrl(filePath) };
+    }
+
+    async function handleCaseImageUpload() {
+      if (!session || !session.access_token) {
+        setCaseUploadStatus("error", "请先登录后再上传图片。");
+        return;
+      }
+      document.getElementById("caseImageFileInput").click();
+    }
+
+    async function handleCaseUploadSelectedImage(fileFromDrop) {
+      var fileInput = document.getElementById("caseImageFileInput");
+      var file = fileFromDrop instanceof File ? fileFromDrop : (fileInput.files && fileInput.files[0]);
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        setCaseUploadStatus("error", "只支持 png、jpg、webp、gif 图片。");
+        fileInput.value = "";
+        return;
+      }
+
+      var sizeWarning = file.size > IMAGE_SIZE_WARN_BYTES
+        ? "图片较大，建议先压缩后再上传。仍会继续上传。\n"
+        : "";
+      var uploadButton = document.getElementById("caseUploadImageButton");
+      setLoading(uploadButton, "上传中...", true);
+      setCaseUploadStatus(file.size > IMAGE_SIZE_WARN_BYTES ? "warn" : "", sizeWarning + "上传中...");
+      document.getElementById("caseUploadPreview").classList.remove("show");
+
+      try {
+        var result = await uploadCaseImageFile(file);
+        var publicUrl = result.publicUrl;
+        caseLastUploadedUrl = publicUrl;
+        document.getElementById("caseUploadedImageUrl").value = publicUrl;
+        document.getElementById("caseUploadPreview").classList.add("show");
+        document.getElementById("caseForm").elements.cover_url.value = publicUrl;
+        setCaseUploadStatus("success", "上传成功，封面图链接已自动填入。");
+      } catch (error) {
+        setCaseUploadStatus("error", friendlyUploadError(error.status || error.friendlyStatus, error.message));
+      } finally {
+        fileInput.value = "";
+        setLoading(uploadButton, "上传中...", false);
+      }
+    }
+
+    async function handleCaseSave(event) {
+      event.preventDefault();
+      clearNotice();
+
+      var payload = getCaseFormPayload();
+      if (!payload.slug || !payload.title) {
+        showNotice("warn", "案例标识 / 链接名和案例标题必填。");
+        return;
+      }
+
+      var saveButton = document.getElementById("caseSaveButton");
+      setLoading(saveButton, "保存中...", true);
+      try {
+        var savedRows = null;
+        if (caseEditingId) {
+          savedRows = await requestSupabase("/rest/v1/cases?id=eq." + encodeURIComponent(caseEditingId), {
+            method: "PATCH",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        } else {
+          savedRows = await requestSupabase("/rest/v1/cases", {
+            method: "POST",
+            headers: authHeaders({
+              "Content-Type": "application/json",
+              Prefer: "return=representation"
+            }),
+            body: JSON.stringify(payload)
+          });
+        }
+
+        var savedCase = Array.isArray(savedRows) && savedRows[0] ? savedRows[0] : payload;
+        if (savedCase.id) {
+          caseEditingId = savedCase.id;
+          document.getElementById("caseEditorHeading").textContent = "编辑案例";
+          document.getElementById("caseEditorSubheading").textContent = "正在编辑 ID：" + caseEditingId;
+        }
+        updateCasePreviewButton({
+          slug: savedCase.slug || payload.slug,
+          status: savedCase.status || payload.status
+        });
+        showNotice("success", "保存成功。");
+        await fetchCases();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "保存案例"));
+      } finally {
+        setLoading(saveButton, "保存中...", false);
+      }
+    }
+
+    async function handleCaseDelete(id) {
+      var caseItem = cases.find(function(item) { return String(item.id) === String(id); });
+      if (!caseItem) return;
+      var title = caseItem.title || "未命名案例";
+      if (!window.confirm("确定要删除《" + title + "》吗？\n这个操作会从 Supabase cases 表中删除该案例，无法直接恢复。")) return;
+
+      clearNotice();
+      try {
+        await requestSupabase("/rest/v1/cases?id=eq." + encodeURIComponent(id), {
+          method: "DELETE",
+          headers: authHeaders()
+        });
+        showNotice("success", "删除成功。");
+        if (String(caseEditingId) === String(id)) {
+          setCaseFormMode("new");
+        }
+        await fetchCases();
+      } catch (error) {
+        showNotice("error", friendlyError(error.status || error.friendlyStatus, error.message, "删除案例"));
+      }
+    }
+
+    // ── 案例管理事件 ──
+    document.getElementById("caseForm").addEventListener("submit", handleCaseSave);
+    document.getElementById("caseSearchInput").addEventListener("input", renderCaseList);
+    document.getElementById("caseCategoryFilter").addEventListener("change", renderCaseList);
+    document.getElementById("caseStatusFilter").addEventListener("change", renderCaseList);
+    document.getElementById("caseCaseStatusFilter").addEventListener("change", renderCaseList);
+    document.getElementById("caseClearFiltersButton").addEventListener("click", resetCaseFilters);
+    document.getElementById("caseUploadImageButton").addEventListener("click", handleCaseImageUpload);
+    document.getElementById("caseImageFileInput").addEventListener("change", handleCaseUploadSelectedImage);
+    document.getElementById("caseUseCoverButton").addEventListener("click", function() {
+      if (caseLastUploadedUrl) {
+        document.getElementById("caseForm").elements.cover_url.value = caseLastUploadedUrl;
+        setCaseUploadStatus("success", "封面图链接已设置。");
+      }
+    });
+    document.getElementById("caseRefreshButton").addEventListener("click", fetchCases);
+    document.getElementById("caseNewButton").addEventListener("click", function() {
+      clearNotice();
+      setCaseFormMode("new");
+    });
+    document.getElementById("caseResetFormButton").addEventListener("click", function() {
+      clearNotice();
+      setCaseFormMode("new");
+    });
+    document.getElementById("caseList").addEventListener("click", function(event) {
+      var button = event.target.closest("button[data-case-action]");
+      if (!button) return;
+      var id = button.dataset.id;
+      if (button.dataset.caseAction === "edit") {
+        var caseItem = cases.find(function(item) { return String(item.id) === String(id); });
+        if (caseItem) {
+          clearNotice();
+          setCaseFormMode("edit", caseItem);
+        }
+      }
+      if (button.dataset.caseAction === "delete") {
+        handleCaseDelete(id);
+      }
+    });
+    document.getElementById("caseForm").addEventListener("click", function(event) {
+      var button = event.target.closest("button[data-insert-markdown]");
+      if (!button) return;
+      event.preventDefault();
+      var type = button.dataset.insertMarkdown;
+      var textarea = document.getElementById("caseForm").elements.content;
+      var snippets = {
+        h2: "## {cursor}小标题",
+        h3: "### {cursor}小标题",
+        tip: "> 提示：{cursor}这里填写提醒内容",
+        code: "```text\n{cursor}这里填写代码或命令\n```",
+        divider: "---"
+      };
+      if (!snippets[type]) return;
+      var value = textarea.value || "";
+      var start = textarea.selectionStart;
+      var end = textarea.selectionEnd;
+      var markdown = snippets[type];
+      var cursorToken = "{cursor}";
+      var cursorIndex = markdown.indexOf(cursorToken);
+      var cleanMarkdown = cursorIndex >= 0 ? markdown.replace(cursorToken, "") : markdown;
+      var prefix = value.slice(0, start);
+      var suffix = value.slice(end);
+      var insertPrefix = prefix && !prefix.endsWith("\n") ? "\n" : (prefix.endsWith("\n\n") || !prefix ? "" : "\n");
+      var insertSuffix = suffix && !suffix.startsWith("\n") ? "\n" : (suffix.startsWith("\n\n") || !suffix ? "" : "\n");
+      var insertText = insertPrefix + cleanMarkdown + insertSuffix;
+      var nextCursor = cursorIndex >= 0
+        ? start + insertPrefix.length + cursorIndex
+        : start + insertText.length;
+      textarea.value = prefix + insertText + suffix;
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+    });
+    document.getElementById("casePreviewButton").addEventListener("click", function(event) {
+      if (!caseSavedPreview || !caseSavedPreview.slug) {
+        event.preventDefault();
+        return;
+      }
+      if (caseSavedPreview.status === "draft") {
+        window.alert("当前案例是草稿 draft，正式前台可能不会展示。");
+      }
+    });
+
+    // ── 案例图片拖拽上传 ──
+    var caseUploadBox = document.getElementById("caseImageUploadBox");
+    caseUploadBox.addEventListener("dragenter", function(event) {
+      event.preventDefault();
+      caseDragDepth += 1;
+      caseUploadBox.classList.add("drag-active");
+    });
+    caseUploadBox.addEventListener("dragover", function(event) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      caseUploadBox.classList.add("drag-active");
+    });
+    caseUploadBox.addEventListener("dragleave", function(event) {
+      event.preventDefault();
+      caseDragDepth = Math.max(0, caseDragDepth - 1);
+      if (caseDragDepth === 0) caseUploadBox.classList.remove("drag-active");
+    });
+    caseUploadBox.addEventListener("drop", function(event) {
+      event.preventDefault();
+      caseDragDepth = 0;
+      caseUploadBox.classList.remove("drag-active");
+      var files = Array.from(event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files : []);
+      var file = files.find(function(f) { return ALLOWED_IMAGE_TYPES.includes(f.type); }) || files[0] || null;
+      if (!file) {
+        setCaseUploadStatus("error", "没有识别到可上传的图片文件。");
+        return;
+      }
+      handleCaseUploadSelectedImage(file);
     });
 
     refreshConfigUi();
