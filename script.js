@@ -1607,14 +1607,41 @@ async function loadSearchData() {
 
   searchState.loadPromise = (async () => {
     let hasPartialFailure = false;
-    const [toolsResult, resourcesResult, casesResult] = await Promise.all([
-      loadJSON("tools"),
+
+    // ── 工具：优先 Supabase，再 JSON，最后 fallback ──
+    let tools = [];
+    console.log("[search] loading tools from supabase");
+    try {
+      const supabaseTools = await loadSupabaseTools();
+      if (Array.isArray(supabaseTools) && supabaseTools.length > 0) {
+        tools = supabaseTools;
+        console.log("[search] supabase tools loaded", tools.length);
+      } else if (Array.isArray(supabaseTools)) {
+        console.warn("[search] supabase returned empty array, fallback to json");
+      }
+    } catch (error) {
+      console.warn("[search] supabase tools failed, fallback to json", error);
+    }
+
+    if (tools.length === 0) {
+      const toolsResult = await loadJSON("tools");
+      tools = toolsResult.data || [];
+      if (toolsResult.source === "fallback") {
+        hasPartialFailure = true;
+        console.log("[search] fallback tools loaded", tools.length);
+      } else {
+        console.log("[search] json tools loaded", tools.length);
+      }
+    }
+
+    // ── 资源 / 案例并行从 JSON 读取 ──
+    const [resourcesResult, casesResult] = await Promise.all([
       loadJSON("resources"),
       loadJSON("cases")
     ]);
+    hasPartialFailure = hasPartialFailure || resourcesResult.source === "fallback" || casesResult.source === "fallback";
 
-    hasPartialFailure = [toolsResult, resourcesResult, casesResult].some((result) => result.source === "fallback");
-
+    // ── 教程：优先 Supabase，再 JSON ──
     let tutorials = [];
     try {
       const supabaseItems = await loadSupabaseTutorials();
@@ -1633,7 +1660,7 @@ async function loadSearchData() {
     }
 
     searchState.items = buildSearchIndex({
-      tools: toolsResult.data,
+      tools,
       resources: resourcesResult.data,
       tutorials,
       cases: casesResult.data
@@ -1698,18 +1725,18 @@ function renderSearchResults(query) {
     const safeUrl = escapeHTML(item.url || "#");
     const target = isExternalUrl(item.url) ? ` target="_blank" rel="noopener"` : "";
     const tags = item.tags.length
-      ? `<div class="search-result-tags">${item.tags.slice(0, 4).map((tag) => `<span>${escapeHTML(tag)}</span>`).join("")}</div>`
+      ? item.tags.slice(0, 3).map((tag) => `<span>${escapeHTML(tag)}</span>`).join("")
       : "";
     return `
       <article class="search-result-card">
         <div class="search-result-topline">
           <span class="search-type">${escapeHTML(item.label)}</span>
-          <span>${escapeHTML(item.category)}</span>
+          <span class="search-category">${escapeHTML(item.category)}</span>
+          ${tags ? `<span class="search-result-tags">${tags}</span>` : ""}
+          <a class="search-result-link" href="${safeUrl}"${target}>查看 →</a>
         </div>
         <h3>${escapeHTML(item.title)}</h3>
         <p>${escapeHTML(item.summary)}</p>
-        ${tags}
-        <a class="search-result-link" href="${safeUrl}"${target}><span>查看</span><i aria-hidden="true"></i></a>
       </article>
     `;
   }).join("");
