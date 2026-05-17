@@ -998,7 +998,7 @@ function renderToolCards(container) {
   });
 
   if (!filtered.length) {
-    container.innerHTML = '<div class="resource-empty-state"><div class="resource-empty-icon" aria-hidden="true"></div><h2>暂无匹配工具</h2><p>可以换个关键词，或点击联系合作获取人工推荐。</p><button class="btn btn-primary js-contact-modal" type="button"><span>联系获取</span><i aria-hidden="true"></i></button></div>';
+    container.innerHTML = '<div class="resource-empty-state"><div class="resource-empty-icon" aria-hidden="true"></div><h2>暂无匹配工具</h2><p>可以换个关键词试试，或浏览其他分类。</p></div>';
     return;
   }
 
@@ -1025,24 +1025,23 @@ function renderToolCards(container) {
     var buttons = [];
     var hasOfficial = officialUrl && officialUrl !== "#";
     var hasTutorial = tutorialUrl && tutorialUrl !== "#";
-    var isContactOnly = toolStatus === "需联系";
-    var noUrls = !hasOfficial && !hasTutorial;
+
+    // 查看详情 — always visible
+    buttons.push('<button class="card-link js-tool-detail" type="button"><span>查看详情</span><i aria-hidden="true"></i></button>');
 
     if (hasOfficial) {
-      buttons.push('<a class="card-link" href="' + escapeHTML(officialUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()"><span>官网</span><i aria-hidden="true"></i></a>');
+      buttons.push('<a class="card-link" href="' + escapeHTML(officialUrl) + '" target="_blank" rel="noopener"><span>官网</span><i aria-hidden="true"></i></a>');
     }
     if (hasTutorial) {
-      buttons.push('<a class="card-link" href="' + escapeHTML(tutorialUrl) + '" onclick="event.stopPropagation()"><span>教程</span><i aria-hidden="true"></i></a>');
+      buttons.push('<a class="card-link" href="' + escapeHTML(tutorialUrl) + '"><span>教程</span><i aria-hidden="true"></i></a>');
     }
-    if (isContactOnly || noUrls) {
-      buttons.push('<button class="card-link js-contact-modal" type="button"><span>联系获取</span><i aria-hidden="true"></i></button>');
-    }
-    if (!hasTutorial && !isContactOnly && !noUrls) {
+    if (!hasTutorial) {
       buttons.push('<span class="tool-tidying-hint">教程整理中</span>');
     }
 
+    var toolId = item.id || item.slug || "";
     return [
-      '<article class="tool-card" data-tool-card data-official-url="' + escapeHTML(officialUrl) + '" data-tutorial-url="' + escapeHTML(tutorialUrl) + '" data-category="' + escapeHTML(normalizeCategories(item, "category")) + '">',
+      '<article class="tool-card" data-tool-id="' + escapeHTML(toolId) + '" data-category="' + escapeHTML(normalizeCategories(item, "category")) + '">',
         coverUrl ? '<div class="tool-card-cover"><img src="' + escapeHTML(coverUrl) + '" alt="' + escapeHTML(name) + '" loading="lazy"></div>' : "",
         '<div class="tool-card-body">',
           '<div class="tool-card-header">',
@@ -1087,17 +1086,52 @@ function matchesToolScene(item, scene) {
   return keywords.some(function(kw) { return text.includes(kw.toLowerCase()); });
 }
 
-function handleToolCardClick(officialUrl, tutorialUrl) {
-  var hasTutorial = tutorialUrl && tutorialUrl !== "#";
-  var hasOfficial = officialUrl && officialUrl !== "#";
+function findToolById(id) {
+  var grid = document.querySelector(".tools-grid");
+  if (!grid || !grid._toolsData) return null;
+  return (grid._toolsData || []).find(function(item) { return String(item.id || item.slug) === String(id); });
+}
 
-  if (hasTutorial) {
-    window.location.href = tutorialUrl;
-  } else if (hasOfficial) {
-    window.open(officialUrl, "_blank", "noopener");
-  } else {
-    tryOpenContactModal(null);
+function openToolDetailModal(toolData) {
+  if (!modal || !modalDialog || !toolData) return;
+  closeMenu();
+  modalDialog.innerHTML = renderToolDetailModalContent(toolData);
+  modal.classList.remove("is-contact-modal", "is-search-modal");
+  modal.classList.add("is-open", "is-tool-detail-modal");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function renderToolDetailModalContent(item) {
+  var name = item.name || item.title || "未命名工具";
+  var category = item.category || "AI 对话";
+  var description = item.description || item.summary || "工具简介正在整理中。";
+  var suitableFor = item.suitableFor || item.suitable_for || "—";
+  var usageTip = item.usageTip || item.usage_tip || "暂无使用建议。";
+  var officialUrl = item.officialUrl || item.official_url || "#";
+  var tutorialUrl = item.tutorialUrl || item.tutorial_url || "#";
+  var toolStatus = item.toolStatus || item.tool_status || item.status || "整理中";
+  var tags = Array.isArray(item.tags) ? item.tags : [];
+
+  var statusClass = "status-default";
+  if (toolStatus === "推荐") statusClass = "status-recommended";
+  else if (toolStatus === "常用") statusClass = "status-common";
+  else if (toolStatus === "进阶") statusClass = "status-advanced";
+  else if (toolStatus === "需联系") statusClass = "status-contact";
+
+  var hasOfficial = officialUrl && officialUrl !== "#";
+  var hasTutorial = tutorialUrl && tutorialUrl !== "#";
+
+  var actionsHtml = [];
+  if (hasOfficial) {
+    actionsHtml.push('<a class="btn btn-primary" href="' + escapeHTML(officialUrl) + '" target="_blank" rel="noopener"><span>官网</span><i aria-hidden="true"></i></a>');
   }
+  if (hasTutorial) {
+    actionsHtml.push('<a class="btn btn-secondary" href="' + escapeHTML(tutorialUrl) + '"><span>教程</span><i aria-hidden="true"></i></a>');
+  }
+  actionsHtml.push('<button class="btn btn-secondary" type="button" data-modal-close><span>关闭</span><i aria-hidden="true"></i></button>');
+
+  return '\n    <button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>\xd7</button>\n    <div class="tool-detail-modal-content">\n      <div class="tool-detail-head">\n        <p class="eyebrow">AI Tool</p>\n        <h2 id="modal-title">' + escapeHTML(name) + '</h2>\n        <span class="tool-status-badge ' + statusClass + '">' + escapeHTML(toolStatus) + '</span>\n      </div>\n      <span class="tag">' + escapeHTML(category) + '</span>\n      <p class="tool-detail-desc">' + escapeHTML(description) + '</p>\n      <dl class="tool-detail-info">\n        <dt>适合人群</dt><dd>' + escapeHTML(suitableFor) + '</dd>\n        <dt>使用建议</dt><dd>' + escapeHTML(usageTip) + '</dd>\n      </dl>\n      ' + (tags.length ? '<div class="resource-card-tags">' + tags.map(function(tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("") + '</div>' : "") + '\n      <div class="tool-detail-actions">' + actionsHtml.join("\n        ") + '</div>\n    </div>\n  ';
 }
 
 function renderResourceCard(item) {
@@ -2189,9 +2223,7 @@ function isContactModalIntent(trigger) {
 
 function closeModal() {
   if (!modal) return;
-  modal.classList.remove("is-open");
-  modal.classList.remove("is-contact-modal");
-  modal.classList.remove("is-search-modal");
+  modal.classList.remove("is-open", "is-contact-modal", "is-search-modal", "is-tool-detail-modal");
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
 }
@@ -2273,10 +2305,14 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  const toolCard = event.target.closest("[data-tool-card]");
-  if (toolCard && !event.target.closest("a, button, .card-link")) {
+  const toolDetailBtn = event.target.closest(".js-tool-detail");
+  if (toolDetailBtn) {
     event.preventDefault();
-    handleToolCardClick(toolCard.dataset.officialUrl, toolCard.dataset.tutorialUrl);
+    var toolId = toolDetailBtn.closest("[data-tool-id]")?.dataset?.toolId;
+    if (toolId) {
+      var toolData = findToolById(toolId);
+      if (toolData) openToolDetailModal(toolData);
+    }
     return;
   }
 

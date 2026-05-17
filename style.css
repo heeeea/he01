@@ -1057,7 +1057,6 @@ button {
 
 .entry-card,
 .preview-column,
-.tool-card,
 .resource-card,
 .tutorial-card,
 .case-card,
@@ -1070,6 +1069,15 @@ button {
   overflow: hidden;
   border-radius: var(--radius-lg);
   cursor: pointer;
+  transform: translateZ(0);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease, opacity 220ms ease;
+}
+
+.tool-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  cursor: default;
   transform: translateZ(0);
   transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease, opacity 220ms ease;
 }
@@ -1101,7 +1109,6 @@ button {
 
 .entry-card:hover,
 .preview-column:hover,
-.tool-card:hover,
 .resource-card:hover,
 .tutorial-card:hover,
 .case-card:hover,
@@ -1111,6 +1118,11 @@ button {
   border-color: var(--line-hot);
   box-shadow: var(--shadow-inset), var(--shadow-lift);
   transform: translateY(-5px) translateZ(0);
+}
+
+.tool-card:hover {
+  border-color: var(--line-hot);
+  box-shadow: var(--shadow-inset), var(--shadow-lift);
 }
 
 .entry-card {
@@ -2992,6 +3004,110 @@ time,
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* ── Tool detail modal ── */
+
+.modal.is-tool-detail-modal .modal-dialog {
+  width: min(100%, 640px);
+  max-height: min(680px, calc(100vh - 36px));
+  overflow-y: auto;
+  padding: clamp(20px, 4vw, 30px);
+  scrollbar-color: rgba(151, 168, 255, 0.36) transparent;
+  scrollbar-width: thin;
+}
+
+.modal.is-tool-detail-modal .modal-dialog::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal.is-tool-detail-modal .modal-dialog::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(151, 168, 255, 0.28);
+}
+
+.tool-detail-modal-content {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.tool-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-right: 36px;
+}
+
+.tool-detail-head h2 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 28px);
+  line-height: 1.3;
+}
+
+.tool-detail-head .eyebrow {
+  margin: 0 0 -4px;
+  width: 100%;
+}
+
+.tool-detail-desc {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.tool-detail-info {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 14px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(151, 168, 255, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.tool-detail-info dt {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.tool-detail-info dd {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.tool-detail-modal-content .resource-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tool-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .modal.is-tool-detail-modal .modal-dialog {
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+  }
+
+  .tool-detail-modal-content {
+    gap: 12px;
+  }
+
+  .tool-detail-info {
+    gap: 4px 10px;
+    padding: 10px 12px;
+  }
 }
 
 .ripple {
