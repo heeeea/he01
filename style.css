@@ -11,8 +11,8 @@
   --panel: var(--glass);
   --panel-strong: var(--glass-strong);
   --text: #f6f8ff;
-  --text-soft: #c8d0ea;
-  --text-muted: #8e98bd;
+  --text-soft: #d2d8f0;
+  --text-muted: #9aa3c6;
   --primary: #7867ff;
   --primary-strong: #a374ff;
   --blue: #4db9ff;
@@ -525,9 +525,9 @@ button {
 .hero-copy {
   max-width: 720px;
   margin: 0 0 26px;
-  color: var(--text-soft);
+  color: #d4daf4;
   font-size: 16px;
-  line-height: 1.96;
+  line-height: 1.9;
   overflow-wrap: break-word;
 }
 
@@ -1048,9 +1048,9 @@ button {
 .modal-dialog {
   border: 1px solid var(--line);
   background:
-    linear-gradient(145deg, rgba(18, 27, 67, 0.68), rgba(7, 12, 31, 0.54)),
-    radial-gradient(circle at 18% 0%, rgba(119, 102, 255, 0.12), transparent 36%),
-    radial-gradient(circle at 90% 100%, rgba(77, 185, 255, 0.06), transparent 42%);
+    linear-gradient(145deg, rgba(20, 30, 72, 0.72), rgba(8, 14, 34, 0.58)),
+    radial-gradient(circle at 18% 0%, rgba(119, 102, 255, 0.14), transparent 36%),
+    radial-gradient(circle at 90% 100%, rgba(77, 185, 255, 0.08), transparent 42%);
   box-shadow: var(--shadow-inset), var(--shadow-soft);
   backdrop-filter: blur(14px);
 }
@@ -1131,8 +1131,8 @@ button {
 }
 
 .compact-card {
-  min-height: 184px;
-  padding: 18px;
+  min-height: 178px;
+  padding: 20px;
 }
 
 .entry-icon {
@@ -1189,7 +1189,13 @@ button {
 }
 
 .compact-card h3 {
-  font-size: 18px;
+  font-size: 17px;
+  margin: 0 0 6px;
+}
+
+.compact-card p {
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .entry-card p,
@@ -1210,6 +1216,8 @@ button {
 .tutorial-card p,
 .mini-card p {
   margin: 0 0 18px;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .preview-column,
@@ -1228,7 +1236,7 @@ button {
 .preview-column {
   display: flex;
   flex-direction: column;
-  min-height: 240px;
+  min-height: 260px;
 }
 
 .preview-column ul,
@@ -1268,14 +1276,14 @@ button {
   align-items: center;
   justify-content: center;
   gap: 9px;
-  min-height: 42px;
+  min-height: 44px;
   width: fit-content;
   min-width: 118px;
   padding: 0 17px;
   border: 1px solid rgba(151, 168, 255, 0.22);
   border-radius: var(--radius-sm);
   color: #dce1ff;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
   transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
@@ -4581,6 +4589,23 @@ time,
   }
 }
 
+/* ── Home particle canvas ── */
+.home-particle-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+@media (max-width: 767px) {
+  .home-particle-canvas {
+    opacity: 0.45;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -4600,7 +4625,8 @@ time,
     transform: none;
   }
 
-  .hero-particles {
+  .hero-particles,
+  .home-particle-canvas {
     display: none;
   }
 }

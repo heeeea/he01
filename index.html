@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <canvas id="homeParticleCanvas" class="home-particle-canvas" aria-hidden="true"></canvas>
   <div class="site-shell">
     <header class="site-header">
       <nav class="navbar" aria-label="主导航">
@@ -41,10 +42,9 @@
         <div class="hero-content">
           <p class="eyebrow">AI 实战 · 资源整合 · 项目落地</p>
           <h1 id="hero-title">贺 · 01 <span>AI 实战资源库</span></h1>
-          <h2>精选 AI 工具、实战教程、<br class="mobile-break">资源下载、项目案例解析</h2>
+          <h2>帮你快速找到能落地的 AI 工具、教程和项目资源</h2>
           <p class="hero-copy">
-            这里整理我真实用过的 AI 工具、项目案例、<br class="mobile-break">教程资料和资源下载。<br>
-            不讲空概念，只做能跑通、能展示、能变现的 AI 实战内容。
+            这里整理我实测过的 AI 工具、建站教程、资源模板和项目案例，<br class="mobile-break">适合想用 AI 做项目、提效率、接单变现的新手。
           </p>
           <div class="hero-buttons" aria-label="首页主要操作">
             <a class="btn btn-primary" href="resources.html"><span>进入资源库</span><i aria-hidden="true"></i></a>
@@ -128,12 +128,12 @@
           <h2 id="entry-title">核心入口</h2>
         </div>
         <div class="entry-grid compact-grid">
-          <a class="entry-card compact-card" href="tools.html"><div class="entry-icon icon-ai">AI</div><h3>AI 工具导航</h3><p>按场景查找常用 AI 工具。</p></a>
-          <a class="entry-card compact-card" href="resources.html"><div class="entry-icon folder-icon"></div><h3>资源下载</h3><p>提示词、模板、清单和项目资料。</p></a>
-          <a class="entry-card compact-card" href="tutorials.html"><div class="entry-icon cap-icon"></div><h3>新手入门教程</h3><p>从安装、配置到第一个项目。</p></a>
-          <a class="entry-card compact-card" href="tutorials.html"><div class="entry-icon rocket-icon"></div><h3>进阶实战指南</h3><p>围绕真实工作流继续深入。</p></a>
-          <a class="entry-card compact-card" href="cases.html"><div class="entry-icon cube-icon"></div><h3>作品案例库</h3><p>查看已完成和制作中的项目。</p></a>
-          <a class="entry-card compact-card" href="cases.html"><div class="entry-icon star-icon"></div><h3>创作者项目</h3><p>记录 AI 工具和变现尝试。</p></a>
+          <a class="entry-card compact-card" href="tools.html"><div class="entry-icon icon-ai">AI</div><h3>AI 工具导航</h3><p>不知道用哪个 AI？按场景快速筛选。</p></a>
+          <a class="entry-card compact-card" href="resources.html"><div class="entry-icon folder-icon"></div><h3>资源下载</h3><p>提示词、清单、SQL、部署模板直接拿走。</p></a>
+          <a class="entry-card compact-card" href="tutorials.html"><div class="entry-icon cap-icon"></div><h3>新手入门教程</h3><p>从 0 到 1 跑通一个真实项目。</p></a>
+          <a class="entry-card compact-card" href="tutorials.html"><div class="entry-icon rocket-icon"></div><h3>进阶实战指南</h3><p>解决部署、后台、数据、自动化问题。</p></a>
+          <a class="entry-card compact-card" href="cases.html"><div class="entry-icon cube-icon"></div><h3>作品案例库</h3><p>看项目怎么做，再照着拆解复刻。</p></a>
+          <a class="entry-card compact-card" href="cases.html"><div class="entry-icon star-icon"></div><h3>创作者项目</h3><p>记录 AI 工具和项目变现尝试。</p></a>
         </div>
       </section>
 
@@ -144,11 +144,22 @@
         </div>
         <div class="preview-grid" data-render="home-preview">
           <article class="preview-column">
+            <span class="tag">推荐工具</span>
+            <h3>AI 工具</h3>
+            <ul>
+              <li>ChatGPT</li>
+              <li>Claude</li>
+              <li>Codex</li>
+            </ul>
+            <a class="card-link" href="tools.html"><span>查看更多</span><i aria-hidden="true"></i></a>
+          </article>
+          <article class="preview-column">
             <span class="tag">精选资源</span>
             <h3>资源下载</h3>
             <ul>
               <li>Codex 项目提示词模板</li>
-              <li>ComfyUI 新手模型路径表</li>
+              <li>Supabase 建表 SQL</li>
+              <li>Vercel 部署检查清单</li>
             </ul>
             <a class="card-link" href="resources.html"><span>查看更多</span><i aria-hidden="true"></i></a>
           </article>
@@ -157,16 +168,18 @@
             <h3>实战教程</h3>
             <ul>
               <li>用 Codex 做一个 AI 资源库网站</li>
-              <li>ComfyUI 新手如何排查模型和节点报错</li>
+              <li>Supabase 如何做网站后台</li>
+              <li>Vercel + GitHub 部署静态网站</li>
             </ul>
             <a class="card-link" href="tutorials.html"><span>查看更多</span><i aria-hidden="true"></i></a>
           </article>
           <article class="preview-column">
             <span class="tag">作品案例</span>
-            <h3>项目展示</h3>
+            <h3>项目案例</h3>
             <ul>
-              <li>珀雅造型会员管理工具</li>
-              <li>装修公司 AI 线索接待工作台</li>
+              <li>AI 资源库网站案例</li>
+              <li>AI 工具导航站案例</li>
+              <li>Supabase 后台管理案例</li>
             </ul>
             <a class="card-link" href="cases.html"><span>查看更多</span><i aria-hidden="true"></i></a>
           </article>
@@ -175,10 +188,10 @@
 
       <section class="community-section slim reveal" aria-labelledby="community-title">
         <div class="community-content">
-          <p class="eyebrow">Private Community</p>
-          <h2 id="community-title" data-site-field="privateCommunity.title">加入贺 · 01 私域社区</h2>
-          <p data-site-field="privateCommunity.description">获取资源更新、项目拆解、AI 工具使用经验和实战陪跑机会。</p>
-          <button class="btn btn-primary" type="button" data-contact-modal><span>获取加入方式</span><i aria-hidden="true"></i></button>
+          <p class="eyebrow">Resource Pack</p>
+          <h2 id="community-title" data-site-field="privateCommunity.title">领取 AI 工具资源包</h2>
+          <p data-site-field="privateCommunity.description">扫码添加微信，获取教程更新、资源模板和项目案例。</p>
+          <button class="btn btn-primary" type="button" data-contact-modal><span>获取资料包</span><i aria-hidden="true"></i></button>
         </div>
         <div class="qr-card" aria-label="微信二维码" data-render="private-community-qr">
           <div class="qr-placeholder"><span></span><span></span><span></span><span></span></div>
@@ -190,10 +203,10 @@
       <section class="contact-cta reveal" aria-labelledby="home-contact-title">
         <div>
           <p class="eyebrow">Collaboration</p>
-          <h2 id="home-contact-title">需要 AI 工具调试或项目陪跑？</h2>
-          <p>如果你卡在 ComfyUI、OpenClaw、Codex、Claude Code、AI 项目落地这些问题上，可以通过私域联系我。</p>
+          <h2 id="home-contact-title">想做一个类似的 AI 资源库 / 工具导航网站？</h2>
+          <p>如果你想做 AI 工具站、资源库、教程站、项目展示页，我可以帮你梳理结构、搭建页面、接入后台和部署上线。</p>
         </div>
-        <a class="btn btn-primary" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a>
+        <button class="btn btn-primary" type="button" data-contact-modal><span>咨询建站 / 项目陪跑</span><i aria-hidden="true"></i></button>
       </section>
     </main>
 

@@ -1458,15 +1458,15 @@ function renderSiteFields(site) {
 }
 
 function renderHomePreview(container, data) {
-  const toolItems = (data.tools || []).slice(0, 2);
-  const resourceItems = (data.resources || []).slice(0, 2);
-  const tutorialItems = (data.tutorials || []).slice(0, 2);
-  const caseItems = (data.cases || []).slice(0, 2);
+  const toolItems = (data.tools || []).slice(0, 3);
+  const resourceItems = (data.resources || []).slice(0, 3);
+  const tutorialItems = (data.tutorials || []).slice(0, 3);
+  const caseItems = (data.cases || []).slice(0, 3);
   const columns = [
-    { tag: "推荐工具", title: "AI 工具导航", link: "tools.html", items: toolItems.map((item) => ({ label: item.name, url: "tools.html" })) },
+    { tag: "推荐工具", title: "AI 工具", link: "tools.html", items: toolItems.map((item) => ({ label: item.name, url: "tools.html" })) },
     { tag: "精选资源", title: "资源下载", link: "resources.html", items: resourceItems.map((item) => ({ label: item.title, url: detailUrl("resource", item, "resources.html") })) },
     { tag: "最新教程", title: "实战教程", link: "tutorials.html", items: tutorialItems.map((item) => ({ label: item.title, url: detailUrl("tutorial", item, "tutorials.html") })) },
-    { tag: "作品案例", title: "项目展示", link: "cases.html", items: caseItems.map((item) => ({ label: item.title, url: detailUrl("case", item, "cases.html") })) }
+    { tag: "作品案例", title: "项目案例", link: "cases.html", items: caseItems.map((item) => ({ label: item.title, url: detailUrl("case", item, "cases.html") })) }
   ];
   container.innerHTML = columns.map((column) => `
     <article class="preview-column">
@@ -2666,9 +2666,136 @@ function initHeroParticles() {
   });
 }
 
+function initHomeParticles() {
+  const canvas = document.getElementById("homeParticleCanvas");
+  if (!canvas || reduceMotion) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  let width = 0;
+  let height = 0;
+  let particles = [];
+  let rafId = 0;
+  let isRunning = false;
+  let lastTime = 0;
+  let isMobile = window.innerWidth < 768;
+
+  function getParticleCount() {
+    return window.innerWidth < 768 ? 12 : 55;
+  }
+
+  function resize() {
+    width = window.innerWidth;
+    height = document.documentElement.scrollHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function createParticle() {
+    return {
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: -0.08 - Math.random() * 0.22,
+      radius: 0.6 + Math.random() * 1.6,
+      alpha: 0.06 + Math.random() * 0.14,
+      hue: Math.random() > 0.5 ? "140,130,255" : "105,180,255"
+    };
+  }
+
+  function resetParticles() {
+    particles = Array.from({ length: getParticleCount() }, () => createParticle());
+  }
+
+  function draw(timestamp) {
+    if (!isRunning) return;
+    if (!lastTime) lastTime = timestamp;
+    const dt = Math.min((timestamp - lastTime) / 16.67, 4);
+    lastTime = timestamp;
+
+    ctx.clearRect(0, 0, width, height);
+
+    particles.forEach((p, i) => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      if (p.x < -20) p.x = width + 20;
+      if (p.x > width + 20) p.x = -20;
+      if (p.y < -20) p.y = height + 20;
+      if (p.y > height + 20) p.y = -20;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.hue}, ${p.alpha})`;
+      ctx.fill();
+
+      if (i > 0 && !isMobile) {
+        for (let j = i - 1; j >= Math.max(0, i - 4); j--) {
+          const other = particles[j];
+          const dx = p.x - other.x;
+          const dy = p.y - other.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 130 && dist > 1) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(other.x, other.y);
+            ctx.strokeStyle = `rgba(130,160,240, ${(1 - dist / 130) * 0.04})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+    });
+
+    rafId = requestAnimationFrame(draw);
+  }
+
+  function start() {
+    if (isRunning) return;
+    resize();
+    resetParticles();
+    isRunning = true;
+    lastTime = 0;
+    draw(0);
+  }
+
+  function stop() {
+    isRunning = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+
+  function onVisibility() {
+    if (document.hidden) {
+      stop();
+    } else {
+      start();
+    }
+  }
+
+  function onResize() {
+    isMobile = window.innerWidth < 768;
+    stop();
+    ctx.clearRect(0, 0, width, height);
+    resize();
+    resetParticles();
+    start();
+  }
+
+  document.addEventListener("visibilitychange", onVisibility);
+  window.addEventListener("resize", onResize);
+  start();
+}
+
 initDataRender();
 loadHomeStats();
 initHeroParticles();
+initHomeParticles();
 
 if ("IntersectionObserver" in window && !reduceMotion) {
   const revealObserver = new IntersectionObserver(
