@@ -53,8 +53,8 @@ const FALLBACK_DATA = {
     siteName: "贺01 AI 实战资源库",
     slogan: "AI 实战、资源整合、项目落地",
     description: "这里整理我真实用过的 AI 工具、项目案例、教程资料和资源下载。不讲空概念，只做能跑通、能展示、能变现的 AI 实战内容。",
-    contact: { wechat: "HE01-AI", xianyu: "贺01 AI", douyin: "贺·01", xiaohongshu: "贺·01", email: "hello@he01.ai" },
-    privateCommunity: { title: "私域二维码", description: "后续替换真实二维码。你可以在这里承接微信、社群、资料包或服务咨询入口。", qrCodeUrl: "", placeholderText: "二维码占位" },
+    contact: { wechat: "Hwxxxx_499", xianyu: "賀hee", douyin: "Hhhhheoi", xiaohongshu: "贺造科技", email: "1194547344@qq.com" },
+    privateCommunity: { title: "扫码添加微信", description: "扫码添加微信，获取 AI 工具资源、教程更新、项目案例和实战交流。", qrCodeUrl: "assets/wechat-qr.png", placeholderText: "二维码占位" },
     services: ["AI工具安装调试", "ComfyUI报错排查", "OpenClaw接通本地工具", "Codex / Claude Code 项目陪跑", "AI小工具 / 网站 Demo 制作", "AI项目需求梳理"]
   }
 };
@@ -1391,7 +1391,7 @@ function renderSiteFields(site) {
     const qr = community.qrCodeUrl
       ? `<img class="qr-image" src="${escapeHTML(community.qrCodeUrl)}" alt="${escapeHTML(community.title || "私域二维码")}">`
       : `<div class="qr-placeholder"><span></span><span></span><span></span><span></span></div>`;
-    container.innerHTML = `${qr}<strong>${escapeHTML(community.placeholderText || community.title || "二维码占位")}</strong><small>${escapeHTML(community.qrCodeUrl ? "扫码或长按识别" : "后续替换真实二维码")}</small>`;
+    container.innerHTML = `${qr}<strong>${escapeHTML(community.title || community.placeholderText || "扫码添加微信")}</strong><small>${escapeHTML(community.qrCodeUrl ? "扫码或长按识别" : "备注：AI资源 / 网站 / 调试")}</small>`;
   });
 }
 
@@ -1459,7 +1459,7 @@ function firstValue(...values) {
 function getContactEntries(site = currentSiteData) {
   const contact = site?.contact || {};
   return [
-    { key: "wechat", label: "微信号", value: firstValue(contact.wechat, contact.wechatId, site?.wechat, site?.wechatId) },
+    { key: "wechat", label: "微信", value: firstValue(contact.wechat, contact.wechatId, site?.wechat, site?.wechatId) },
     { key: "xianyu", label: "闲鱼", value: firstValue(contact.xianyu, site?.xianyu) },
     { key: "douyin", label: "抖音", value: firstValue(contact.douyin, site?.douyin) },
     { key: "xiaohongshu", label: "小红书", value: firstValue(contact.xiaohongshu, contact.redbook, site?.xiaohongshu, site?.redbook) },
@@ -1486,22 +1486,21 @@ function renderBasicModalContent(message) {
 function renderContactModalContent(site = currentSiteData) {
   const qr = getContactQr(site);
   const entries = getContactEntries(site);
-  const qrTitle = firstValue(site?.privateCommunity?.title, "微信二维码");
-  const qrDescription = firstValue(site?.privateCommunity?.description, "扫码添加微信，获取 AI 工具资源、教程更新和项目陪跑支持。");
+  const qrTitle = firstValue(site?.privateCommunity?.title, "扫码添加微信");
   return `
     <button class="modal-close" type="button" aria-label="关闭弹窗" data-modal-close>×</button>
     <div class="contact-modal-content">
       <div>
         <p class="eyebrow">Contact</p>
-        <h2 id="modal-title">需要陪跑 / 调试？</h2>
-        <p id="modal-message">如果你在 AI 工具安装、ComfyUI 报错、OpenClaw 接通、Codex / Claude Code 项目制作中卡住，可以扫码添加我。</p>
+        <h2 id="modal-title">获取资料 / 合作咨询</h2>
+        <p id="modal-message">需要 AI 工具资源、网站制作、项目陪跑、ComfyUI / OpenClaw 调试，可以扫码或复制联系方式添加我。</p>
       </div>
       <div class="contact-modal-grid">
         <figure class="contact-qr-card">
-          ${qr ? `<img src="${escapeHTML(qr)}" alt="${escapeHTML(qrTitle)}">` : `<div class="contact-qr-placeholder">二维码待补充</div>`}
+          ${qr ? `<img src="${escapeHTML(qr)}" alt="${escapeHTML(qrTitle)}">` : `<div class="contact-qr-placeholder">二维码加载中</div>`}
           <figcaption>
             <strong>${escapeHTML(qrTitle)}</strong>
-            <span>${escapeHTML(qrDescription)}</span>
+            <small>备注：AI资源 / 网站 / 调试</small>
           </figcaption>
         </figure>
         <div class="contact-copy-list">
@@ -1511,7 +1510,7 @@ function renderContactModalContent(site = currentSiteData) {
                 <span>${escapeHTML(item.label)}</span>
                 <strong>${escapeHTML(item.value)}</strong>
               </div>
-              <button class="copy-button js-copy-contact" type="button" data-copy="${escapeHTML(item.value)}">复制</button>
+              <button class="copy-button js-copy-contact" type="button" data-copy="${escapeHTML(item.value)}">复制${escapeHTML(item.label)}</button>
             </div>
           `).join("") : `<p class="detail-muted">联系方式正在整理中。</p>`}
           <p class="contact-copy-status" aria-live="polite"></p>
