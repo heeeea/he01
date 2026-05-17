@@ -1313,14 +1313,33 @@ button.card-link {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.filter-button {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.scene-button {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .page-hero {
-  padding: clamp(34px, 4vw, 54px);
+  padding: clamp(28px, 3.5vw, 48px);
   border: 1px solid rgba(151, 168, 255, 0.16);
   border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   background:
     linear-gradient(110deg, rgba(8, 13, 34, 0.86), rgba(5, 9, 24, 0.5)),
     radial-gradient(circle at 80% 30%, rgba(104, 80, 255, 0.24), transparent 34%);
   overflow: hidden;
+}
+
+.page-hero p:not(.eyebrow) {
+  max-width: 760px;
+  font-size: 15px;
 }
 
 .page-hero h1 {
@@ -1353,8 +1372,8 @@ button.card-link {
 
 .detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  gap: clamp(18px, 2.4vw, 28px);
   align-items: start;
 }
 
@@ -1365,7 +1384,7 @@ button.card-link {
 }
 
 .detail-hero-card {
-  padding: clamp(26px, 3.6vw, 46px);
+  padding: clamp(24px, 3vw, 38px);
   background:
     linear-gradient(116deg, rgba(16, 25, 62, 0.86), rgba(6, 11, 31, 0.62)),
     radial-gradient(circle at 80% 18%, rgba(120, 103, 255, 0.24), transparent 36%),
@@ -1376,8 +1395,8 @@ button.card-link {
   position: relative;
   max-width: 940px;
   margin: 10px 0 14px;
-  font-size: clamp(34px, 4vw, 58px);
-  line-height: 1.16;
+  font-size: clamp(28px, 3.5vw, 44px);
+  line-height: 1.22;
   background: linear-gradient(135deg, #ffffff, #b9c2ff 44%, #69e2ff);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1583,11 +1602,30 @@ button.card-link {
 
 .detail-sidebar {
   min-width: 0;
+  position: sticky;
+  top: var(--header-offset);
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(151, 168, 255, 0.36) transparent;
+  scrollbar-width: thin;
+}
+
+.detail-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.detail-sidebar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(151, 168, 255, 0.28);
+}
+
+.detail-sidebar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .sticky-card {
-  position: sticky;
-  top: var(--header-offset);
+  position: static;
 }
 
 .sticky-card .detail-meta {
@@ -1596,7 +1634,14 @@ button.card-link {
 }
 
 .sidebar-actions {
+  display: grid;
+  gap: 10px;
   margin-top: 18px;
+}
+
+.sidebar-actions .btn,
+.sidebar-actions .card-link {
+  width: 100%;
 }
 
 .detail-cta {
@@ -1710,16 +1755,16 @@ button.card-link {
 }
 
 .article-section + .article-section {
-  margin-top: 34px;
-  padding-top: 30px;
+  margin-top: 28px;
+  padding-top: 24px;
   border-top: 1px solid rgba(151, 168, 255, 0.14);
 }
 
 .article-section > h2,
 .article-prose h2 {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   color: var(--text);
-  font-size: clamp(24px, 2.2vw, 31px);
+  font-size: clamp(20px, 2vw, 26px);
   line-height: 1.3;
 }
 
@@ -1728,9 +1773,9 @@ button.card-link {
 }
 
 .article-prose h3 {
-  margin: 24px 0 10px;
+  margin: 22px 0 8px;
   color: #edf2ff;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.4;
 }
 
@@ -1741,12 +1786,12 @@ button.card-link {
 .article-bullet-list li,
 .article-resource-link small {
   color: var(--text-soft);
-  font-size: 16px;
-  line-height: 1.9;
+  font-size: 15px;
+  line-height: 1.8;
 }
 
 .article-prose p {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
 }
 
 .article-prose strong {
@@ -2009,15 +2054,16 @@ button.card-link {
 
 .tutorial-help-button {
   width: 100%;
+  min-height: 40px;
 }
 
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 14px;
-  border: 1px solid rgba(151, 168, 255, 0.12);
-  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  border: 1px solid rgba(151, 168, 255, 0.14);
+  border-radius: var(--radius-md);
   background: rgba(3, 7, 20, 0.24);
 }
 
@@ -2168,86 +2214,103 @@ dd {
   opacity: 0.6;
 }
 
-/* ========================================
-   Tools grid — compact navigation cards
-   ======================================== */
-
-/* Grid: 4→3→2→1 columns */
-.tools-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+/* ════════════════════════════════════════════
+   Unified list grid — 4 pages, auto columns
+   ════════════════════════════════════════════ */
+.tools-grid,
+.resources-grid,
+.tutorials-grid,
+.cases-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
-@media (max-width: 1200px) {
-  .tools-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+/* ════════════════════════════════════════════
+   Unified list card internals — compact
+   ════════════════════════════════════════════ */
+
+/* Card min-height — consistent across all list types */
+.tools-grid .tool-card,
+.resources-grid .resource-card,
+.tutorials-grid .tutorial-card,
+.cases-grid .case-card {
+  min-height: auto;
+  padding: 18px;
 }
 
-@media (max-width: 980px) {
-  .tools-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 680px) {
-  .tools-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Compact tool card */
-.tools-grid .tool-card {
-  min-height: 220px;
-  padding: 0;
-}
-
-.tools-grid .tool-card-cover {
-  height: 120px;
-}
-
-.tools-grid .tool-card-body {
-  padding: 14px;
-}
-
-/* Title */
-.tools-grid .tool-card-header {
-  margin-bottom: 4px;
-}
-
-.tools-grid .tool-card-header h2 {
-  font-size: 15px;
-}
-
-/* Category tag */
-.tools-grid .tool-card-body > .tag {
-  margin-bottom: 6px;
-  font-size: 11px;
-  min-height: 22px;
-  padding: 2px 8px;
-}
-
-/* Description — line-clamp 2 */
-.tools-grid .tool-card p {
-  margin: 0 0 8px;
-  font-size: 13px;
+/* Title — 2-line clamp, consistent size */
+.tools-grid h2,
+.resources-grid h2,
+.tutorials-grid h2,
+.cases-grid h2 {
+  font-size: 17px;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+  margin: 0 0 6px;
+}
+
+/* Exception: case title row keeps h2 visible for status inline */
+.cases-grid .case-title-row h2 {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* Description — 2-line clamp */
+.tools-grid p,
+.resources-grid p,
+.tutorials-grid p {
+  font-size: 13px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0 0 8px;
   flex: none;
 }
 
-/* dl compact */
-.tools-grid .tool-card-body dl {
+/* Case card DL values */
+.cases-grid dl {
   gap: 4px;
   margin: 0 0 8px;
 }
+.cases-grid dt {
+  font-size: 11px;
+}
+.cases-grid dd {
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
 
+/* Compact tool card cover */
+.tools-grid .tool-card-cover {
+  height: 130px;
+}
+.tools-grid .tool-card {
+  padding: 0;
+}
+.tools-grid .tool-card-body {
+  padding: 16px;
+}
+.tools-grid .tool-card-header {
+  margin-bottom: 4px;
+}
+
+/* Compact tool card DL */
+.tools-grid .tool-card-body dl {
+  gap: 4px;
+  margin: 0 0 6px;
+}
 .tools-grid .tool-card-body dt {
   font-size: 11px;
 }
-
 .tools-grid .tool-card-body dd {
   font-size: 12px;
   display: -webkit-box;
@@ -2256,44 +2319,106 @@ dd {
   overflow: hidden;
 }
 
-.tools-grid .tool-card-body dd:last-child {
-  -webkit-line-clamp: 2;
+/* Unified tag sizing for all list cards */
+.tools-grid .tag,
+.tools-grid .resource-card-tags span,
+.tools-grid .card-tags span,
+.resources-grid .tag,
+.resources-grid .resource-card-tags span,
+.resources-grid .card-tags span,
+.tutorials-grid .tag,
+.tutorials-grid .resource-card-tags span,
+.tutorials-grid .card-tags span,
+.cases-grid .tag,
+.cases-grid .resource-card-tags span,
+.cases-grid .card-tags span {
+  font-size: 11px;
+  min-height: 22px;
+  padding: 2px 8px;
 }
 
-/* Tags */
-.tools-grid .resource-card-tags {
+.tools-grid .resource-card-tags,
+.tools-grid .card-tags,
+.resources-grid .resource-card-tags,
+.resources-grid .card-tags,
+.tutorials-grid .resource-card-tags,
+.tutorials-grid .card-tags,
+.cases-grid .resource-card-tags,
+.cases-grid .card-tags {
   margin-bottom: 6px;
   gap: 4px;
 }
 
-.tools-grid .resource-card-tags span {
+/* Unified status badges */
+.tools-grid .tool-status-badge,
+.resources-grid .resource-status-badge,
+.cases-grid .status {
+  min-height: 22px;
+  padding: 1px 8px;
   font-size: 11px;
-  padding: 2px 8px;
 }
 
-/* Button area */
-.tools-grid .card-actions {
+/* Resource card topline */
+.resources-grid .resource-card-topline {
+  margin-bottom: 8px;
+}
+
+/* Resource meta compact */
+.resources-grid .resource-card-meta {
+  margin: 0 0 8px;
+  gap: 4px 14px;
+}
+.resources-grid .resource-meta-item {
+  font-size: 12px;
+}
+
+/* Tutorial info row compact */
+.tutorials-grid .info-row {
+  margin-bottom: 6px;
+}
+.tutorials-grid .info-row span,
+.tutorials-grid .info-row time {
+  font-size: 11px;
+}
+
+/* Case shot — reduced height */
+.cases-grid .case-shot {
+  min-height: 130px;
+  margin-bottom: 12px;
+}
+
+/* Button area — all list cards */
+.tools-grid .card-actions,
+.resources-grid .card-actions,
+.tutorials-grid .card-actions,
+.cases-grid .card-actions {
   gap: 6px;
   margin-top: auto;
 }
 
-.tools-grid .card-link {
-  min-height: 30px;
+/* Unified card-link button in list cards */
+.tools-grid .card-link,
+.resources-grid .card-link,
+.tutorials-grid .card-link,
+.cases-grid .card-link {
+  min-height: 34px;
   min-width: auto;
-  padding: 0 12px;
+  padding: 0 13px;
   font-size: 12px;
-  gap: 6px;
+  gap: 5px;
 }
 
-.tools-grid .card-link i {
+.tools-grid .card-link i,
+.resources-grid .card-link i,
+.tutorials-grid .card-link i,
+.cases-grid .card-link i {
   width: 12px;
   height: 8px;
 }
 
-/* Status badge — keep small */
-.tools-grid .tool-status-badge {
-  min-height: 20px;
-  padding: 1px 8px;
+.tools-grid .tool-tidying-hint {
+  min-height: 28px;
+  padding: 0 4px;
   font-size: 11px;
 }
 
@@ -2354,36 +2479,19 @@ time,
   border-color: rgba(77, 185, 255, 0.34);
 }
 
-.data-notice,
-.empty-state {
+.data-notice {
+  margin-top: var(--space-section);
+  padding: 12px 16px;
   border: 1px solid rgba(151, 168, 255, 0.22);
   border-radius: var(--radius-md);
+  color: var(--text-soft);
+  font-size: 14px;
   background: rgba(7, 12, 31, 0.56);
   box-shadow: var(--shadow-inset), var(--shadow-soft);
   backdrop-filter: blur(14px);
 }
 
-.data-notice {
-  margin-top: var(--space-section);
-  padding: 12px 16px;
-  color: var(--text-soft);
-  font-size: 14px;
-}
-
-.empty-state {
-  grid-column: 1 / -1;
-  padding: 28px;
-}
-
-.empty-state h2 {
-  margin: 0 0 8px;
-  font-size: 22px;
-}
-
-.empty-state p {
-  margin: 0;
-  color: var(--text-soft);
-}
+/* empty-state now unified with resource-empty-state above */
 
 .case-shot img,
 .qr-image {
@@ -4078,17 +4186,17 @@ time,
    资源下载中心 — 搜索 / 场景 / 状态 / 详情
    ════════════════════════════════════════════ */
 
-/* 资源搜索栏 */
+/* 资源搜索栏 — unified */
 .resource-search-wrap {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  min-height: 56px;
+  min-height: 50px;
   margin-top: var(--space-section);
-  padding: 0 18px;
-  border: 1px solid rgba(105, 226, 255, 0.22);
-  border-radius: var(--radius-lg);
+  padding: 0 16px;
+  border: 1px solid rgba(151, 168, 255, 0.18);
+  border-radius: var(--radius-md);
   background:
     linear-gradient(145deg, rgba(15, 24, 59, 0.78), rgba(5, 10, 28, 0.82)),
     radial-gradient(circle at 12% 0%, rgba(105, 226, 255, 0.08), transparent 42%);
@@ -4098,13 +4206,13 @@ time,
 .resource-search-wrap input {
   width: 100%;
   min-width: 0;
-  min-height: 54px;
+  min-height: 48px;
   border: 0;
   color: var(--text);
   background: transparent;
   outline: none;
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .resource-search-wrap input::placeholder {
@@ -4140,9 +4248,9 @@ time,
   gap: 8px;
   margin-top: 14px;
   padding: 12px 14px;
-  border: 1px solid rgba(151, 168, 255, 0.1);
-  border-radius: var(--radius-lg);
-  background: rgba(3, 7, 20, 0.18);
+  border: 1px solid rgba(151, 168, 255, 0.14);
+  border-radius: var(--radius-md);
+  background: rgba(3, 7, 20, 0.24);
 }
 
 .scene-button {
@@ -4288,34 +4396,39 @@ time,
 }
 
 /* 空状态 */
-.resource-empty-state {
+.resource-empty-state,
+.empty-state {
   grid-column: 1 / -1;
   display: grid;
   justify-items: center;
-  gap: 16px;
-  padding: 52px 24px;
+  gap: 14px;
+  padding: 40px 24px;
   border: 1px solid rgba(151, 168, 255, 0.18);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background:
-    linear-gradient(145deg, rgba(12, 20, 48, 0.48), rgba(5, 10, 28, 0.38));
+    linear-gradient(145deg, rgba(12, 20, 48, 0.52), rgba(5, 10, 28, 0.42));
+  box-shadow: var(--shadow-inset), var(--shadow-soft);
+  backdrop-filter: blur(14px);
   text-align: center;
 }
 
 .resource-empty-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border: 2px dashed rgba(151, 168, 255, 0.28);
   border-radius: 50%;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
-.resource-empty-state h2 {
+.resource-empty-state h2,
+.empty-state h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
   color: var(--text);
 }
 
-.resource-empty-state p {
+.resource-empty-state p,
+.empty-state p {
   margin: 0;
   color: var(--text-soft);
   max-width: 480px;
@@ -4324,7 +4437,7 @@ time,
 /* ═══ 资源详情页 ═══ */
 
 .resource-detail-hero {
-  padding: clamp(26px, 3.6vw, 46px);
+  padding: clamp(24px, 3vw, 38px);
   border: 1px solid rgba(151, 168, 255, 0.16);
   border-radius: var(--radius-lg);
   background:
@@ -4347,8 +4460,8 @@ time,
 .resource-detail-hero h1 {
   max-width: 940px;
   margin: 0 0 14px;
-  font-size: clamp(34px, 4vw, 58px);
-  line-height: 1.16;
+  font-size: clamp(28px, 3.5vw, 44px);
+  line-height: 1.22;
   background: linear-gradient(135deg, #ffffff, #b9c2ff 44%, #69e2ff);
   -webkit-background-clip: text;
   background-clip: text;
@@ -4385,8 +4498,8 @@ time,
 /* 详情页左右布局 */
 .resource-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(270px, 320px);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  gap: clamp(18px, 2.4vw, 28px);
   align-items: start;
 }
 
@@ -4396,13 +4509,17 @@ time,
   min-width: 0;
 }
 
-.resource-detail-main .detail-card {
-  padding: clamp(22px, 3vw, 34px);
+/* Unified detail content sections */
+.resource-detail-main .detail-card,
+.detail-main .detail-card {
+  padding: clamp(22px, 3vw, 32px);
 }
 
-.resource-detail-main .detail-card h2 {
-  margin: 0 0 16px;
-  font-size: clamp(22px, 2vw, 28px);
+.resource-detail-main .detail-card h2,
+.detail-main .detail-card h2 {
+  margin: 0 0 14px;
+  font-size: clamp(20px, 2vw, 26px);
+  line-height: 1.3;
 }
 
 .detail-text {
@@ -4439,8 +4556,8 @@ time,
 
 .resource-sidebar-panel {
   display: grid;
-  gap: 20px;
-  padding: 20px;
+  gap: 18px;
+  padding: 18px;
   border: 1px solid rgba(151, 168, 255, 0.16);
   border-radius: var(--radius-lg);
   background:
@@ -4454,55 +4571,70 @@ time,
   min-width: 0;
 }
 
-.resource-sidebar-dl {
+/* Unified sidebar DL (info rows) — scoped to sidebar contexts */
+.resource-sidebar-dl,
+.tutorial-sidebar-panel .detail-meta,
+.sticky-card .detail-meta {
   display: grid;
-  gap: 0;
+  gap: 8px;
   margin: 0;
 }
 
-.resource-sidebar-dl div {
+.resource-sidebar-dl div,
+.tutorial-sidebar-panel .detail-meta div,
+.sticky-card .detail-meta div {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid rgba(151, 168, 255, 0.1);
+  min-width: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
-.resource-sidebar-dl div:last-child {
+.resource-sidebar-dl div:last-child,
+.tutorial-sidebar-panel .detail-meta div:last-child,
+.sticky-card .detail-meta div:last-child {
   border-bottom: 0;
 }
 
-.resource-sidebar-dl dt {
+.resource-sidebar-dl dt,
+.tutorial-sidebar-panel .detail-meta dt,
+.sticky-card .detail-meta dt {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
   margin: 0;
   flex-shrink: 0;
 }
 
-.resource-sidebar-dl dd {
+.resource-sidebar-dl dd,
+.tutorial-sidebar-panel .detail-meta dd,
+.sticky-card .detail-meta dd {
   color: var(--text-soft);
   font-size: 13px;
   margin: 0;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .resource-sidebar-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 6px;
 }
 
 .resource-sidebar-tags span {
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
-  padding: 0 9px;
+  min-height: 24px;
+  padding: 0 8px;
   border: 1px solid rgba(151, 168, 255, 0.16);
   border-radius: 999px;
-  color: var(--text-soft);
-  font-size: 12px;
-  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-muted);
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .resource-sidebar-actions {
@@ -4519,13 +4651,15 @@ time,
   width: 100%;
 }
 
-/* 资源详情页响应式 */
+/* 详情页响应式 — 统一 */
 @media (max-width: 980px) {
-  .resource-detail-layout {
+  .resource-detail-layout,
+  .detail-layout {
     grid-template-columns: 1fr;
   }
 
-  .resource-detail-sidebar {
+  .resource-detail-sidebar,
+  .detail-sidebar {
     position: relative;
     top: auto;
     max-height: none;

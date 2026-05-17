@@ -947,8 +947,7 @@ function renderArticleRelatedResources(items, compact = false) {
 function renderTutorialArticleSidebar(item, related) {
   const toc = [
     ["教程简介", "tutorial-intro"],
-    ["正文内容", "tutorial-content"],
-    ["联系咨询", "tutorial-contact"]
+    ["正文内容", "tutorial-content"]
   ];
   return `
     <aside class="tutorial-article-sidebar" aria-label="教程辅助信息">
@@ -1376,7 +1375,7 @@ async function renderTutorials(container, items, source) {
       <p>${escapeHTML(item.description || item.contentPreview || "教程简介正在整理中。")}</p>
       <div class="info-row"><span>${escapeHTML(item.readingTime || "阅读时间待补充")}</span><span>${escapeHTML(item.difficulty || "未标注")}</span><time>${escapeHTML(formatDate(item.updatedAt))}</time></div>
       ${tags.length ? `<div class="card-tags">${tags.map((tag) => `<span>${escapeHTML(tag)}</span>`).join("")}</div>` : ""}
-      <a class="card-link" href="${escapeHTML(detailUrl("tutorial", item, "tutorials.html"))}"><span>查看教程</span><i aria-hidden="true"></i></a>
+      <div class="card-actions"><a class="card-link" href="${escapeHTML(detailUrl("tutorial", item, "tutorials.html"))}"><span>查看教程</span><i aria-hidden="true"></i></a></div>
     </article>
   `;
   }).join("");
@@ -1425,7 +1424,7 @@ async function renderCases(container, items, source) {
           '<dt>解决问题</dt><dd>' + escapeHTML(item.problem) + '</dd>',
           '<dt>核心功能</dt><dd>' + escapeHTML((item.features || []).join("、")) + '</dd>',
         '</dl>',
-        '<a class="card-link" href="' + escapeHTML(detailUrl("case", item, "cases.html")) + '"><span>查看案例</span><i aria-hidden="true"></i></a>',
+        '<div class="card-actions"><a class="card-link" href="' + escapeHTML(detailUrl("case", item, "cases.html")) + '"><span>查看案例</span><i aria-hidden="true"></i></a></div>',
       '</article>'
     ].join("");
   }).join("");
@@ -2090,6 +2089,10 @@ async function renderTutorialDetail(container, data) {
               </section>
             `}
           </div>
+          <section class="contact-cta detail-cta">
+            <div><p class="eyebrow">Collaboration</p><h2>需要陪跑调试或项目落地？</h2><p>如果教程里的步骤卡住了，或者想把方案落到你自己的项目里，可以联系我一起拆解。</p></div>
+            <button class="btn btn-primary js-contact-modal" type="button"><span>需要陪跑 / 调试</span><i aria-hidden="true"></i></button>
+          </section>
         </article>
         ${renderTutorialArticleSidebar(item, related)}
       </div>
