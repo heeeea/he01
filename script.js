@@ -294,6 +294,14 @@ function normalizeData(key, data) {
   return data;
 }
 
+function formatStatCount(count) {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n < 0) return "0";
+  if (n < 10) return String(n);
+  if (n < 100) return `${Math.floor(n / 10) * 10}+`;
+  return `${Math.floor(n / 100) * 100}+`;
+}
+
 async function loadJSON(key) {
   try {
     if (window.location.protocol === "file:") {
@@ -605,6 +613,60 @@ async function loadSupabaseTools() {
   } catch (error) {
     console.error("Supabase tools 读取失败。", error);
     return null;
+  }
+}
+
+async function loadHomeStats() {
+  const statElements = document.querySelectorAll("[data-home-stat]");
+  if (statElements.length === 0) return;
+
+  const config = getSupabaseConfig();
+  if (!config) {
+    console.warn("[home-stats] Supabase not configured, keeping defaults");
+    return;
+  }
+
+  console.log("[home-stats] loading");
+  const TABLES = ["tools", "resources", "tutorials", "cases"];
+
+  try {
+    const counts = await Promise.all(
+      TABLES.map(async (table) => {
+        try {
+          const response = await fetch(
+            `${config.url}/rest/v1/${table}?select=id&status=eq.published&limit=1`,
+            {
+              cache: "no-store",
+              headers: {
+                apikey: config.anonKey,
+                Authorization: `Bearer ${config.anonKey}`,
+                Prefer: "count=exact"
+              }
+            }
+          );
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const contentRange = response.headers.get("content-range");
+          const match = contentRange && contentRange.match(/\/(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        } catch (error) {
+          console.warn(`[home-stats] ${table} failed`, error);
+          return null;
+        }
+      })
+    );
+
+    const stats = { tools: counts[0], resources: counts[1], tutorials: counts[2], cases: counts[3] };
+    console.log("[home-stats] loaded", stats);
+
+    statElements.forEach((el) => {
+      const type = el.dataset.homeStat;
+      const count = stats[type];
+      if (count !== null && count !== undefined) {
+        el.textContent = formatStatCount(count);
+      }
+    });
+  } catch (error) {
+    console.warn("[home-stats] failed", error);
   }
 }
 
@@ -2605,6 +2667,7 @@ function initHeroParticles() {
 }
 
 initDataRender();
+loadHomeStats();
 initHeroParticles();
 
 if ("IntersectionObserver" in window && !reduceMotion) {
