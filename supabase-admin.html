@@ -903,7 +903,7 @@
             <label class="sb-field">
               分类
               <input name="category" type="text" placeholder="提示词 / 模板 / 教程资料 / 工具清单 / 项目案例 / 安装排查">
-              <small>用来在前台分类筛选和标记资源方向。</small>
+              <small>用于前台分类筛选按钮。建议使用短分类名（不超过 6 个字），细分信息放到标签里。</small>
             </label>
             <label class="sb-field">
               资源状态
@@ -924,22 +924,22 @@
             <label class="sb-field">
               适合人群
               <input name="suitable_for" type="text" placeholder="AI 编程初学者、ComfyUI 新手">
-              <small>帮助读者判断这份资源是否适合自己。</small>
+              <small>显示在详情页顶部 meta 信息栏，帮助读者判断是否适合自己。</small>
             </label>
             <label class="sb-field">
               下载链接
               <input name="download_url" type="url" placeholder="https://example.com/download.zip">
-              <small>填写真实文件下载地址；没有下载链接时留空，前台会显示"资源整理中"。</small>
+              <small>填写真实文件下载地址。留空时前台按钮显示"资源整理中"。</small>
             </label>
             <label class="sb-field">
               官网链接
               <input name="official_url" type="url" placeholder="https://example.com">
-              <small>工具或资源的官方网站地址。</small>
+              <small>工具或资源的官方网站地址。留空时前台不显示该链接。</small>
             </label>
             <label class="sb-field">
               关联教程链接
               <input name="tutorial_url" type="url" placeholder="tutorial-detail.html?slug=xxx">
-              <small>如果这份资源有配套教程，可以填写教程详情页链接。</small>
+              <small>配套教程的详情页链接。留空时前台不显示该链接。</small>
             </label>
             <label class="sb-field">
               封面图链接
@@ -949,7 +949,7 @@
             <label class="sb-field full">
               资源简介
               <textarea name="description" placeholder="用一两句话说明这份资源是什么、能帮读者解决什么问题。"></textarea>
-              <small>会显示在资源卡片和详情页顶部。</small>
+              <small>显示在资源列表卡片和详情页顶部一句话简介区域。</small>
             </label>
             <label class="sb-field full">
               资源详细说明
@@ -961,7 +961,7 @@
                 <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
               </div>
               <textarea name="detail_content" placeholder="资源的详细说明，支持 Markdown 写法。"></textarea>
-              <small>支持 Markdown 写法，可以用上面的按钮快速插入标题、提示、代码块和分割线。</small>
+              <small>详情页「资源说明」区块的内容。支持 Markdown。如果留空，前台不显示该区块。</small>
             </label>
             <div class="sb-upload-box" id="resourceImageUploadBox">
               <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后链接会自动写入封面图字段。</p>
@@ -982,6 +982,21 @@
                 <button id="resourceUseCoverButton" class="sb-button ghost" type="button">设为封面图</button>
               </div>
             </div>
+            <label class="sb-field full">
+              使用方法
+              <textarea name="usage_steps" placeholder="每行写一个步骤标题和说明，用逗号分隔。例如：&#10;第一步：确认工具环境，先检查本地是否已安装所需软件和依赖。&#10;第二步：下载并解压资源文件，放置到正确路径。&#10;第三步：按教程跑通流程，验证每个环节的输出结果。"></textarea>
+              <small>每行一个步骤。前台资源详情页会在「使用方法」区块按行展示。如果留空，前台不显示这个区块。</small>
+            </label>
+            <label class="sb-field full">
+              注意事项
+              <textarea name="notes" placeholder="每行写一条注意事项。例如：&#10;下载前请确认你的工具版本和系统环境。&#10;部分模型文件较大，建议在网络稳定时下载。&#10;示例内容可根据你的实际情况删改。"></textarea>
+              <small>每行一条注意事项。前台资源详情页会在「注意事项」区块显示。如果留空，前台不显示这个区块。</small>
+            </label>
+            <label class="sb-field full">
+              常见问题
+              <textarea name="faq" placeholder="每行一个问答，用「问题：答案」格式。例如：&#10;这个资源适合新手吗？：适合，建议先从简介和使用步骤看起。&#10;下载后怎么使用？：按照使用方法里的步骤逐步操作。"></textarea>
+              <small>每行一条 FAQ，用中文冒号或英文冒号分隔问题和答案。前台会在「常见问题」区块显示。如果留空，前台不显示这个区块。</small>
+            </label>
             <label class="sb-field full">
               标签
               <input name="tags" type="text" placeholder="Codex,提示词,项目需求,教程配套">
@@ -2316,6 +2331,9 @@
         official_url: form.elements.official_url.value.trim(),
         tutorial_url: form.elements.tutorial_url.value.trim(),
         cover_url: form.elements.cover_url.value.trim(),
+        usage_steps: form.elements.usage_steps.value,
+        notes: form.elements.notes.value,
+        faq: form.elements.faq.value,
         tags: parseTags(form.elements.tags.value),
         resource_status: form.elements.resource_status.value,
         status: form.elements.status.value,
@@ -2336,6 +2354,9 @@
       form.elements.official_url.value = resource.official_url || "";
       form.elements.tutorial_url.value = resource.tutorial_url || "";
       form.elements.cover_url.value = resource.cover_url || "";
+      form.elements.usage_steps.value = typeof resource.usage_steps === "string" ? resource.usage_steps : (Array.isArray(resource.usage_steps) ? resource.usage_steps.map(function(s) { return typeof s === "object" ? (s.title ? s.title + "：" + (s.description || "") : "") : s; }).filter(Boolean).join("\n") : "");
+      form.elements.notes.value = Array.isArray(resource.notes) ? resource.notes.join("\n") : (resource.notes || "");
+      form.elements.faq.value = Array.isArray(resource.faq) ? resource.faq.map(function(f) { return (f.question || "") + "：" + (f.answer || ""); }).join("\n") : (resource.faq || "");
       form.elements.tags.value = tagsToInput(resource.tags);
       form.elements.resource_status.value = resource.resource_status || "整理中";
       form.elements.status.value = resource.status || "draft";

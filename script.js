@@ -230,13 +230,10 @@ function normalizeFaq(value) {
 function normalizeFrontItem(key, source) {
   const item = { ...source };
   if (key === "resources") {
-    item.detailContent ||= `这份资源围绕「${item.title || "资源"}」整理，适合在做项目前先统一需求、检查准备材料，并把可复用的方法沉淀下来。你可以先按步骤通读，再结合自己的工具环境补充真实链接和文件。`;
-    item.usageSteps = toArray(item.usageSteps);
-    if (item.usageSteps.length === 0) item.usageSteps = ["先阅读资源简介和适合人群，确认是否匹配当前任务。", "按照资源里的清单或模板填写自己的项目情况。", "结合相关教程或案例复盘，补齐下载文件和真实交付材料。"];
+    item.detailContent = firstValue(item.detailContent, item.detail_content, item.description) || "";
+    item.usageSteps = toArray(item.usageSteps || item.usage_steps);
     item.notes = toArray(item.notes);
-    if (item.notes.length === 0) item.notes = ["下载链接为 # 时表示资源还在整理中。", "示例内容可以直接替换成你的真实资料说明。"];
     item.faq = normalizeFaq(item.faq);
-    if (item.faq.length === 0) item.faq = [{ question: "这个资源适合新手吗？", answer: "适合。建议先从简介和使用步骤看起，再根据自己的场景做删改。" }];
     item.relatedResourceIds = toIdArray(item.relatedResourceIds || item.relatedResourceId);
   }
   if (key === "tutorials") {
@@ -412,6 +409,9 @@ function normalizeSupabaseResource(row) {
     officialUrl: firstValue(row?.official_url, "#"),
     coverUrl: row?.cover_url || "",
     tags: Array.isArray(row?.tags) ? row.tags : [],
+    notes: Array.isArray(row?.notes) ? row.notes : (row?.notes ? String(row.notes).split(/[\n\r]+/).map(function(s) { return s.trim(); }).filter(Boolean) : []),
+    usage_steps: row?.usage_steps || null,
+    faq: row?.faq || null,
     resourceStatus: firstValue(row?.resource_status, "整理中"),
     status: row?.status || "draft",
     updatedAt: firstValue(row?.updated_at, row?.created_at),
@@ -1033,10 +1033,9 @@ function renderToolCards(container) {
   if (activeSceneButton) activeScene = activeSceneButton.dataset.toolScene || "all";
 
   var filtered = displayItems.filter(function(item) {
-    // Category filter
+    // Category filter — 使用关键词匹配而非精确匹配
     if (activeCategory !== "all") {
-      var categories = normalizeCategories(item, "category");
-      if (!categories.includes(activeCategory)) return false;
+      if (!matchesToolCategory(item, activeCategory)) return false;
     }
     // Scene filter
     if (activeScene !== "all") {
@@ -1144,6 +1143,35 @@ function matchesToolScene(item, scene) {
   };
 
   var keywords = sceneKeywords[scene] || [];
+  return keywords.some(function(kw) { return text.includes(kw.toLowerCase()); });
+}
+
+function matchesToolCategory(item, category) {
+  var text = [
+    item.name, item.title,
+    item.category,
+    item.description, item.summary,
+    item.suitableFor, item.suitable_for,
+    item.usageTip, item.usage_tip,
+    Array.isArray(item.tags) ? item.tags.join(" ") : String(item.tags || "")
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  var categoryKeywords = {
+    "AI 图像": ["comfyui", "ai图像", "ai图片", "生图", "绘图", "stable diffusion", "sd", "midjourney", "图像生成", "图片生成", "ai绘画"],
+    "AI 视频": ["comfyui", "ai视频", "生视频", "视频生成", "ltx", "wan", "seedance", "可灵", "即梦", "runway", "视频"],
+    "AI 对话": ["chatgpt", "claude", "gemini", "deepseek", "对话", "聊天", "ai对话", "ai助手"],
+    "AI 编程": ["codex", "claude code", "编程", "写代码", "代码", "开发", "编程助手", "命令行"],
+    "AI 办公": ["wps ai", "办公", "文档", "表格", "ppt", "演示", "ai办公"],
+    "AI 自动化": ["openclaw", "coze", "自动化", "工作流", "智能体", "机器人", "自动", "ai自动化"],
+    "本地部署": ["comfyui", "本地部署", "本地", "部署", "离线", "自部署", "开源", "模型", "节点", "gpu", "工作流"]
+  };
+
+  var keywords = categoryKeywords[category] || [];
+  if (keywords.length === 0) {
+    // 未知分类时回退到精确匹配
+    var categories = normalizeCategories(item, "category");
+    return categories.includes(category);
+  }
   return keywords.some(function(kw) { return text.includes(kw.toLowerCase()); });
 }
 
@@ -1921,10 +1949,17 @@ async function renderResourceDetail(container, data) {
   var audience = getResourceField(item, "suitableFor", "targetUser", "audience") || "—";
   var related = relatedResources(item, resources, 3);
   var tags = toArray(item.tags);
-  var detailContent = getResourceField(item, "detailContent", "content", "description") || "详细说明正在整理中。";
+  var detailContent = getResourceField(item, "detailContent", "content", "description") || "";
   var usageSteps = item.usageSteps || item.steps || [];
   var notes = toArray(item.notes || item.tips);
   var faqItems = normalizeFaq(item.faq);
+  var officialUrl = getResourceField(item, "officialUrl", "official_url");
+
+  // 检查 usageSteps 是否包含真实步骤（排除自动生成的默认步骤标题）
+  var hasRealSteps = usageSteps.length > 0 && usageSteps.some(function(s) {
+    var title = (typeof s === "object" ? s.title : s) || "";
+    return title && !/^(先阅读资源简介|按照资源里的清单|结合相关教程|查看下载资源)/.test(title);
+  });
 
   var downloadBtn = "";
   if (hasDownload) {
@@ -1940,6 +1975,88 @@ async function renderResourceDetail(container, data) {
     tutorialBtn = '<a class="btn btn-secondary resource-dl-btn" href="' + escapeHTML(tutorialUrl) + '"><span>相关教程</span><i aria-hidden="true"></i></a>';
   }
 
+  // 构建正文区块 — 只有有真实内容才显示
+  var mainSections = [];
+
+  // 1. 资源说明
+  if (detailContent) {
+    mainSections.push(
+      '<section class="detail-card" id="res-detail">',
+        '<p class="eyebrow">Overview</p>',
+        '<h2>资源说明</h2>',
+        renderArticleMarkdown(detailContent),
+      '</section>'
+    );
+  }
+
+  // 2. 使用方法 — 只有真实步骤才显示
+  if (hasRealSteps) {
+    mainSections.push(
+      '<section class="detail-card" id="res-steps">',
+        '<p class="eyebrow">Steps</p>',
+        '<h2>使用方法</h2>',
+        renderArticleSteps(usageSteps),
+      '</section>'
+    );
+  }
+
+  // 3. 注意事项
+  if (notes.length > 0) {
+    mainSections.push(
+      '<section class="detail-card" id="res-notes">',
+        '<p class="eyebrow">Notes</p>',
+        '<h2>注意事项</h2>',
+        renderArticleList(notes),
+      '</section>'
+    );
+  }
+
+  // 4. 常见问题
+  if (faqItems.length > 0) {
+    mainSections.push(
+      '<section class="detail-card" id="res-faq">',
+        '<p class="eyebrow">FAQ</p>',
+        '<h2>常见问题</h2>',
+        renderArticleFaq(faqItems),
+      '</section>'
+    );
+  }
+
+  // 5. 相关链接 — 只有多个链接时用大卡片，1-2 个用紧凑小横条
+  var linkItems = [];
+  if (hasDownload) linkItems.push('<a class="card-link" href="' + escapeHTML(downloadUrl) + '" target="_blank" rel="noopener"><span>下载资源</span><i aria-hidden="true"></i></a>');
+  if (officialUrl && officialUrl !== "#") linkItems.push('<a class="card-link" href="' + escapeHTML(officialUrl) + '" target="_blank" rel="noopener"><span>官网链接</span><i aria-hidden="true"></i></a>');
+  if (hasTutorial) linkItems.push('<a class="card-link" href="' + escapeHTML(tutorialUrl) + '"><span>关联教程</span><i aria-hidden="true"></i></a>');
+  if (linkItems.length > 0) {
+    if (linkItems.length <= 2) {
+      mainSections.push(
+        '<section class="resource-links-compact" id="res-links">',
+          '<span class="resource-links-compact-label">Links</span>',
+          linkItems.join(""),
+        '</section>'
+      );
+    } else {
+      mainSections.push(
+        '<section class="detail-card" id="res-links">',
+          '<p class="eyebrow">Links</p>',
+          '<h2>相关链接</h2>',
+          '<div class="resource-links-list">' + linkItems.join("") + '</div>',
+        '</section>'
+      );
+    }
+  }
+
+  // 6. 关联资源
+  if (related.length > 0) {
+    mainSections.push(
+      '<section class="detail-card" id="res-related">',
+        '<p class="eyebrow">Related</p>',
+        '<h2>关联教程与资源</h2>',
+        renderArticleRelatedResources(related),
+      '</section>'
+    );
+  }
+
   container.innerHTML = [
     '<section class="detail-shell reveal is-visible">',
       '<a class="text-action back-link" href="resources.html">← 返回资源下载</a>',
@@ -1951,7 +2068,7 @@ async function renderResourceDetail(container, data) {
           '<span class="resource-status-badge status-' + escapeHTML(statusInfo.type) + '">' + escapeHTML(statusInfo.label) + '</span>',
         '</div>',
         '<h1>' + escapeHTML(item.title || "未命名资源") + '</h1>',
-        '<p class="resource-detail-desc">' + escapeHTML(item.description || item.summary || "简介正在整理中。") + '</p>',
+        '<p class="resource-detail-desc">' + escapeHTML(item.description || item.summary || "") + '</p>',
         '<div class="resource-detail-meta-row">',
           '<span><strong>格式/大小</strong>' + escapeHTML(formatSize) + '</span>',
           '<span><strong>更新时间</strong>' + escapeHTML(formatDate(item.updatedAt)) + '</span>',
@@ -1961,25 +2078,11 @@ async function renderResourceDetail(container, data) {
 
       // ── 主内容 + 侧边栏 ──
       '<div class="resource-detail-layout">',
-        // 左侧主内容
         '<article class="resource-detail-main">',
-          '<section class="detail-card" id="res-what">',
-            '<p class="eyebrow">Overview</p>',
-            '<h2>这个资源是什么？</h2>',
-            renderArticleMarkdown(detailContent),
-          '</section>',
-          '<section class="detail-card" id="res-who">',
-            '<p class="eyebrow">Audience</p>',
-            '<h2>适合谁用？</h2>',
-            '<p class="detail-text">' + escapeHTML(audience) + '</p>',
-          '</section>',
-          usageSteps.length ? '<section class="detail-card" id="res-steps"><p class="eyebrow">Steps</p><h2>使用方法</h2>' + renderArticleSteps(usageSteps) + '</section>' : "",
-          notes.length ? '<section class="detail-card" id="res-notes"><p class="eyebrow">Notes</p><h2>注意事项</h2>' + renderArticleList(notes) + '</section>' : "",
-          faqItems.length ? '<section class="detail-card" id="res-faq"><p class="eyebrow">FAQ</p><h2>常见问题</h2>' + renderArticleFaq(faqItems) + '</section>' : "",
-          related.length ? '<section class="detail-card" id="res-related"><p class="eyebrow">Related</p><h2>关联教程与资源</h2>' + renderArticleRelatedResources(related) + '</section>' : "",
-          '<section class="contact-cta detail-cta">',
-            '<div><p class="eyebrow">Collaboration</p><h2>需要帮你安装调试或跑通工具？</h2><p>可以把当前资源、工具环境和卡住的位置发给我，一起拆解下一步。</p></div>',
-            '<button class="btn btn-primary js-contact-modal" type="button"><span>联系合作</span><i aria-hidden="true"></i></button>',
+          mainSections.length > 0 ? mainSections.join("\n") : '<section class="detail-card"><p class="eyebrow">Overview</p><h2>资源说明</h2><p class="detail-text">详细说明正在整理中，可以先查看资源简介和适合人群了解基本方向。</p></section>',
+          '<section class="detail-cta">',
+            '<div><h2>需要帮你跑通这个资源？</h2><p>如果安装、模型路径、节点报错或工作流运行卡住，可以联系我协助排查。</p></div>',
+            '<button class="btn btn-primary js-contact-modal" type="button"><span>咨询调试</span><i aria-hidden="true"></i></button>',
           '</section>',
         '</article>',
 
