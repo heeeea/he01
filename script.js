@@ -870,6 +870,130 @@ function renderArticleMarkdown(value) {
   return `<div class="article-prose">${output.join("")}</div>`;
 }
 
+// ── Resource detail rich-text formatter ──
+// Handles: newline→paragraph, URL→link, Chinese/English numbered lists,
+// unordered lists, inline code, bold. Always escapes HTML first.
+
+function formatResourceInline(value) {
+  return escapeHTML(value)
+    .replace(/(https?:\/\/[^\s<>"'，。；：、）\)】」]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="resource-link">$1</a>')
+    .replace(/`([^`]+)`/g, '<code class="resource-inline-code">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function formatResourceText(value) {
+  var raw = String(value || "");
+  if (!raw.trim()) return "";
+
+  var lines = raw.replace(/\r\n/g, "\n").split("\n");
+  var output = [];
+  var inList = false;
+  var listType = "";
+
+  function closeList() {
+    if (inList) {
+      output.push(listType === "ol" ? "</ol>" : "</ul>");
+      inList = false;
+      listType = "";
+    }
+  }
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.trim();
+
+    // Empty line → close list, paragraph break
+    if (!trimmed) {
+      closeList();
+      continue;
+    }
+
+    // Ordered list: "1、", "1.", "1)", "1．"
+    var orderedMatch = trimmed.match(/^(\d+)[、.)．]\s*(.+)$/);
+    if (orderedMatch) {
+      if (!inList || listType !== "ol") {
+        closeList();
+        inList = true;
+        listType = "ol";
+        output.push('<ol class="resource-rich-list">');
+      }
+      output.push("<li>" + formatResourceInline(orderedMatch[2]) + "</li>");
+      continue;
+    }
+
+    // Unordered list: "- ", "• ", "* "
+    var unorderedMatch = trimmed.match(/^[-•*]\s+(.+)$/);
+    if (unorderedMatch) {
+      if (!inList || listType !== "ul") {
+        closeList();
+        inList = true;
+        listType = "ul";
+        output.push('<ul class="resource-rich-list">');
+      }
+      output.push("<li>" + formatResourceInline(unorderedMatch[1]) + "</li>");
+      continue;
+    }
+
+    // ### / ## heading (only if line starts with #)
+    var headingMatch = trimmed.match(/^(#{2,4})\s+(.+)$/);
+    if (headingMatch) {
+      closeList();
+      var level = headingMatch[1].length;
+      output.push("<h" + level + ">" + formatResourceInline(headingMatch[2]) + "</h" + level + ">");
+      continue;
+    }
+
+    // Regular line → accumulate into paragraph
+    closeList();
+    output.push("<p>" + formatResourceInline(trimmed) + "</p>");
+  }
+
+  closeList();
+  return '<div class="resource-rich-text">' + output.join("") + "</div>";
+}
+
+// Format usage steps that may be a string or an array
+function formatResourceSteps(value) {
+  var items = Array.isArray(value) ? value : (value ? String(value).replace(/\r\n/g, "\n").split("\n").map(function(s) { return s.trim(); }).filter(Boolean) : []);
+  if (items.length === 0) return "";
+  var html = ['<ol class="resource-steps-list">'];
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var title = typeof item === "object" ? (item.title || "") : String(item || "");
+    var desc = typeof item === "object" ? (item.description || "") : "";
+    if (!title && !desc) continue;
+    html.push("<li>");
+    html.push('<span class="resource-step-index">' + (i + 1) + "</span>");
+    html.push("<div>");
+    if (title) html.push("<strong>" + formatResourceInline(title) + "</strong>");
+    if (desc) html.push("<p>" + formatResourceInline(desc) + "</p>");
+    html.push("</div>");
+    html.push("</li>");
+  }
+  html.push("</ol>");
+  return '<div class="resource-rich-text">' + html.join("") + "</div>";
+}
+
+// Format notes — array of strings, each gets inline formatting
+function formatResourceNotes(items) {
+  var list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (list.length === 0) return "";
+  return '<div class="resource-rich-text"><ul class="resource-notes-list">' + list.map(function(item) {
+    return "<li>" + formatResourceInline(String(item)) + "</li>";
+  }).join("") + "</ul></div>";
+}
+
+// Format FAQ — array of {question, answer} objects
+function formatResourceFaq(items) {
+  var list = Array.isArray(items) ? items.filter(function(f) { return f && (f.question || f.answer); }) : [];
+  if (list.length === 0) return "";
+  return '<div class="resource-rich-text"><dl class="resource-faq-list">' + list.map(function(item) {
+    var q = item.question || "常见问题";
+    var a = item.answer || "";
+    return '<div class="resource-faq-item"><dt>Q: ' + formatResourceInline(String(q)) + "</dt><dd>" + formatResourceInline(String(a)) + "</dd></div>";
+  }).join("") + "</dl></div>";
+}
+
 function renderListItems(items) {
   const list = toArray(items);
   if (list.length === 0) return `<p class="detail-muted">内容正在整理中。</p>`;
@@ -1955,12 +2079,6 @@ async function renderResourceDetail(container, data) {
   var faqItems = normalizeFaq(item.faq);
   var officialUrl = getResourceField(item, "officialUrl", "official_url");
 
-  // 检查 usageSteps 是否包含真实步骤（排除自动生成的默认步骤标题）
-  var hasRealSteps = usageSteps.length > 0 && usageSteps.some(function(s) {
-    var title = (typeof s === "object" ? s.title : s) || "";
-    return title && !/^(先阅读资源简介|按照资源里的清单|结合相关教程|查看下载资源)/.test(title);
-  });
-
   var downloadBtn = "";
   if (hasDownload) {
     downloadBtn = '<a class="btn btn-primary resource-dl-btn" href="' + escapeHTML(downloadUrl) + '" target="_blank" rel="noopener"><span>下载资源</span><i aria-hidden="true"></i></a>';
@@ -1984,40 +2102,43 @@ async function renderResourceDetail(container, data) {
       '<section class="detail-card" id="res-detail">',
         '<p class="eyebrow">Overview</p>',
         '<h2>资源说明</h2>',
-        renderArticleMarkdown(detailContent),
+        formatResourceText(detailContent),
       '</section>'
     );
   }
 
   // 2. 使用方法 — 只有真实步骤才显示
-  if (hasRealSteps) {
+  var stepsHtml = formatResourceSteps(usageSteps);
+  if (stepsHtml) {
     mainSections.push(
       '<section class="detail-card" id="res-steps">',
         '<p class="eyebrow">Steps</p>',
         '<h2>使用方法</h2>',
-        renderArticleSteps(usageSteps),
+        stepsHtml,
       '</section>'
     );
   }
 
   // 3. 注意事项
-  if (notes.length > 0) {
+  var notesHtml = formatResourceNotes(notes);
+  if (notesHtml) {
     mainSections.push(
       '<section class="detail-card" id="res-notes">',
         '<p class="eyebrow">Notes</p>',
         '<h2>注意事项</h2>',
-        renderArticleList(notes),
+        notesHtml,
       '</section>'
     );
   }
 
   // 4. 常见问题
-  if (faqItems.length > 0) {
+  var faqHtml = formatResourceFaq(faqItems);
+  if (faqHtml) {
     mainSections.push(
       '<section class="detail-card" id="res-faq">',
         '<p class="eyebrow">FAQ</p>',
         '<h2>常见问题</h2>',
-        renderArticleFaq(faqItems),
+        faqHtml,
       '</section>'
     );
   }
