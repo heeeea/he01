@@ -694,148 +694,166 @@
     </section>
 
     <div class="sb-module-tabs active" id="moduleTabs" aria-label="模块切换">
-      <button class="sb-module-tab active" type="button" data-module="tutorials">教程管理</button>
+      <button class="sb-module-tab active" type="button" data-module="tools">AI 工具管理</button>
       <button class="sb-module-tab" type="button" data-module="resources">资源管理</button>
+      <button class="sb-module-tab" type="button" data-module="tutorials">教程管理</button>
       <button class="sb-module-tab" type="button" data-module="cases">案例管理</button>
-      <button class="sb-module-tab" type="button" data-module="tools">AI 工具管理</button>
     </div>
 
-    <main id="adminView" class="sb-admin-main" aria-label="Supabase 管理后台">
-      <div class="sb-module-panel active" data-module-panel="tutorials">
-      <section class="sb-panel">
-        <div class="sb-panel-head">
-          <div>
-            <h2>教程列表</h2>
-            <p id="listSummary">登录后读取 tutorials 表。</p>
-          </div>
-          <div class="sb-actions" style="margin-top: 0;">
-            <button id="refreshButton" class="sb-button ghost" type="button">刷新列表</button>
-            <button id="newButton" class="sb-button primary" type="button">新增教程</button>
-          </div>
-        </div>
-        <div class="sb-list-tools" aria-label="教程筛选">
-          <input id="tutorialSearchInput" class="sb-list-search" type="search" placeholder="搜索教程标题 / 文章标识 / 教程简介" autocomplete="off">
-          <div class="sb-list-filter-row">
-            <select id="categoryFilter" aria-label="分类筛选">
-              <option value="all">全部分类</option>
-            </select>
-            <select id="statusFilter" aria-label="状态筛选">
-              <option value="all">全部状态</option>
-              <option value="draft">草稿</option>
-              <option value="published">已发布</option>
-            </select>
-            <button id="clearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
-          </div>
-        </div>
-        <div id="tutorialList" class="sb-list"></div>
-      </section>
-
-      <section class="sb-panel sb-editor">
-        <div class="sb-editor-title">
-          <div>
-            <h2 id="editorHeading">新增教程</h2>
-            <p id="editorSubheading">保存后会写入 Supabase tutorials 表。</p>
-          </div>
-          <button id="resetFormButton" class="sb-button ghost" type="button">清空表单</button>
-        </div>
-
-        <form id="tutorialForm" class="sb-form-grid">
-          <div id="previewArea" class="sb-preview-area" aria-live="polite">
-            <p id="previewHint"></p>
-            <a id="previewArticleButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览文章</a>
-          </div>
-          <label class="sb-field">
-            文章标识 / 链接名
-            <input name="slug" type="text" placeholder="codex-ai-resource-site" required>
-            <small>建议使用英文小写和短横线，例如：codex-ai-resource-site。这个会出现在文章链接里，不建议用中文长句。</small>
-          </label>
-          <label class="sb-field">
-            发布状态
-            <select name="status">
-              <option value="draft">草稿 draft</option>
-              <option value="published">已发布 published</option>
-            </select>
-            <small>草稿不会作为正式发布内容展示；已发布会进入前台读取范围。</small>
-          </label>
-          <label class="sb-field full">
-            教程标题
-            <input name="title" type="text" placeholder="教程标题" required>
-            <small>写给读者看的标题，建议清楚说明这篇教程解决什么问题。</small>
-          </label>
-          <label class="sb-field">
-            分类
-            <input name="category" type="text" placeholder="Codex / ComfyUI / OpenClaw / Claude Code">
-            <small>用来在列表和详情页标记教程方向。</small>
-          </label>
-          <label class="sb-field">
-            难度
-            <input name="difficulty" type="text" placeholder="入门 / 进阶 / 实战">
-            <small>给读者一个学习门槛参考。</small>
-          </label>
-          <label class="sb-field">
-            阅读时间
-            <input name="reading_time" type="text" placeholder="10 分钟">
-            <small>可以写“10 分钟”“约 15 分钟”等。</small>
-          </label>
-          <label class="sb-field">
-            封面图链接
-            <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
-            <small>填写图片网址；没有封面时可以先留空。</small>
-          </label>
-          <label class="sb-field full">
-            教程简介
-            <textarea name="summary" placeholder="教程简介"></textarea>
-            <small>用一两句话说明读者能学到什么。</small>
-          </label>
-          <label class="sb-field full">
-            教程正文
-            <div class="sb-markdown-tools" aria-label="正文快捷插入">
-              <button class="sb-button ghost" type="button" data-insert-markdown="h2">插入二级标题</button>
-              <button class="sb-button ghost" type="button" data-insert-markdown="h3">插入三级标题</button>
-              <button class="sb-button ghost" type="button" data-insert-markdown="tip">插入提示框</button>
-              <button class="sb-button ghost" type="button" data-insert-markdown="code">插入代码块</button>
-              <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
+    <main id="adminView" class="sb-admin-main" aria-label="Supabase 管理后台"><!-- ========== AI 工具管理模块 ========== -->
+      <div class="sb-module-panel active" data-module-panel="tools">
+        <section class="sb-panel">
+          <div class="sb-panel-head">
+            <div>
+              <h2>AI 工具列表</h2>
+              <p>对应前台：AI工具导航</p>
+              <p id="toolListSummary">登录后读取 tools 表。</p>
             </div>
-            <textarea name="content" placeholder="正文内容，支持换行保存。"></textarea>
-            <small>支持 Markdown 写法，可以用上面的按钮快速插入标题、提示、代码块和分割线。</small>
-          </label>
-          <div class="sb-upload-box" id="imageUploadBox">
-            <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后会自动插入正文光标位置。</p>
-            <label class="sb-field" style="margin: 0;">
-              图片说明
-              <input id="imageAltInput" type="text" placeholder="例如：Codex 对话截图">
+            <div class="sb-actions" style="margin-top: 0;">
+              <button id="toolRefreshButton" class="sb-button ghost" type="button">刷新列表</button>
+              <button id="toolNewButton" class="sb-button primary" type="button">新增工具</button>
+            </div>
+          </div>
+          <div class="sb-list-tools" aria-label="工具筛选">
+            <input id="toolSearchInput" class="sb-list-search" type="search" placeholder="搜索工具名称 / 标识 / 简介 / 分类 / 适合人群 / 使用建议 / 标签" autocomplete="off">
+            <div class="sb-list-filter-row">
+              <select id="toolCategoryFilter" aria-label="分类筛选">
+                <option value="all">全部分类</option>
+              </select>
+              <select id="toolStatusFilter" aria-label="发布状态筛选">
+                <option value="all">全部发布状态</option>
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+              </select>
+              <select id="toolToolStatusFilter" aria-label="工具状态筛选">
+                <option value="all">全部工具状态</option>
+                <option value="推荐">推荐</option>
+                <option value="常用">常用</option>
+                <option value="进阶">进阶</option>
+                <option value="整理中">整理中</option>
+                <option value="需联系">需联系</option>
+              </select>
+              <button id="toolClearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
+            </div>
+          </div>
+          <div id="toolList" class="sb-list"></div>
+        </section>
+
+        <section class="sb-panel sb-editor">
+          <div class="sb-editor-title">
+            <div>
+              <h2 id="toolEditorHeading">新增工具</h2>
+              <p id="toolEditorSubheading">保存后会写入 Supabase tools 表。</p>
+            </div>
+            <button id="toolResetFormButton" class="sb-button ghost" type="button">清空表单</button>
+          </div>
+
+          <form id="toolForm" class="sb-form-grid">
+            <div id="toolPreviewArea" class="sb-preview-area" aria-live="polite">
+              <p id="toolPreviewHint"></p>
+              <a id="toolPreviewButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览工具</a>
+            </div>
+            <label class="sb-field">
+              工具标识 / 链接名
+              <input name="slug" type="text" placeholder="chatgpt" required>
+              <small>建议使用英文小写和短横线，例如：chatgpt、claude-code。</small>
             </label>
-            <div class="sb-actions" style="margin: 0;">
-              <input id="imageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
-              <button id="uploadImageButton" class="sb-button ghost" type="button">上传图片并插入正文</button>
-            </div>
-            <div id="uploadStatus" class="sb-upload-status">上传状态：未上传</div>
-            <div id="uploadPreview" class="sb-upload-preview">
+            <label class="sb-field">
+              发布状态
+              <select name="status">
+                <option value="draft">草稿 draft</option>
+                <option value="published">已发布 published</option>
+              </select>
+              <small>草稿不会在正式前台展示；已发布会进入前台读取范围。</small>
+            </label>
+            <label class="sb-field full">
+              工具名称
+              <input name="name" type="text" placeholder="ChatGPT" required>
+              <small>工具的名称，会显示在卡片标题位置。</small>
+            </label>
+            <label class="sb-field">
+              工具分类
+              <input name="category" type="text" placeholder="AI 对话 / AI 编程 / AI 图像 / AI 视频 / AI 办公 / AI 自动化 / 本地部署">
+              <small>用来在前台分类筛选和标记工具方向。</small>
+            </label>
+            <label class="sb-field">
+              工具状态
+              <select name="tool_status">
+                <option value="推荐">推荐</option>
+                <option value="常用">常用</option>
+                <option value="进阶">进阶</option>
+                <option value="整理中">整理中</option>
+                <option value="需联系">需联系</option>
+              </select>
+              <small>前台会根据工具状态显示不同标签和按钮。</small>
+            </label>
+            <label class="sb-field full">
+              工具简介
+              <textarea name="description" placeholder="用一两句话说明这个工具是什么、适合做什么。"></textarea>
+              <small>会显示在工具卡片上。</small>
+            </label>
+            <label class="sb-field">
+              适合人群
+              <input name="suitable_for" type="text" placeholder="新手、内容创作者、项目负责人">
+              <small>帮助读者判断这个工具是否适合自己。</small>
+            </label>
+            <label class="sb-field">
+              使用建议
+              <input name="usage_tip" type="text" placeholder="先用于需求整理和方案拆解，再接入具体工具执行。">
+              <small>给读者的使用建议，会显示在工具卡片上。</small>
+            </label>
+            <label class="sb-field">
+              官网链接
+              <input name="official_url" type="url" placeholder="https://example.com">
+              <small>工具或服务的官方网站地址。</small>
+            </label>
+            <label class="sb-field">
+              教程链接
+              <input name="tutorial_url" type="url" placeholder="tutorial-detail.html?slug=xxx">
+              <small>如果这个工具有配套教程，可以填写教程详情页链接。</small>
+            </label>
+            <label class="sb-field">
+              封面图链接
+              <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
+              <small>填写图片网址；没有封面时可以先留空。</small>
+            </label>
+            <div class="sb-upload-box" id="toolImageUploadBox">
+              <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后链接会自动写入封面图字段。</p>
               <label class="sb-field" style="margin: 0;">
-                上传成功后的图片链接
-                <input id="uploadedImageUrl" type="url" readonly>
+                图片说明
+                <input id="toolImageAltInput" type="text" placeholder="例如：ChatGPT 截图">
               </label>
-              <button id="insertLastImageButton" class="sb-button ghost" type="button">再次插入正文</button>
+              <div class="sb-actions" style="margin: 0;">
+                <input id="toolImageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                <button id="toolUploadImageButton" class="sb-button ghost" type="button">上传封面图</button>
+              </div>
+              <div id="toolUploadStatus" class="sb-upload-status">上传状态：未上传</div>
+              <div id="toolUploadPreview" class="sb-upload-preview">
+                <label class="sb-field" style="margin: 0;">
+                  上传成功后的图片链接
+                  <input id="toolUploadedImageUrl" type="url" readonly>
+                </label>
+                <button id="toolUseCoverButton" class="sb-button ghost" type="button">设为封面图</button>
+              </div>
             </div>
-          </div>
-          <label class="sb-field full">
-            标签
-            <input name="tags" type="text" placeholder="Codex,AI建站,资源库">
-            <small>多个标签请用英文逗号分隔，例如：Codex,AI建站,资源库。</small>
-          </label>
-          <div class="sb-actions full">
-            <button id="saveButton" class="sb-button primary" type="submit">保存教程</button>
-          </div>
-        </form>
-      </section>
+            <label class="sb-field full">
+              标签
+              <input name="tags" type="text" placeholder="AI 对话,写作,项目构思">
+              <small>多个标签请用英文逗号分隔，例如：AI 对话,写作,项目构思。</small>
+            </label>
+            <div class="sb-actions full">
+              <button id="toolSaveButton" class="sb-button primary" type="submit">保存工具</button>
+            </div>
+          </form>
+        </section>
       </div>
-
       <!-- ========== 资源管理模块 ========== -->
       <div class="sb-module-panel" data-module-panel="resources">
         <section class="sb-panel">
           <div class="sb-panel-head">
             <div>
               <h2>资源列表</h2>
+              <p>对应前台：资源下载</p>
               <p id="resourceListSummary">登录后读取 resources 表。</p>
             </div>
             <div class="sb-actions" style="margin-top: 0;">
@@ -1009,12 +1027,145 @@
         </section>
       </div>
 
+      
+      <!-- ========== 教程管理模块 ========== -->
+      <div class="sb-module-panel" data-module-panel="tutorials">
+      <section class="sb-panel">
+        <div class="sb-panel-head">
+          <div>
+            <h2>教程列表</h2>
+            <p>对应前台：实战教程</p>
+            <p id="listSummary">登录后读取 tutorials 表。</p>
+          </div>
+          <div class="sb-actions" style="margin-top: 0;">
+            <button id="refreshButton" class="sb-button ghost" type="button">刷新列表</button>
+            <button id="newButton" class="sb-button primary" type="button">新增教程</button>
+          </div>
+        </div>
+        <div class="sb-list-tools" aria-label="教程筛选">
+          <input id="tutorialSearchInput" class="sb-list-search" type="search" placeholder="搜索教程标题 / 文章标识 / 教程简介" autocomplete="off">
+          <div class="sb-list-filter-row">
+            <select id="categoryFilter" aria-label="分类筛选">
+              <option value="all">全部分类</option>
+            </select>
+            <select id="statusFilter" aria-label="状态筛选">
+              <option value="all">全部状态</option>
+              <option value="draft">草稿</option>
+              <option value="published">已发布</option>
+            </select>
+            <button id="clearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
+          </div>
+        </div>
+        <div id="tutorialList" class="sb-list"></div>
+      </section>
+
+      <section class="sb-panel sb-editor">
+        <div class="sb-editor-title">
+          <div>
+            <h2 id="editorHeading">新增教程</h2>
+            <p id="editorSubheading">保存后会写入 Supabase tutorials 表。</p>
+          </div>
+          <button id="resetFormButton" class="sb-button ghost" type="button">清空表单</button>
+        </div>
+
+        <form id="tutorialForm" class="sb-form-grid">
+          <div id="previewArea" class="sb-preview-area" aria-live="polite">
+            <p id="previewHint"></p>
+            <a id="previewArticleButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览文章</a>
+          </div>
+          <label class="sb-field">
+            文章标识 / 链接名
+            <input name="slug" type="text" placeholder="codex-ai-resource-site" required>
+            <small>建议使用英文小写和短横线，例如：codex-ai-resource-site。这个会出现在文章链接里，不建议用中文长句。</small>
+          </label>
+          <label class="sb-field">
+            发布状态
+            <select name="status">
+              <option value="draft">草稿 draft</option>
+              <option value="published">已发布 published</option>
+            </select>
+            <small>草稿不会作为正式发布内容展示；已发布会进入前台读取范围。</small>
+          </label>
+          <label class="sb-field full">
+            教程标题
+            <input name="title" type="text" placeholder="教程标题" required>
+            <small>写给读者看的标题，建议清楚说明这篇教程解决什么问题。</small>
+          </label>
+          <label class="sb-field">
+            分类
+            <input name="category" type="text" placeholder="Codex / ComfyUI / OpenClaw / Claude Code">
+            <small>用来在列表和详情页标记教程方向。</small>
+          </label>
+          <label class="sb-field">
+            难度
+            <input name="difficulty" type="text" placeholder="入门 / 进阶 / 实战">
+            <small>给读者一个学习门槛参考。</small>
+          </label>
+          <label class="sb-field">
+            阅读时间
+            <input name="reading_time" type="text" placeholder="10 分钟">
+            <small>可以写“10 分钟”“约 15 分钟”等。</small>
+          </label>
+          <label class="sb-field">
+            封面图链接
+            <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
+            <small>填写图片网址；没有封面时可以先留空。</small>
+          </label>
+          <label class="sb-field full">
+            教程简介
+            <textarea name="summary" placeholder="教程简介"></textarea>
+            <small>用一两句话说明读者能学到什么。</small>
+          </label>
+          <label class="sb-field full">
+            教程正文
+            <div class="sb-markdown-tools" aria-label="正文快捷插入">
+              <button class="sb-button ghost" type="button" data-insert-markdown="h2">插入二级标题</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="h3">插入三级标题</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="tip">插入提示框</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="code">插入代码块</button>
+              <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
+            </div>
+            <textarea name="content" placeholder="正文内容，支持换行保存。"></textarea>
+            <small>支持 Markdown 写法，可以用上面的按钮快速插入标题、提示、代码块和分割线。</small>
+          </label>
+          <div class="sb-upload-box" id="imageUploadBox">
+            <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后会自动插入正文光标位置。</p>
+            <label class="sb-field" style="margin: 0;">
+              图片说明
+              <input id="imageAltInput" type="text" placeholder="例如：Codex 对话截图">
+            </label>
+            <div class="sb-actions" style="margin: 0;">
+              <input id="imageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+              <button id="uploadImageButton" class="sb-button ghost" type="button">上传图片并插入正文</button>
+            </div>
+            <div id="uploadStatus" class="sb-upload-status">上传状态：未上传</div>
+            <div id="uploadPreview" class="sb-upload-preview">
+              <label class="sb-field" style="margin: 0;">
+                上传成功后的图片链接
+                <input id="uploadedImageUrl" type="url" readonly>
+              </label>
+              <button id="insertLastImageButton" class="sb-button ghost" type="button">再次插入正文</button>
+            </div>
+          </div>
+          <label class="sb-field full">
+            标签
+            <input name="tags" type="text" placeholder="Codex,AI建站,资源库">
+            <small>多个标签请用英文逗号分隔，例如：Codex,AI建站,资源库。</small>
+          </label>
+          <div class="sb-actions full">
+            <button id="saveButton" class="sb-button primary" type="submit">保存教程</button>
+          </div>
+        </form>
+      </section>
+      </div>
+
       <!-- ========== 案例管理模块 ========== -->
       <div class="sb-module-panel" data-module-panel="cases">
         <section class="sb-panel">
           <div class="sb-panel-head">
             <div>
               <h2>案例列表</h2>
+              <p>对应前台：作品案例</p>
               <p id="caseListSummary">登录后读取 cases 表。</p>
             </div>
             <div class="sb-actions" style="margin-top: 0;">
@@ -1173,152 +1324,7 @@
         </section>
       </div>
 
-      <!-- ========== AI 工具管理模块 ========== -->
-      <div class="sb-module-panel" data-module-panel="tools">
-        <section class="sb-panel">
-          <div class="sb-panel-head">
-            <div>
-              <h2>AI 工具列表</h2>
-              <p id="toolListSummary">登录后读取 tools 表。</p>
-            </div>
-            <div class="sb-actions" style="margin-top: 0;">
-              <button id="toolRefreshButton" class="sb-button ghost" type="button">刷新列表</button>
-              <button id="toolNewButton" class="sb-button primary" type="button">新增工具</button>
-            </div>
-          </div>
-          <div class="sb-list-tools" aria-label="工具筛选">
-            <input id="toolSearchInput" class="sb-list-search" type="search" placeholder="搜索工具名称 / 标识 / 简介 / 分类 / 适合人群 / 使用建议 / 标签" autocomplete="off">
-            <div class="sb-list-filter-row">
-              <select id="toolCategoryFilter" aria-label="分类筛选">
-                <option value="all">全部分类</option>
-              </select>
-              <select id="toolStatusFilter" aria-label="发布状态筛选">
-                <option value="all">全部发布状态</option>
-                <option value="draft">草稿</option>
-                <option value="published">已发布</option>
-              </select>
-              <select id="toolToolStatusFilter" aria-label="工具状态筛选">
-                <option value="all">全部工具状态</option>
-                <option value="推荐">推荐</option>
-                <option value="常用">常用</option>
-                <option value="进阶">进阶</option>
-                <option value="整理中">整理中</option>
-                <option value="需联系">需联系</option>
-              </select>
-              <button id="toolClearFiltersButton" class="sb-button ghost" type="button">清空筛选</button>
-            </div>
-          </div>
-          <div id="toolList" class="sb-list"></div>
-        </section>
-
-        <section class="sb-panel sb-editor">
-          <div class="sb-editor-title">
-            <div>
-              <h2 id="toolEditorHeading">新增工具</h2>
-              <p id="toolEditorSubheading">保存后会写入 Supabase tools 表。</p>
-            </div>
-            <button id="toolResetFormButton" class="sb-button ghost" type="button">清空表单</button>
-          </div>
-
-          <form id="toolForm" class="sb-form-grid">
-            <div id="toolPreviewArea" class="sb-preview-area" aria-live="polite">
-              <p id="toolPreviewHint"></p>
-              <a id="toolPreviewButton" class="sb-button ghost" href="#" target="_blank" rel="noopener">预览工具</a>
-            </div>
-            <label class="sb-field">
-              工具标识 / 链接名
-              <input name="slug" type="text" placeholder="chatgpt" required>
-              <small>建议使用英文小写和短横线，例如：chatgpt、claude-code。</small>
-            </label>
-            <label class="sb-field">
-              发布状态
-              <select name="status">
-                <option value="draft">草稿 draft</option>
-                <option value="published">已发布 published</option>
-              </select>
-              <small>草稿不会在正式前台展示；已发布会进入前台读取范围。</small>
-            </label>
-            <label class="sb-field full">
-              工具名称
-              <input name="name" type="text" placeholder="ChatGPT" required>
-              <small>工具的名称，会显示在卡片标题位置。</small>
-            </label>
-            <label class="sb-field">
-              工具分类
-              <input name="category" type="text" placeholder="AI 对话 / AI 编程 / AI 图像 / AI 视频 / AI 办公 / AI 自动化 / 本地部署">
-              <small>用来在前台分类筛选和标记工具方向。</small>
-            </label>
-            <label class="sb-field">
-              工具状态
-              <select name="tool_status">
-                <option value="推荐">推荐</option>
-                <option value="常用">常用</option>
-                <option value="进阶">进阶</option>
-                <option value="整理中">整理中</option>
-                <option value="需联系">需联系</option>
-              </select>
-              <small>前台会根据工具状态显示不同标签和按钮。</small>
-            </label>
-            <label class="sb-field full">
-              工具简介
-              <textarea name="description" placeholder="用一两句话说明这个工具是什么、适合做什么。"></textarea>
-              <small>会显示在工具卡片上。</small>
-            </label>
-            <label class="sb-field">
-              适合人群
-              <input name="suitable_for" type="text" placeholder="新手、内容创作者、项目负责人">
-              <small>帮助读者判断这个工具是否适合自己。</small>
-            </label>
-            <label class="sb-field">
-              使用建议
-              <input name="usage_tip" type="text" placeholder="先用于需求整理和方案拆解，再接入具体工具执行。">
-              <small>给读者的使用建议，会显示在工具卡片上。</small>
-            </label>
-            <label class="sb-field">
-              官网链接
-              <input name="official_url" type="url" placeholder="https://example.com">
-              <small>工具或服务的官方网站地址。</small>
-            </label>
-            <label class="sb-field">
-              教程链接
-              <input name="tutorial_url" type="url" placeholder="tutorial-detail.html?slug=xxx">
-              <small>如果这个工具有配套教程，可以填写教程详情页链接。</small>
-            </label>
-            <label class="sb-field">
-              封面图链接
-              <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
-              <small>填写图片网址；没有封面时可以先留空。</small>
-            </label>
-            <div class="sb-upload-box" id="toolImageUploadBox">
-              <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后链接会自动写入封面图字段。</p>
-              <label class="sb-field" style="margin: 0;">
-                图片说明
-                <input id="toolImageAltInput" type="text" placeholder="例如：ChatGPT 截图">
-              </label>
-              <div class="sb-actions" style="margin: 0;">
-                <input id="toolImageFileInput" class="sb-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
-                <button id="toolUploadImageButton" class="sb-button ghost" type="button">上传封面图</button>
-              </div>
-              <div id="toolUploadStatus" class="sb-upload-status">上传状态：未上传</div>
-              <div id="toolUploadPreview" class="sb-upload-preview">
-                <label class="sb-field" style="margin: 0;">
-                  上传成功后的图片链接
-                  <input id="toolUploadedImageUrl" type="url" readonly>
-                </label>
-                <button id="toolUseCoverButton" class="sb-button ghost" type="button">设为封面图</button>
-              </div>
-            </div>
-            <label class="sb-field full">
-              标签
-              <input name="tags" type="text" placeholder="AI 对话,写作,项目构思">
-              <small>多个标签请用英文逗号分隔，例如：AI 对话,写作,项目构思。</small>
-            </label>
-            <div class="sb-actions full">
-              <button id="toolSaveButton" class="sb-button primary" type="submit">保存工具</button>
-            </div>
-          </form>
-        </section>
-      </div>
+      
     </main>
   </div>
 
@@ -1388,7 +1394,7 @@
     let lastUploadedMarkdown = "";
     let savedPreview = null;
     let dragDepth = 0;
-    let activeModule = "tutorials";
+    let activeModule = "tools";
     let resources = [];
     let resourceEditingId = null;
     let resourceContentCursor = null;
@@ -2177,6 +2183,9 @@
       });
       els.adminView.classList.toggle("active", Boolean(session && session.access_token));
       document.querySelector(".sb-module-tabs").classList.toggle("active", Boolean(session && session.access_token));
+      if (module === "tutorials" && session && session.access_token) {
+        fetchTutorials();
+      }
       if (module === "resources" && session && session.access_token) {
         fetchResources();
       }
