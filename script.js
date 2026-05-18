@@ -230,7 +230,7 @@ function normalizeFaq(value) {
 function normalizeFrontItem(key, source) {
   const item = { ...source };
   if (key === "resources") {
-    item.detailContent = firstValue(item.detailContent, item.detail_content, item.description) || "";
+    item.detailContent = item.detailContent || "";
     item.usageSteps = toArray(item.usageSteps || item.usage_steps);
     item.notes = toArray(item.notes);
     item.faq = normalizeFaq(item.faq);
@@ -390,10 +390,10 @@ function normalizeSupabaseResource(row) {
     title: firstValue(row?.title, "未命名资源"),
     type: firstValue(row?.category, "资源"),
     category: row?.category || "",
-    description: firstValue(row?.description, "资源简介正在整理中。"),
-    detailContent: firstValue(row?.detail_content, row?.description, "详细说明正在整理中。"),
-    suitableFor: firstValue(row?.suitable_for, "—"),
-    format: firstValue(row?.format, "待补充"),
+    description: row?.description || "",
+    detailContent: row?.detail_content || "",
+    suitableFor: row?.suitable_for || "",
+    format: row?.format || "",
     size: "",
     downloadUrl: firstValue(row?.download_url, "#"),
     tutorialUrl: firstValue(row?.tutorial_url, "#"),
@@ -1448,11 +1448,12 @@ function renderResourceCard(item) {
   var tutorialUrl = getResourceField(item, "tutorialUrl", "tutorial_url");
   var hasDownload = downloadUrl && downloadUrl !== "#";
   var hasTutorial = tutorialUrl && tutorialUrl !== "#";
-  var formatVal = getResourceField(item, "format", "fileType") || "待补充";
+  var formatVal = getResourceField(item, "format", "fileType") || "";
   var sizeVal = getResourceField(item, "size") || "";
-  var formatSize = sizeVal && sizeVal !== "待补充" ? formatVal + " · " + sizeVal : formatVal;
-  var audience = getResourceField(item, "suitableFor", "targetUser", "audience") || "—";
+  var formatSize = sizeVal ? formatVal + " · " + sizeVal : formatVal;
+  var audience = getResourceField(item, "suitableFor", "targetUser", "audience") || "";
   var tags = toArray(item.tags);
+  var displayTags = tags.slice(0, 3);
 
   var buttons = [
     '<a class="card-link" href="' + escapeHTML(detailUrl("resource", item, "resources.html")) + '"><span>查看详情</span><i aria-hidden="true"></i></a>'
@@ -1470,6 +1471,10 @@ function renderResourceCard(item) {
     buttons.push('<a class="card-link" href="' + escapeHTML(tutorialUrl) + '"><span>相关教程</span><i aria-hidden="true"></i></a>');
   }
 
+  var metaItems = [];
+  if (formatSize) metaItems.push('<span class="resource-meta-item"><span class="resource-meta-label">格式/大小</span>' + escapeHTML(formatSize) + '</span>');
+  if (audience) metaItems.push('<span class="resource-meta-item"><span class="resource-meta-label">适合人群</span>' + escapeHTML(audience) + '</span>');
+
   return [
     '<article class="resource-card" data-resource-card data-id="' + escapeHTML(item.id || "") + '">',
       '<div class="resource-card-topline">',
@@ -1477,12 +1482,9 @@ function renderResourceCard(item) {
         '<span class="resource-status-badge status-' + escapeHTML(statusInfo.type) + '">' + escapeHTML(statusInfo.label) + '</span>',
       '</div>',
       '<h2>' + escapeHTML(item.title || "未命名资源") + '</h2>',
-      '<p>' + escapeHTML(item.description || item.summary || "简介正在整理中。") + '</p>',
-      '<div class="resource-card-meta">',
-        '<span class="resource-meta-item"><span class="resource-meta-label">格式/大小</span>' + escapeHTML(formatSize) + '</span>',
-        '<span class="resource-meta-item"><span class="resource-meta-label">适合人群</span>' + escapeHTML(audience) + '</span>',
-      '</div>',
-      tags.length ? '<div class="resource-card-tags">' + tags.map(function(tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("") + '</div>' : "",
+      '<p>' + escapeHTML(item.description || item.summary || "") + '</p>',
+      metaItems.length ? '<div class="resource-card-meta">' + metaItems.join("") + '</div>' : "",
+      displayTags.length ? '<div class="resource-card-tags">' + displayTags.map(function(tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("") + '</div>' : "",
       '<div class="card-actions">' + buttons.join("\n") + '</div>',
     '</article>'
   ].join("\n");
@@ -2162,13 +2164,13 @@ async function renderResourceDetail(container, data) {
   var tutorialUrl = getResourceField(item, "tutorialUrl", "tutorial_url");
   var hasDownload = downloadUrl && downloadUrl !== "#";
   var hasTutorial = tutorialUrl && tutorialUrl !== "#";
-  var formatVal = getResourceField(item, "format", "fileType") || "待补充";
+  var formatVal = getResourceField(item, "format", "fileType") || "";
   var sizeVal = getResourceField(item, "size") || "";
-  var formatSize = sizeVal && sizeVal !== "待补充" ? formatVal + " · " + sizeVal : formatVal;
-  var audience = getResourceField(item, "suitableFor", "targetUser", "audience") || "—";
+  var formatSize = sizeVal ? formatVal + " · " + sizeVal : formatVal;
+  var audience = getResourceField(item, "suitableFor", "targetUser", "audience") || "";
   var related = relatedResources(item, resources, 3);
   var tags = toArray(item.tags);
-  var detailContent = getResourceField(item, "detailContent", "content", "description") || "";
+  var detailContent = item.detail_content || item.detailContent || "";
   var usageSteps = item.usageSteps || item.steps || [];
   var notes = toArray(item.notes || item.tips);
   var faqItems = normalizeFaq(item.faq);
@@ -2285,20 +2287,20 @@ async function renderResourceDetail(container, data) {
         '</div>',
         '<h1>' + escapeHTML(item.title || "未命名资源") + '</h1>',
         '<p class="resource-detail-desc">' + escapeHTML(item.description || item.summary || "") + '</p>',
-        '<div class="resource-detail-meta-row">',
-          '<span><strong>格式/大小</strong>' + escapeHTML(formatSize) + '</span>',
-          '<span><strong>更新时间</strong>' + escapeHTML(formatDate(item.updatedAt)) + '</span>',
-          '<span><strong>适合人群</strong>' + escapeHTML(audience) + '</span>',
-        '</div>',
+        (formatSize || item.updatedAt || audience ? '<div class="resource-detail-meta-row">' +
+          (formatSize ? '<span><strong>格式/大小</strong>' + escapeHTML(formatSize) + '</span>' : '') +
+          (item.updatedAt ? '<span><strong>更新时间</strong>' + escapeHTML(formatDate(item.updatedAt)) + '</span>' : '') +
+          (audience ? '<span><strong>适合人群</strong>' + escapeHTML(audience) + '</span>' : '') +
+        '</div>' : ''),
       '</header>',
 
       // ── 主内容 + 侧边栏 ──
       '<div class="resource-detail-layout">',
         '<article class="resource-detail-main">',
-          mainSections.length > 0 ? mainSections.join("\n") : '<section class="detail-card"><p class="eyebrow">Overview</p><h2>资源说明</h2><p class="detail-text">详细说明正在整理中，可以先查看资源简介和适合人群了解基本方向。</p></section>',
+          mainSections.length > 0 ? mainSections.join("\n") : "",
           '<section class="detail-cta">',
-            '<div><h2>需要帮你跑通这个资源？</h2><p>如果安装、模型路径、节点报错或工作流运行卡住，可以联系我协助排查。</p></div>',
-            '<button class="btn btn-primary js-contact-modal" type="button"><span>咨询调试</span><i aria-hidden="true"></i></button>',
+            '<div><h2>需要帮你用好这个资源？</h2><p>如果在使用过程中遇到问题，或需要根据你的实际情况做调整，可以联系我协助。</p></div>',
+            '<button class="btn btn-primary js-contact-modal" type="button"><span>咨询协助</span><i aria-hidden="true"></i></button>',
           '</section>',
         '</article>',
 
@@ -2309,14 +2311,15 @@ async function renderResourceDetail(container, data) {
               '<p class="eyebrow">资源信息</p>',
               '<dl class="resource-sidebar-dl">',
                 '<div><dt>状态</dt><dd><span class="resource-status-badge status-' + escapeHTML(statusInfo.type) + '">' + escapeHTML(statusInfo.label) + '</span></dd></div>',
-                '<div><dt>格式/大小</dt><dd>' + escapeHTML(formatSize) + '</dd></div>',
-                '<div><dt>分类</dt><dd>' + escapeHTML(item.type || item.category || "—") + '</dd></div>',
-                '<div><dt>更新时间</dt><dd>' + escapeHTML(formatDate(item.updatedAt)) + '</dd></div>',
+                (formatSize ? '<div><dt>格式/大小</dt><dd>' + escapeHTML(formatSize) + '</dd></div>' : ''),
+                ((item.type || item.category) ? '<div><dt>分类</dt><dd>' + escapeHTML(item.type || item.category) + '</dd></div>' : ''),
+                (item.updatedAt ? '<div><dt>更新时间</dt><dd>' + escapeHTML(formatDate(item.updatedAt)) + '</dd></div>' : ''),
               '</dl>',
             '</section>',
             tags.length ? '<section class="resource-sidebar-section"><p class="eyebrow">标签</p><div class="resource-sidebar-tags">' + tags.map(function(tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("") + '</div></section>' : "",
             '<div class="resource-sidebar-actions">',
               downloadBtn,
+              (officialUrl && officialUrl !== "#" ? '<a class="card-link" href="' + escapeHTML(officialUrl) + '" target="_blank" rel="noopener"><span>官网链接</span><i aria-hidden="true"></i></a>' : ''),
               tutorialBtn,
               '<a class="card-link" href="resources.html"><span>返回列表</span><i aria-hidden="true"></i></a>',
             '</div>',

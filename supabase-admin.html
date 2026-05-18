@@ -178,6 +178,10 @@
       line-height: 1.65;
     }
 
+    .sb-field textarea[name="detail_content"] {
+      min-height: 200px;
+    }
+
     .sb-field textarea[name="content"] {
       min-height: 280px;
     }
@@ -915,13 +919,13 @@
             </label>
             <label class="sb-field full">
               资源标题
-              <input name="title" type="text" placeholder="资源标题" required>
-              <small>写给读者看的标题，建议清楚说明这份资源解决什么问题。</small>
+              <input name="title" type="text" placeholder="例如：Codex 建站提示词模板 / Supabase 建表 SQL 模板 / ComfyUI LTX 工作流" required>
+              <small>显示在资源卡片和详情页标题位置。建议用「工具/场景 + 资源类型」格式，让读者一眼知道这是什么。</small>
             </label>
             <label class="sb-field">
               分类
-              <input name="category" type="text" placeholder="提示词 / 模板 / 教程资料 / 工具清单 / 项目案例 / 安装排查">
-              <small>用于前台分类筛选按钮。建议使用短分类名（不超过 6 个字），细分信息放到标签里。</small>
+              <input name="category" type="text" placeholder="提示词 / 模板 / 教程资料 / 工具清单 / 项目案例 / 安装排查 / ComfyUI工作流 / 建站资料">
+              <small>用于前台分类筛选按钮。建议短分类（不超过 8 个字），细分关键词放到标签字段。</small>
             </label>
             <label class="sb-field">
               资源状态
@@ -932,42 +936,42 @@
                 <option value="教程配套">教程配套</option>
                 <option value="推荐">推荐</option>
               </select>
-              <small>前台会根据资源状态显示不同按钮（下载 / 联系获取 / 整理中）。</small>
+              <small>控制前台按钮和状态标签。可下载 → 显示下载按钮；整理中 → 显示"资源整理中"；需联系获取 → 显示"联系获取"按钮。</small>
             </label>
             <label class="sb-field">
               格式 / 大小
-              <input name="format" type="text" placeholder="PDF · 约 500KB">
-              <small>例如：PDF、TXT、ZIP，可附带文件大小。</small>
+              <input name="format" type="text" placeholder="TXT 模板 / SQL 文件 / PDF 清单 / ZIP 项目包 / 工作流 + 模型说明 · 约 58G">
+              <small>显示在资源卡片和详情页信息区。例如：TXT 模板、SQL 文件、PDF 清单、ZIP 项目包。可附带文件大小。</small>
             </label>
             <label class="sb-field">
               适合人群
-              <input name="suitable_for" type="text" placeholder="AI 编程初学者、ComfyUI 新手">
-              <small>显示在详情页顶部 meta 信息栏，帮助读者判断是否适合自己。</small>
+              <input name="suitable_for" type="text" placeholder="AI 编程新手、建站初学者、ComfyUI 用户、想做项目交付的人">
+              <small>显示在资源卡片和详情页顶部 meta 信息，帮助用户判断是否适合自己。</small>
             </label>
             <label class="sb-field">
               下载链接
-              <input name="download_url" type="url" placeholder="https://example.com/download.zip">
-              <small>填写真实文件下载地址。留空时前台按钮显示"资源整理中"。</small>
+              <input name="download_url" type="url" placeholder="https://pan.baidu.com/xxx 或 https://github.com/xxx/releases">
+              <small>真实资源下载地址：网盘链接、GitHub Release、文件直链等。留空则前台按钮显示"资源整理中"。</small>
             </label>
             <label class="sb-field">
               官网链接
-              <input name="official_url" type="url" placeholder="https://example.com">
-              <small>工具或资源的官方网站地址。留空时前台不显示该链接。</small>
+              <input name="official_url" type="url" placeholder="https://github.com/xxx/xxx">
+              <small>资源对应工具或项目的官网地址。没有可以留空，前台不显示。</small>
             </label>
             <label class="sb-field">
               关联教程链接
-              <input name="tutorial_url" type="url" placeholder="tutorial-detail.html?slug=xxx">
-              <small>配套教程的详情页链接。留空时前台不显示该链接。</small>
+              <input name="tutorial_url" type="url" placeholder="tutorial-detail.html?slug=xxx 或完整链接">
+              <small>配套教程的详情页链接。没有可以留空，前台不显示该按钮。</small>
             </label>
             <label class="sb-field">
               封面图链接
               <input name="cover_url" type="url" placeholder="https://example.com/cover.jpg">
-              <small>填写图片网址；没有封面时可以先留空。</small>
+              <small>资源封面图 URL。没有可以留空。</small>
             </label>
             <label class="sb-field full">
               资源简介
-              <textarea name="description" placeholder="用一两句话说明这份资源是什么、能帮读者解决什么问题。"></textarea>
-              <small>显示在资源列表卡片和详情页顶部一句话简介区域。</small>
+              <textarea name="description" placeholder="一句话说明这个资源解决什么问题。&#10;不要写安装步骤、不要写 FAQ。&#10;&#10;例如：&#10;适合新手快速整理 Codex 建站需求，避免和 AI 沟通不清。&#10;一键查询、修改和清理数据库中重复数据的 SQL 模板集合。"></textarea>
+              <small>显示在资源卡片和详情页顶部。只写一句话定位，不要在这里堆使用步骤、注意事项和 FAQ。</small>
             </label>
             <label class="sb-field full">
               资源详细说明
@@ -978,8 +982,8 @@
                 <button class="sb-button ghost" type="button" data-insert-markdown="code">插入代码块</button>
                 <button class="sb-button ghost" type="button" data-insert-markdown="divider">插入分割线</button>
               </div>
-              <textarea name="detail_content" placeholder="资源的详细说明，支持 Markdown 写法。"></textarea>
-              <small>详情页「资源说明」区块的内容。支持 Markdown。如果留空，前台不显示该区块。</small>
+              <textarea name="detail_content" placeholder="详细说明这个资源是什么、适合什么场景、能解决什么问题、大概包含什么内容。&#10;支持 Markdown。&#10;&#10;注意：不要把使用步骤、注意事项、FAQ 堆在这里——它们有各自的字段，前台会自动分开展示。"></textarea>
+              <small>对应前台「资源说明」区块。写资源背景、适用场景、包含内容。不要把使用步骤 / 注意事项 / FAQ 混进来，它们各自有独立区块。</small>
             </label>
             <div class="sb-upload-box" id="resourceImageUploadBox">
               <p class="sb-drop-hint">可点击上传，也可以把 png / jpg / webp / gif 图片拖到这里，上传后链接会自动写入封面图字段。</p>
@@ -1002,23 +1006,23 @@
             </div>
             <label class="sb-field full">
               使用方法
-              <textarea name="usage_steps" placeholder="每行写一个步骤标题和说明，用逗号分隔。例如：&#10;第一步：确认工具环境，先检查本地是否已安装所需软件和依赖。&#10;第二步：下载并解压资源文件，放置到正确路径。&#10;第三步：按教程跑通流程，验证每个环节的输出结果。"></textarea>
-              <small>每行一个步骤。前台资源详情页会在「使用方法」区块按行展示。如果留空，前台不显示这个区块。</small>
+              <textarea name="usage_steps" placeholder="每行一个步骤。适合任何资源类型：&#10;&#10;提示词模板：复制模板 → 替换项目信息 → 发给 AI&#10;SQL 模板：打开 Supabase → SQL Editor → 粘贴执行&#10;部署清单：按清单逐项检查&#10;工作流：下载文件 → 放到对应目录 → 导入工作流&#10;项目包：解压 → 阅读说明 → 按步骤配置"></textarea>
+              <small>对应前台「使用方法」区块。每行一个步骤。只写下载后怎么用，不要写资源说明或 FAQ。留空则前台不显示该区块。</small>
             </label>
             <label class="sb-field full">
               注意事项
-              <textarea name="notes" placeholder="每行写一条注意事项。例如：&#10;下载前请确认你的工具版本和系统环境。&#10;部分模型文件较大，建议在网络稳定时下载。&#10;示例内容可根据你的实际情况删改。"></textarea>
-              <small>每行一条注意事项。前台资源详情页会在「注意事项」区块显示。如果留空，前台不显示这个区块。</small>
+              <textarea name="notes" placeholder="每行一条注意事项，适合写容易出错的地方、限制条件和风险提醒。&#10;&#10;例如：&#10;不要把 service_role key 写进前端代码&#10;执行 SQL 前先确认表名是否重复&#10;下载大文件前先确认网盘链接有效"></textarea>
+              <small>对应前台「注意事项」区块。每行一条。写容易出错的点、限制条件、风险提醒。留空则前台不显示该区块。</small>
             </label>
             <label class="sb-field full">
               常见问题
-              <textarea name="faq" placeholder="每行一个问答，用「问题：答案」格式。例如：&#10;这个资源适合新手吗？：适合，建议先从简介和使用步骤看起。&#10;下载后怎么使用？：按照使用方法里的步骤逐步操作。"></textarea>
-              <small>每行一条 FAQ，用中文冒号或英文冒号分隔问题和答案。前台会在「常见问题」区块显示。如果留空，前台不显示这个区块。</small>
+              <textarea name="faq" placeholder="每行一个问答，用中文冒号分隔问题和答案。&#10;&#10;例如：&#10;这个模板适合新手吗？：适合，按字段替换即可。&#10;执行后报错怎么办？：先检查字段名、表名和权限配置。&#10;下载链接失效怎么办？：通过联系页面反馈，会尽快更新。"></textarea>
+              <small>对应前台「常见问题」区块。每行一条 Q/A，用中文冒号分隔。留空则前台不显示该区块。</small>
             </label>
             <label class="sb-field full">
               标签
-              <input name="tags" type="text" placeholder="Codex,提示词,项目需求,教程配套">
-              <small>多个标签请用英文逗号分隔，例如：Codex,提示词,项目需求,教程配套。</small>
+              <input name="tags" type="text" placeholder="Codex,Supabase,Vercel,SQL,部署,排错,ComfyUI,LTX2.3,本地部署">
+              <small>细分关键词，多个用英文逗号分隔。不要用标签代替分类——分类是大类筛选，标签是细分检索。</small>
             </label>
             <div class="sb-actions full">
               <button id="resourceSaveButton" class="sb-button primary" type="submit">保存资源</button>
