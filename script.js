@@ -263,23 +263,14 @@ function normalizeFrontItem(key, source) {
     item.tags = Array.isArray(item.tags) ? item.tags : [];
   }
   if (key === "cases") {
-    item.background ||= `这个案例来自「${item.title || "项目"}」方向的实战整理，重点记录需求背景、实现过程和后续可升级空间。`;
+    item.background = firstValue(item.background, "");
     item.process = Array.isArray(item.process) ? item.process : [];
-    if (item.process.length === 0) item.process = [
-      { title: "需求梳理", description: "先明确目标用户、核心痛点和最小可用功能。" },
-      { title: "原型搭建", description: "用静态页面或轻量工具跑通主要操作路径。" },
-      { title: "演示复盘", description: "整理截图、结果和下一阶段升级方向。" }
-    ];
     item.upgrades = toArray(item.upgrades);
-    if (item.upgrades.length === 0) item.upgrades = ["补充真实业务数据。", "增加搜索、筛选或自动化提醒。"];
-    item.relatedResourceIds = toIdArray(item.relatedResourceIds);
+    item.result = firstValue(item.result, "");
+    item.lessons = firstValue(item.lessons, "");
     item.toolsUsed = Array.isArray(item.toolsUsed) ? item.toolsUsed : toArray(item.toolsUsed);
-    item.result ||= "项目目前以演示和复盘为主，后续可继续接入真实业务数据。";
-    item.lessons ||= "先把最小流程跑通，再决定是否升级数据库、登录和在线后台。";
-    item.problem ||= item.description || "";
-    item.features = Array.isArray(item.features) ? item.features : toArray(item.features);
-    item.targetUser ||= "—";
-    item.description ||= item.problem || item.summary || "";
+    item.description = firstValue(item.description, item.summary, "");
+    item.relatedResourceIds = toIdArray(item.relatedResourceIds || item.relatedResourceId);
   }
   return item;
 }
@@ -992,6 +983,110 @@ function formatResourceFaq(items) {
     var a = item.answer || "";
     return '<div class="resource-faq-item"><dt>Q: ' + formatResourceInline(String(q)) + "</dt><dd>" + formatResourceInline(String(a)) + "</dd></div>";
   }).join("") + "</dl></div>";
+}
+
+// ── Case detail formatting ──
+
+function formatCaseInline(value) {
+  return escapeHTML(value)
+    .replace(/(https?:\/\/[^\s<>"'，。；：、）\)】」]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="case-link">$1</a>')
+    .replace(/`([^`]+)`/g, '<code class="case-inline-code">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function formatCaseText(value) {
+  var raw = String(value || "");
+  if (!raw.trim()) return "";
+
+  var lines = raw.replace(/\r\n/g, "\n").split("\n");
+  var output = [];
+  var inList = false;
+  var listType = "";
+
+  function closeList() {
+    if (inList) {
+      output.push(listType === "ol" ? "</ol>" : "</ul>");
+      inList = false;
+      listType = "";
+    }
+  }
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.trim();
+
+    if (!trimmed) {
+      closeList();
+      continue;
+    }
+
+    var orderedMatch = trimmed.match(/^(\d+)[、.)．]\s*(.+)$/);
+    if (orderedMatch) {
+      if (!inList || listType !== "ol") {
+        closeList();
+        inList = true;
+        listType = "ol";
+        output.push('<ol class="case-rich-list">');
+      }
+      output.push("<li>" + formatCaseInline(orderedMatch[2]) + "</li>");
+      continue;
+    }
+
+    var unorderedMatch = trimmed.match(/^[-•*]\s+(.+)$/);
+    if (unorderedMatch) {
+      if (!inList || listType !== "ul") {
+        closeList();
+        inList = true;
+        listType = "ul";
+        output.push('<ul class="case-rich-list">');
+      }
+      output.push("<li>" + formatCaseInline(unorderedMatch[1]) + "</li>");
+      continue;
+    }
+
+    var headingMatch = trimmed.match(/^(#{2,4})\s+(.+)$/);
+    if (headingMatch) {
+      closeList();
+      var level = headingMatch[1].length;
+      output.push("<h" + level + ">" + formatCaseInline(headingMatch[2]) + "</h" + level + ">");
+      continue;
+    }
+
+    closeList();
+    output.push("<p>" + formatCaseInline(trimmed) + "</p>");
+  }
+
+  closeList();
+  return '<div class="case-rich-text">' + output.join("") + "</div>";
+}
+
+function formatCaseProcess(value) {
+  var items = Array.isArray(value) ? value : (value ? String(value).replace(/\r\n/g, "\n").split("\n").map(function(s) { return s.trim(); }).filter(Boolean) : []);
+  if (items.length === 0) return "";
+  var html = ['<ol class="case-process-list">'];
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var title = typeof item === "object" ? (item.title || "") : String(item || "");
+    var desc = typeof item === "object" ? (item.description || "") : "";
+    if (!title && !desc) continue;
+    html.push("<li>");
+    html.push('<span class="case-process-index">' + (i + 1) + "</span>");
+    html.push("<div>");
+    if (title) html.push("<strong>" + formatCaseInline(title) + "</strong>");
+    if (desc) html.push("<p>" + formatCaseInline(desc) + "</p>");
+    html.push("</div>");
+    html.push("</li>");
+  }
+  html.push("</ol>");
+  return '<div class="case-rich-text">' + html.join("") + "</div>";
+}
+
+function formatCaseUpgrades(items) {
+  var list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (list.length === 0) return "";
+  return '<div class="case-rich-text"><ul class="case-upgrade-list">' + list.map(function(item) {
+    return "<li>" + formatCaseInline(String(item)) + "</li>";
+  }).join("") + "</ul></div>";
 }
 
 function renderListItems(items) {
@@ -2324,6 +2419,31 @@ async function renderTutorialDetail(container, data) {
   `;
 }
 
+function renderCaseSidebar(title, items, toolsUsed, tags, backUrl, contactLabel) {
+  var toolsUsedHtml = toolsUsed.length
+    ? '<div class="case-sidebar-section"><p class="case-sidebar-label">使用工具</p><div class="case-sidebar-tags">' + toolsUsed.map(function(t) { return '<span class="case-sidebar-tag">' + escapeHTML(t) + '</span>'; }).join("") + '</div></div>'
+    : "";
+  var tagsHtml = tags.length
+    ? '<div class="case-sidebar-section"><p class="case-sidebar-label">标签</p><div class="case-sidebar-tags">' + tags.map(function(t) { return '<span class="case-sidebar-tag">' + escapeHTML(t) + '</span>'; }).join("") + '</div></div>'
+    : "";
+
+  return [
+    '<aside class="case-detail-sidebar">',
+      '<article class="detail-card sticky-card">',
+        '<p class="eyebrow">本页信息</p>',
+        '<h2>' + escapeHTML(title) + '</h2>',
+        renderDetailMeta(items),
+        toolsUsedHtml,
+        tagsHtml,
+        '<div class="sidebar-actions">',
+          '<a class="card-link" href="' + escapeHTML(backUrl) + '"><span>返回列表</span><i aria-hidden="true"></i></a>',
+          '<a class="card-link js-contact-modal" href="contact.html"><span>' + escapeHTML(contactLabel) + '</span><i aria-hidden="true"></i></a>',
+        '</div>',
+      '</article>',
+    '</aside>'
+  ].join("");
+}
+
 async function renderCaseDetail(container, data) {
   var slug = getQueryParam("slug");
   var id = getQueryParam("id");
@@ -2357,47 +2477,64 @@ async function renderCaseDetail(container, data) {
     renderNotFound(container, "案例不存在或正在整理中", "cases.html", "← 返回作品案例");
     return;
   }
+
   var hasImage = item.imageUrl && item.imageUrl !== "#";
-  var related = relatedResources(item, resources, 3);
-  var toolsUsed = item.toolsUsed || item.features || [];
-  var toolsUsedText = toolsUsed.length ? toolsUsed.join("、") : "待补充";
+  var toolsUsed = item.toolsUsed || [];
+  var tags = Array.isArray(item.tags) ? item.tags : [];
+  var statusLabel = item.status || "展示中";
+
+  // Build content blocks — only show when field has value
+  var contentBlocks = [];
+
+  var bgHtml = formatCaseText(item.background);
+  if (bgHtml) contentBlocks.push('<section class="case-retro-block"><p class="eyebrow">BACKGROUND</p><h2>项目背景</h2>' + bgHtml + '</section>');
+
+  var processHtml = formatCaseProcess(item.process);
+  if (processHtml) contentBlocks.push('<section class="case-retro-block"><p class="eyebrow">PROCESS</p><h2>实现过程</h2>' + processHtml + '</section>');
+
+  var resultHtml = formatCaseText(item.result);
+  if (resultHtml) contentBlocks.push('<section class="case-retro-block case-result-highlight"><p class="eyebrow">RESULT</p><h2>最终结果</h2>' + resultHtml + '</section>');
+
+  var lessonsHtml = formatCaseText(item.lessons);
+  if (lessonsHtml) contentBlocks.push('<section class="case-retro-block"><p class="eyebrow">LESSONS</p><h2>经验总结</h2>' + lessonsHtml + '</section>');
+
+  var upgradesHtml = formatCaseUpgrades(item.upgrades);
+  if (upgradesHtml) contentBlocks.push('<section class="case-retro-block"><p class="eyebrow">NEXT</p><h2>后续升级</h2>' + upgradesHtml + '</section>');
+
+  var contentHtml = formatCaseText(item.content);
+  if (contentHtml) contentBlocks.push('<section class="case-retro-block"><p class="eyebrow">NOTES</p><h2>补充说明</h2>' + contentHtml + '</section>');
+
+  var mainContent = contentBlocks.length > 0
+    ? contentBlocks.join("")
+    : '<div class="case-empty-hint"><p>案例内容正在整理中。</p></div>';
+
+  // Sidebar items — no "适合人群"
+  var sidebarItems = [
+    { label: "分类", value: item.category },
+    { label: "状态", value: statusLabel },
+    { label: "更新时间", value: formatDate(item.updatedAt) }
+  ];
 
   container.innerHTML = [
     '<section class="detail-shell reveal is-visible">',
       '<a class="text-action back-link" href="cases.html">← 返回作品案例</a>',
-      '<div class="detail-layout">',
-        '<article class="detail-main">',
-          '<header class="detail-hero-card">',
-            '<div class="detail-kicker"><span class="tag">' + escapeHTML(item.category || "案例") + '</span><span class="status ' + statusClass(item.status) + '">' + escapeHTML(item.status || "规划中") + '</span></div>',
+      '<div class="case-detail-layout">',
+        '<article class="case-detail-main">',
+          '<header class="case-detail-hero">',
+            '<div class="detail-kicker"><span class="tag">' + escapeHTML(item.category || "案例") + '</span><span class="case-status-tag">' + escapeHTML(statusLabel) + '</span></div>',
+            hasImage ? '<div class="case-cover"><img src="' + escapeHTML(item.imageUrl) + '" alt="' + escapeHTML(item.title) + '" loading="lazy"></div>' : "",
             '<h1>' + escapeHTML(item.title) + '</h1>',
-            '<p>' + escapeHTML(item.description) + '</p>',
-            renderDetailMeta([
-              { label: "适合人群", value: item.targetUser },
-              { label: "更新时间", value: formatDate(item.updatedAt) },
-              { label: "分类", value: item.category },
-              { label: "状态", value: item.status }
-            ]),
+            '<p class="case-summary">' + escapeHTML(item.description) + '</p>',
+            '<div class="case-hero-meta">',
+              '<span class="case-meta-item">' + formatDate(item.updatedAt) + '</span>',
+              toolsUsed.length ? '<span class="case-meta-item case-hero-tools">' + toolsUsed.map(function(t) { return '<span class="case-tool-tag">' + escapeHTML(t) + '</span>'; }).join("") + '</span>' : "",
+              tags.length ? '<span class="case-meta-item">' + tags.map(function(t) { return '<span class="case-info-tag">' + escapeHTML(t) + '</span>'; }).join("") + '</span>' : "",
+            '</div>',
           '</header>',
-
-          '<section class="detail-card"><p class="eyebrow">Background</p><h2>项目背景</h2>' + renderTextBlock(item.background) + '</section>',
-          '<section class="detail-card"><p class="eyebrow">Problem</p><h2>解决的问题</h2>' + renderTextBlock(item.problem) + '</section>',
-          '<section class="detail-card"><p class="eyebrow">Features</p><h2>核心功能</h2>' + renderListItems(item.features) + '</section>',
-          '<section class="detail-card"><p class="eyebrow">Process</p><h2>实现过程</h2>' + renderSteps(item.process) + '</section>',
-          '<section class="detail-card"><p class="eyebrow">Tools</p><h2>使用工具</h2><p class="detail-text">' + escapeHTML(toolsUsedText) + '</p></section>',
-          '<section class="detail-card"><p class="eyebrow">Screenshot</p><h2>项目截图</h2><div class="detail-shot">' + (hasImage ? '<img src="' + escapeHTML(item.imageUrl) + '" alt="' + escapeHTML(item.title) + '">' : "<span>项目截图待补充</span>") + '</div></section>',
-          '<section class="detail-card"><p class="eyebrow">Upgrade</p><h2>后续升级方向</h2>' + renderListItems(item.upgrades) + '</section>',
-          '<section class="detail-card"><p class="eyebrow">Result</p><h2>项目结果</h2>' + renderTextBlock(item.result) + '</section>',
-          '<section class="detail-card"><p class="eyebrow">Lessons</p><h2>经验总结</h2>' + renderTextBlock(item.lessons) + '</section>',
-          '<section class="detail-card"><p class="eyebrow">Resources</p><h2>相关资源</h2>' + renderRelatedResourceCards(related) + '</section>',
-          '<section class="contact-cta detail-cta"><div><p class="eyebrow">Collaboration</p><h2>想做类似项目？</h2><p>可以把行业、目标用户和你想解决的问题发来，一起拆成可落地版本。</p></div><a class="btn btn-primary js-contact-modal" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>',
+          mainContent,
+          '<section class="contact-cta case-detail-cta"><div><p class="eyebrow">COLLABORATION</p><h2>想做类似项目？</h2><p>可以把行业、目标用户和你想解决的问题发来，一起拆成可落地版本。</p></div><a class="btn btn-primary js-contact-modal" href="contact.html"><span>联系合作</span><i aria-hidden="true"></i></a></section>',
         '</article>',
-        renderSidebar(item.category || "案例", [
-          { label: "分类", value: item.category },
-          { label: "适合人群", value: item.targetUser },
-          { label: "更新时间", value: formatDate(item.updatedAt) },
-          { label: "状态", value: item.status },
-          { label: "使用工具", value: toolsUsedText }
-        ], item.tags, "cases.html", "想做类似项目"),
+        renderCaseSidebar(item.category || "案例", sidebarItems, toolsUsed, tags, "cases.html", "想做类似项目"),
       '</div>',
     '</section>'
   ].join("");
